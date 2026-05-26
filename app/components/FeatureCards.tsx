@@ -7,7 +7,10 @@ export default function FeatureCards() {
 
         {/* CARD 1 */}
 
-        <div className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 h-[220px]">
+        <a
+          href="/auctions"
+          className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 h-[220px] block"
+        >
 
           {/* IMAGE */}
 
@@ -22,7 +25,7 @@ export default function FeatureCards() {
 
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-black/10" />
 
-        </div>
+        </a>
 
 
 

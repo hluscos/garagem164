@@ -101,11 +101,14 @@ export default function Hero() {
 
             {/* PRIMARY BUTTON */}
 
-            <button className="h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px] shadow-[0_0_60px_rgba(255,176,0,0.25)] hover:shadow-[0_0_90px_rgba(255,176,0,0.38)]">
+            <a
+              href="/auctions"
+              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px] shadow-[0_0_60px_rgba(255,176,0,0.25)] hover:shadow-[0_0_90px_rgba(255,176,0,0.38)]"
+            >
 
               Ver Leilões ⚡
 
-            </button>
+            </a>
 
             {/* SECONDARY BUTTON */}
 

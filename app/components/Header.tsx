@@ -99,7 +99,7 @@ export default function Header() {
               Início
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
+            <a href="/auctions" className="hover:text-[#ffb800] transition">
               Leilões
             </a>
 
