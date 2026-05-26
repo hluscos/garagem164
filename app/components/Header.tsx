@@ -3,6 +3,12 @@ import {
   ShoppingCart,
 } from "lucide-react";
 
+import {
+  FaInstagram,
+  FaFacebookF,
+  FaYoutube,
+} from "react-icons/fa";
+
 export default function Header() {
   return (
     <>
@@ -40,14 +46,23 @@ export default function Header() {
 
           <div className="flex items-center gap-3">
 
-            {["IG", "FB", "YT", "TT"].map((item) => (
-              <button
-                key={item}
-                className="w-8 h-8 bg-zinc-900 hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-[10px] font-bold"
-              >
-                {item}
-              </button>
-            ))}
+            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+
+              <FaInstagram size={14} />
+
+            </button>
+
+            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+
+              <FaFacebookF size={13} />
+
+            </button>
+
+            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+
+              <FaYoutube size={14} />
+
+            </button>
 
           </div>
 
@@ -136,24 +151,29 @@ export default function Header() {
 
             </button>
 
-            {/* LOGIN */}
+{/* LOGIN */}
 
-            <button className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px]">
+<a
+  href="/login"
+  className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
+>
 
-              Entrar
+  Entrar
 
-            </button>
+</a>
 
-            {/* REGISTER */}
+{/* REGISTER */}
 
-            <button className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)]">
+<a
+  href="/register"
+  className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
+>
 
-              Registar
+  Registar
 
-            </button>
+</a>
 
-          </div>
-
+</div>
         </div>
 
       </header>

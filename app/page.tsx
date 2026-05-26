@@ -4,6 +4,7 @@ import StatsBar from "./components/StatsBar";
 import BrandsRow from "./components/BrandsRow";
 import FeatureCards from "./components/FeatureCards";
 import AuctionGrid from "./components/AuctionGrid";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -20,6 +21,8 @@ export default function Home() {
       <FeatureCards />
 
       <AuctionGrid />
+
+      <Footer />
 
     </main>
   );
