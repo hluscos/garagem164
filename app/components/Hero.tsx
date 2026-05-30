@@ -15,10 +15,10 @@ export default function Hero() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentCar((prev) => (prev + 1) % cars.length);
-    }, 10000);
+    }, 8000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [cars.length]);
 
   return (
     <section className="relative h-[760px] overflow-hidden bg-black">
@@ -33,11 +33,9 @@ export default function Hero() {
         }}
       />
 
-      {/* OVERLAY */}
+      {/* OVERLAYS */}
 
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/15" />
-
-      {/* GLOW */}
 
       <div className="absolute right-[5%] top-[5%] w-[1200px] h-[1200px] rounded-full bg-[#ff9500]/10 blur-[180px]" />
 
@@ -47,7 +45,7 @@ export default function Hero() {
 
       <div className="relative z-10 max-w-[1720px] mx-auto px-16 h-full flex items-center">
 
-        {/* LEFT */}
+        {/* LEFT SIDE */}
 
         <div className="w-[42%]">
 
@@ -79,7 +77,7 @@ export default function Hero() {
 
             <a
               href="/auctions"
-              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px] shadow-[0_0_60px_rgba(255,176,0,0.25)] hover:shadow-[0_0_90px_rgba(255,176,0,0.38)]"
+              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px]"
             >
               Ver Leilões ⚡
             </a>
@@ -93,29 +91,29 @@ export default function Hero() {
 
           </div>
 
-          {/* MARKETPLACE TAGS */}
+          {/* TAGS */}
 
-<div className="mt-16 flex flex-wrap gap-3">
+          <div className="mt-16 flex flex-wrap gap-3">
 
-  <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
-    0% Comissão de lançamento
-  </div>
+            <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+              0% Comissão de Lançamento
+            </div>
 
-  <div className="h-[40px] px-4 rounded-full border border-white/10 bg-zinc-950 text-white flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
-    Leilões
-  </div>
+            <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+              Leilões
+            </div>
 
-  <div className="h-[40px] px-4 rounded-full border border-white/10 bg-zinc-950 text-white flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
-    Sorteios
-  </div>
+            <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+              Sorteios
+            </div>
 
-</div>
+          </div>
 
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE */}
 
-        <div className="absolute right-[-40px] bottom-[-10px] w-[980px] h-[560px]">
+        <div className="absolute right-[20px] bottom-[20px] w-[900px] h-[560px] z-20">
 
           <AnimatePresence mode="wait">
 
@@ -125,8 +123,8 @@ export default function Hero() {
               alt="Hero Car"
               initial={{
                 opacity: 0,
-                x: 300,
-                scale: 0.92,
+                x: 250,
+                scale: 0.96,
               }}
               animate={{
                 opacity: 1,
@@ -139,10 +137,9 @@ export default function Hero() {
                 scale: 0.96,
               }}
               transition={{
-                duration: 1.4,
-                ease: [0.22, 1, 0.36, 1],
+                duration: 1,
               }}
-              className="absolute inset-0 w-full object-contain drop-shadow-[0_0_80px_rgba(255,149,0,0.18)]"
+              className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_0_80px_rgba(255,149,0,0.25)]"
             />
 
           </AnimatePresence>
