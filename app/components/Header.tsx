@@ -16,51 +16,51 @@ export default function Header() {
 
       <div className="hidden lg:block bg-black border-b border-white/5">
 
-        <div className="max-w-[1480px] mx-auto px-12 h-[110px] flex items-center justify-between">
+        <div className="max-w-[1480px] mx-auto px-12 h-[44px] flex items-center justify-between">
 
-          <div className="flex items-center gap-10">
+          <div className="flex-1 flex items-center justify-center text-[12px] uppercase tracking-[1.5px] text-zinc-400 font-semibold">
 
-            <div className="flex items-center gap-2">
-              🚚
-              <span>Envio rápido para todo o país</span>
-            </div>
+            <span>
+              🏁 Comunidade de Colecionadores
+            </span>
 
-            <div className="flex items-center gap-2">
-              🔥
-              <span>Produtos 100% originais</span>
-            </div>
+            <span className="mx-4 text-zinc-700">
+              •
+            </span>
 
-            <div className="flex items-center gap-2">
-              🏁
-              <span>Comunidade de colecionadores</span>
-            </div>
+            <span>
+              🇵🇹 Plataforma Portuguesa
+            </span>
 
-            <div className="flex items-center gap-2">
-              🛟
-              <span>Suporte 24/7</span>
-            </div>
+            <span className="mx-4 text-zinc-700">
+              •
+            </span>
+
+            <span>
+              ⭐ Anúncios Gratuitos durante o Lançamento
+            </span>
 
           </div>
 
           {/* SOCIALS */}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-8">
 
-            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+            <button className="w-8 h-8 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
 
-              <FaInstagram size={14} />
-
-            </button>
-
-            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
-
-              <FaFacebookF size={13} />
+              <FaInstagram size={13} />
 
             </button>
 
-            <button className="w-9 h-9 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+            <button className="w-8 h-8 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
 
-              <FaYoutube size={14} />
+              <FaFacebookF size={12} />
+
+            </button>
+
+            <button className="w-8 h-8 bg-zinc-900 border border-zinc-800 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black transition-all duration-300 rounded-xl flex items-center justify-center text-white">
+
+              <FaYoutube size={13} />
 
             </button>
 
@@ -171,8 +171,6 @@ export default function Header() {
               </div>
 
             </button>
-
-            
 
             {/* LOGIN */}
 

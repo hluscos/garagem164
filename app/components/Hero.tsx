@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function Hero() {
-
   const cars = [
     "/images/hero/cars/porsche-gt3rs.png",
     "/images/hero/cars/clio-williams.png",
@@ -14,19 +13,14 @@ export default function Hero() {
   const [currentCar, setCurrentCar] = useState(0);
 
   useEffect(() => {
-
     const interval = setInterval(() => {
-
       setCurrentCar((prev) => (prev + 1) % cars.length);
-
     }, 10000);
 
     return () => clearInterval(interval);
-
   }, []);
 
   return (
-
     <section className="relative h-[760px] overflow-hidden bg-black">
 
       {/* BACKGROUND */}
@@ -39,15 +33,13 @@ export default function Hero() {
         }}
       />
 
-      {/* DARK OVERLAY */}
+      {/* OVERLAY */}
 
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/15" />
 
-      {/* CINEMATIC GLOW */}
+      {/* GLOW */}
 
       <div className="absolute right-[5%] top-[5%] w-[1200px] h-[1200px] rounded-full bg-[#ff9500]/10 blur-[180px]" />
-
-      {/* EXTRA ATMOSPHERIC LIGHT */}
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,rgba(255,140,0,0.10),transparent_45%)]" />
 
@@ -55,128 +47,73 @@ export default function Hero() {
 
       <div className="relative z-10 max-w-[1720px] mx-auto px-16 h-full flex items-center">
 
-        {/* LEFT SIDE */}
+        {/* LEFT */}
 
         <div className="w-[42%]">
 
-          {/* TITLE */}
-
           <h1 className="text-[104px] leading-[0.82] font-black italic uppercase tracking-[-9px] text-white">
-
             A TUA
             <br />
-
             <span className="text-[#ffb000]">
               GARAGEM.
             </span>
-
           </h1>
 
-          {/* SUBTITLE */}
-
           <h2 className="mt-2 text-[104px] leading-[0.82] font-black italic uppercase tracking-[-9px] text-white">
-
             A TUA
             <br />
-
             <span className="text-[#ffb000]">
               PAIXÃO.
             </span>
-
           </h2>
 
-          {/* DESCRIPTION */}
-
           <p className="mt-8 max-w-[650px] text-[21px] leading-[1.8] text-zinc-300">
-
             O marketplace premium de miniaturas 1:64.
             Leilões exclusivos, sorteios raros e peças
             para verdadeiros colecionadores.
-
           </p>
 
           {/* BUTTONS */}
 
           <div className="mt-12 flex items-center gap-5">
 
-            {/* PRIMARY BUTTON */}
-
             <a
               href="/auctions"
               className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px] shadow-[0_0_60px_rgba(255,176,0,0.25)] hover:shadow-[0_0_90px_rgba(255,176,0,0.38)]"
             >
-
               Ver Leilões ⚡
-
             </a>
 
-            {/* SECONDARY BUTTON */}
-
-            <button className="h-[58px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb000] hover:bg-white/[0.04] transition-all duration-300 text-white font-bold uppercase tracking-[0.5px] text-[15px]">
-
+            <a
+              href="/collections"
+              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb000] hover:bg-white/[0.04] transition-all duration-300 text-white font-bold uppercase tracking-[0.5px] text-[15px]"
+            >
               Explorar Coleções
-
-            </button>
-
-          </div>
-
-          {/* STATS */}
-
-          <div className="mt-16 flex items-center gap-16">
-
-            <div>
-
-              <div className="text-[46px] font-black tracking-[-2px] text-white">
-
-                2.450+
-
-              </div>
-
-              <div className="mt-1 text-[11px] uppercase tracking-[2px] text-zinc-400 font-bold">
-
-                Leilões Concluídos
-
-              </div>
-
-            </div>
-
-            <div>
-
-              <div className="text-[46px] font-black tracking-[-2px] text-white">
-
-                8.750+
-
-              </div>
-
-              <div className="mt-1 text-[11px] uppercase tracking-[2px] text-zinc-400 font-bold">
-
-                Membros
-
-              </div>
-
-            </div>
-
-            <div>
-
-              <div className="text-[46px] font-black tracking-[-2px] text-white">
-
-                1.250+
-
-              </div>
-
-              <div className="mt-1 text-[11px] uppercase tracking-[2px] text-zinc-400 font-bold">
-
-                Sorteios
-
-              </div>
-
-            </div>
+            </a>
 
           </div>
+
+          {/* MARKETPLACE TAGS */}
+
+<div className="mt-16 flex flex-wrap gap-3">
+
+  <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+    0% Comissão de lançamento
+  </div>
+
+  <div className="h-[40px] px-4 rounded-full border border-white/10 bg-zinc-950 text-white flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+    Leilões
+  </div>
+
+  <div className="h-[40px] px-4 rounded-full border border-white/10 bg-zinc-950 text-white flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
+    Sorteios
+  </div>
+
+</div>
 
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT */}
 
         <div className="absolute right-[-40px] bottom-[-10px] w-[980px] h-[560px]">
 
@@ -186,30 +123,25 @@ export default function Hero() {
               key={cars[currentCar]}
               src={cars[currentCar]}
               alt="Hero Car"
-
               initial={{
                 opacity: 0,
                 x: 300,
                 scale: 0.92,
               }}
-
               animate={{
                 opacity: 1,
                 x: 0,
                 scale: 1,
               }}
-
               exit={{
                 opacity: 0,
                 x: -250,
                 scale: 0.96,
               }}
-
               transition={{
                 duration: 1.4,
                 ease: [0.22, 1, 0.36, 1],
               }}
-
               className="absolute inset-0 w-full object-contain drop-shadow-[0_0_80px_rgba(255,149,0,0.18)]"
             />
 
