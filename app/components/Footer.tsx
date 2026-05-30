@@ -98,7 +98,9 @@ export default function Footer() {
               <a href="/cookies" className="hover:text-white transition">
                 Política de Cookies
               </a>
-
+             <a href="/giveaway-rules" className="hover:text-white transition">
+  Regras dos Sorteios
+</a>
             </div>
 
           </div>
