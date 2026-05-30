@@ -16,7 +16,7 @@ export default function Header() {
 
       <div className="hidden lg:block bg-black border-b border-white/5">
 
-        <div className="max-w-[1480px] mx-auto px-12 h-[38px] flex items-center justify-between text-[10px] tracking-[1px] text-zinc-400 uppercase">
+        <div className="max-w-[1480px] mx-auto px-12 h-[110px] flex items-center justify-between">
 
           <div className="flex items-center gap-10">
 
@@ -74,52 +74,73 @@ export default function Header() {
 
       <header className="sticky top-0 z-50 bg-black/85 backdrop-blur-2xl border-b border-white/5">
 
-        <div className="max-w-[1480px] mx-auto px-12 h-[88px] flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-12 h-[100px] flex items-center justify-between">
 
           {/* LOGO */}
 
-          <div className="flex items-center cursor-pointer select-none mr-14">
+          <a
+            href="/"
+            className="flex items-center cursor-pointer select-none mr-14"
+          >
 
             <img
               src="/logo.png"
               alt="Garagem164"
-              className="h-[94px] w-auto"
+              className="h-[160px] w-auto"
             />
 
-          </div>
+          </a>
 
           {/* NAVIGATION */}
 
           <nav className="hidden xl:flex items-center gap-9 text-[15px] font-bold uppercase tracking-[0.5px]">
 
             <a
-              href="#"
+              href="/"
               className="text-[#ffb800] relative after:absolute after:left-0 after:-bottom-[31px] after:w-full after:h-[3px] after:rounded-full after:bg-[#ffb800]"
             >
               Início
             </a>
 
-            <a href="/auctions" className="hover:text-[#ffb800] transition">
+            <a
+              href="/auctions"
+              className="hover:text-[#ffb800] transition"
+            >
               Leilões
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
+            <a
+              href="/giveaways"
+              className="hover:text-[#ffb800] transition"
+            >
               Sorteios
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
-              Loja
+            <a
+              href="/login"
+              className="text-[#ffb800] hover:text-[#ffc933] transition font-black"
+            >
+              Vender
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
+            <a
+              href="/collections"
+              className="hover:text-[#ffb800] transition"
+            >
               Coleções
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
+            <a
+              href="#"
+              className="hover:text-[#ffb800] transition"
+            >
               Comunidade
             </a>
 
-            <a href="#" className="hover:text-[#ffb800] transition">
+            <a
+              href="#"
+              className="hover:text-[#ffb800] transition"
+            >
               Sobre Nós
             </a>
 
@@ -151,29 +172,32 @@ export default function Header() {
 
             </button>
 
-{/* LOGIN */}
+            
 
-<a
-  href="/login"
-  className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
->
+            {/* LOGIN */}
 
-  Entrar
+            <a
+              href="/login"
+              className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
+            >
 
-</a>
+              Entrar
 
-{/* REGISTER */}
+            </a>
 
-<a
-  href="/register"
-  className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
->
+            {/* REGISTER */}
 
-  Registar
+            <a
+              href="/register"
+              className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
+            >
 
-</a>
+              Registar
 
-</div>
+            </a>
+
+          </div>
+
         </div>
 
       </header>
