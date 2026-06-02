@@ -1,4 +1,4 @@
-export default function GiveawaysPage() {
+export default function rafflePage() {
   return (
 
     <main className="min-h-screen bg-black text-white overflow-hidden">
@@ -11,7 +11,7 @@ export default function GiveawaysPage() {
           className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
             backgroundImage:
-              "url('/images/cards/giveaway-card.png')",
+              "url('/images/cards/raffle-card.png')",
           }}
         />
 
@@ -140,7 +140,7 @@ export default function GiveawaysPage() {
                   </div>
 
                   <a
-  href="/giveaways/clio-williams"
+  href="/raffles/clio-williams"
   className="h-[48px] px-5 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[12px] font-black uppercase tracking-[1px] inline-flex items-center justify-center"
 >
 

@@ -1,4 +1,3 @@
-```tsx
 export default function SubmitListingPage() {
   return (
 
@@ -222,4 +221,4 @@ export default function SubmitListingPage() {
 
   );
 }
-```
+

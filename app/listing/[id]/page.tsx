@@ -1,3 +1,6 @@
+import { mockListing } from "@/app/listing/[id]/mockListing";
+
+import RaffleTicketGrid from "@/app/components/listing/RaffleTicketGrid";
 import ListingGallery from "@/app/components/listing/ListingGallery";
 import ListingSidebar from "@/app/components/listing/ListingSidebar";
 import ListingDescription from "@/app/components/listing/ListingDescription";
@@ -36,7 +39,13 @@ export default function ListingPage() {
 
             <ListingDetails />
 
-            <ListingBidHistory />
+            {mockListing.type === "raffle" && (
+              <RaffleTicketGrid />
+            )}
+
+            {mockListing.type === "auction" && (
+              <ListingBidHistory />
+            )}
 
           </div>
 

@@ -110,7 +110,7 @@ export default function Header() {
             </a>
 
             <a
-              href="/giveaways"
+              href="/raffle"
               className="hover:text-[#ffb800] transition"
             >
               Sorteios

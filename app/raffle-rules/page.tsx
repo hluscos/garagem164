@@ -1,4 +1,4 @@
-export default function GiveawayRulesPage() {
+export default function rafflesRulesPage() {
   return (
     <main className="min-h-screen bg-black text-white">
 

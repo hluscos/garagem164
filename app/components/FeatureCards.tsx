@@ -26,14 +26,14 @@ export default function FeatureCards() {
         {/* CARD 2 */}
 
         <a
-          href="/giveaways"
+          href="/raffle"
           className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 h-[220px] block"
         >
 
           <div
             className="absolute inset-0 bg-cover bg-center group-hover:scale-[1.03] transition-all duration-[1800ms]"
             style={{
-              backgroundImage: "url('/images/cards/giveaway-card.png')",
+              backgroundImage: "url('/images/cards/raffle-card.png')",
             }}
           />
 

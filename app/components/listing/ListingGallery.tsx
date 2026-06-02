@@ -14,14 +14,20 @@ export default function ListingGallery() {
         <img
           src={images[selectedImage]}
           alt={mockListing.title}
-          className="w-full aspect-[16/10] object-cover hover:scale-105 transition duration-500"
+          className="w-full aspect-[16/7] object-cover hover:scale-105 transition duration-500"
         />
 
         <div className="absolute top-5 left-5">
-          <span className="px-4 py-2 rounded-full bg-[#ffb800] text-black text-xs font-black uppercase tracking-wider">
-            Leilão
-          </span>
-        </div>
+  <span className="px-4 py-2 rounded-full bg-[#ffb800] text-black text-xs font-black uppercase tracking-wider">
+
+    {mockListing.type === "sale" && "Venda"}
+
+    {mockListing.type === "auction" && "Leilão"}
+
+    {mockListing.type === "raffle" && "Sorteio"}
+
+  </span>
+</div>
       </div>
 
       <div className="grid grid-cols-5 gap-3 mt-4">
@@ -44,18 +50,18 @@ export default function ListingGallery() {
         ))}
       </div>
 
-      <div className="mt-8">
-        <h1 className="text-5xl font-black">
+      <div className="mt-5">
+        <h1 className="text-4xl font-black">
           {mockListing.title}
         </h1>
 
         <p className="mt-3 text-zinc-400 text-lg">
-          {mockListing.brand} • Escala {mockListing.scale}
+         {mockListing.details.brand} • Escala {mockListing.details.scale}
         </p>
 
         <div className="flex flex-wrap gap-2 mt-5">
           <span className="px-3 py-1 rounded-full border border-white/10 text-sm">
-            {mockListing.condition}
+            {mockListing.details.condition}
           </span>
 
           <span className="px-3 py-1 rounded-full border border-white/10 text-sm">
@@ -63,7 +69,7 @@ export default function ListingGallery() {
           </span>
 
           <span className="px-3 py-1 rounded-full border border-white/10 text-sm">
-            {mockListing.location}
+            {mockListing.details.location}
           </span>
 
           <span className="px-3 py-1 rounded-full border border-white/10 text-sm">

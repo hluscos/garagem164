@@ -1,7 +1,7 @@
 export const mockListing = {
   id: "1",
 
-  type: "auction",
+  type: "raffle",
 
   title: "Ferrari F40 LM",
 
@@ -9,6 +9,20 @@ export const mockListing = {
     "Ferrari F40 LM Inno64 em excelente estado. Inclui caixa original e todos os acessórios.",
 
   currentBid: 72,
+  
+  price: 95,
+
+  raffle: {
+  ticketPrice: 1,
+
+  totalTickets: 99,
+
+  soldTickets: [3, 7, 12, 18, 25, 44, 55],
+
+  reservedTickets: [9, 15, 22],
+
+  maxTicketsPerUser: 10,
+},
 
   auction: {
     days: 2,

@@ -1,3 +1,4 @@
+import RaffleTicketGrid from "@/app/components/listing/RaffleTicketGrid";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import StatsBar from "./components/StatsBar";
