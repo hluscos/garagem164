@@ -1,142 +1,168 @@
+"use client";
+
+import { useState } from "react";
+
 export default function SubmitListingPage() {
-  return (
+const [listingType, setListingType] = useState("sale");
 
-    <main className="min-h-screen bg-black text-white">
+return ( <main className="min-h-screen bg-black text-white">
 
-      {/* HERO */}
+```
+  {/* HERO */}
 
-      <section className="border-b border-white/5">
+  <section className="border-b border-white/5">
 
-        <div className="max-w-[1200px] mx-auto px-12 py-20">
+    <div className="max-w-[1200px] mx-auto px-12 py-20">
 
-          <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
+      <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
+        Garagem164
+      </div>
 
-            Garagem164
+      <h1 className="mt-5 text-[72px] leading-none font-black italic uppercase tracking-[-4px]">
+        Vender Miniatura
+      </h1>
 
-          </div>
+      <p className="mt-6 text-zinc-400 text-lg max-w-[700px]">
+        Publica a tua miniatura 1:64 para venda direta,
+        leilão ou sorteio.
+      </p>
 
-          <h1 className="mt-5 text-[72px] leading-none font-black italic uppercase tracking-[-4px]">
+    </div>
 
-            Vender Miniatura
+  </section>
 
-          </h1>
+  {/* FORM */}
 
-          <p className="mt-6 text-zinc-400 text-lg max-w-[700px]">
+  <section className="max-w-[1200px] mx-auto px-12 py-16">
 
-            Publica a tua miniatura 1:64 para venda direta,
-            leilão ou sorteio.
+    <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
 
-          </p>
+      <div className="grid grid-cols-2 gap-8">
+
+        {/* MARCA */}
+
+        <div>
+
+          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            Marca
+          </label>
+
+          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+            <option>Hot Wheels</option>
+            <option>Mini GT</option>
+            <option>Inno64</option>
+            <option>Tarmac Works</option>
+            <option>Matchbox</option>
+            <option>Pop Race</option>
+            <option>Greenlight</option>
+            <option>Johnny Lightning</option>
+            <option>Kaido House</option>
+            <option>M2 Machines</option>
+            <option>Auto World</option>
+            <option>Outro</option>
+          </select>
 
         </div>
 
-      </section>
+        {/* MODELO */}
 
-      {/* FORM */}
+        <div>
 
-      <section className="max-w-[1200px] mx-auto px-12 py-16">
+          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            Modelo
+          </label>
 
-        <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
+          <input
+            type="text"
+            placeholder="Ex: Ferrari F40"
+            className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+          />
 
-          <div className="grid grid-cols-2 gap-8">
+        </div>
 
-            {/* MARCA */}
+        {/* CATEGORIA */}
 
+        <div>
+
+          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            Categoria
+          </label>
+
+          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+            <option>Carro</option>
+            <option>Camião</option>
+            <option>Carrinha</option>
+            <option>Motociclo</option>
+            <option>Transportador</option>
+          </select>
+
+        </div>
+
+        {/* ESTADO */}
+
+        <div>
+
+          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            Estado
+          </label>
+
+          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+            <option>Novo</option>
+            <option>Como Novo</option>
+            <option>Usado</option>
+          </select>
+
+        </div>
+
+        {/* TIPO */}
+
+        <div>
+
+          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            Tipo de Anúncio
+          </label>
+
+          <select
+            value={listingType}
+            onChange={(e) => setListingType(e.target.value)}
+            className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+          >
+            <option value="sale">Venda Direta</option>
+            <option value="auction">Leilão</option>
+            <option value="raffle">Sorteio</option>
+          </select>
+
+        </div>
+
+        {/* SALE */}
+
+        {listingType === "sale" && (
+
+          <div>
+
+            <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+              Preço
+            </label>
+
+            <input
+              type="number"
+              placeholder="0.00"
+              className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+            />
+
+          </div>
+
+        )}
+
+        {/* AUCTION */}
+
+        {listingType === "auction" && (
+
+          <>
             <div>
 
               <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Marca
-
-              </label>
-
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-
-                <option>Hot Wheels</option>
-                <option>Mini GT</option>
-                <option>Inno64</option>
-                <option>Tarmac Works</option>
-                <option>Matchbox</option>
-                <option>Pop Race</option>
-                <option>Greenlight</option>
-                <option>Johnny Lightning</option>
-                <option>Kaido House</option>
-                <option>M2 Machines</option>
-                <option>Auto World</option>
-                <option>Outro</option>
-
-              </select>
-
-            </div>
-
-            {/* MODELO */}
-
-            <div>
-
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Modelo
-
-              </label>
-
-              <input
-                type="text"
-                placeholder="Ex: Ferrari F40"
-                className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
-              />
-
-            </div>
-
-            {/* CATEGORIA */}
-
-            <div>
-
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Categoria
-
-              </label>
-
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-
-                <option>Carro</option>
-                <option>Camião</option>
-                <option>Carrinha</option>
-                <option>Motociclo</option>
-                <option>Transportador</option>
-
-              </select>
-
-            </div>
-
-            {/* ESTADO */}
-
-            <div>
-
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Estado
-
-              </label>
-
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-
-                <option>Novo</option>
-                <option>Como Novo</option>
-                <option>Usado</option>
-
-              </select>
-
-            </div>
-
-            {/* PREÇO */}
-
-            <div>
-
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Preço Inicial
-
+                Licitação Inicial
               </label>
 
               <input
@@ -147,78 +173,107 @@ export default function SubmitListingPage() {
 
             </div>
 
-            {/* TIPO */}
-
             <div>
 
               <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-
-                Tipo de Anúncio
-
+                Duração
               </label>
 
               <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+                <option>3 dias</option>
+                <option>5 dias</option>
+                <option>7 dias</option>
+                <option>10 dias</option>
+              </select>
 
-                <option>Venda Direta</option>
-                <option>Leilão</option>
-                <option>Sorteio</option>
+            </div>
+          </>
 
+        )}
+
+        {/* RAFFLE */}
+
+        {listingType === "raffle" && (
+
+          <>
+            <div>
+
+              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+                Preço por Ticket
+              </label>
+
+              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+                <option>0.25€</option>
+                <option>0.50€</option>
+                <option>1€</option>
+                <option>2€</option>
               </select>
 
             </div>
 
-          </div>
+            <div>
 
-          {/* DESCRIÇÃO */}
+              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+                Número de Tickets
+              </label>
 
-          <div className="mt-8">
+              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
+                <option>25</option>
+                <option>50</option>
+                <option>75</option>
+                <option>99</option>
+              </select>
 
-            <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+            </div>
+          </>
 
-              Descrição
+        )}
 
-            </label>
+      </div>
 
-            <textarea
-              rows={6}
-              className="w-full rounded-2xl bg-black border border-white/10 p-4"
-              placeholder="Descreve a miniatura..."
-            />
+      {/* DESCRIÇÃO */}
 
-          </div>
+      <div className="mt-8">
 
-          {/* FOTOS */}
+        <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+          Descrição
+        </label>
 
-          <div className="mt-8">
+        <textarea
+          rows={6}
+          className="w-full rounded-2xl bg-black border border-white/10 p-4"
+          placeholder="Descreve a miniatura..."
+        />
 
-            <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+      </div>
 
-              Fotos
+      {/* FOTOS */}
 
-            </label>
+      <div className="mt-8">
 
-            <input
-              type="file"
-              multiple
-              className="w-full rounded-2xl bg-black border border-white/10 p-4"
-            />
+        <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+          Fotos
+        </label>
 
-          </div>
+        <input
+          type="file"
+          multiple
+          className="w-full rounded-2xl bg-black border border-white/10 p-4"
+        />
 
-          {/* BUTTON */}
+      </div>
 
-          <button className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]">
+      {/* BUTTON */}
 
-            Publicar Miniatura
+      <button className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]">
+        Publicar Miniatura
+      </button>
 
-          </button>
+    </div>
 
-        </div>
+  </section>
 
-      </section>
+</main>
 
-    </main>
-
-  );
+);
 }
-
