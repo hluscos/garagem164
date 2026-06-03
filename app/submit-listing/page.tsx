@@ -1,10 +1,43 @@
 "use client";
-
+import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 
 export default function SubmitListingPage() {
 const [listingType, setListingType] = useState("sale");
+const [brand, setBrand] = useState("Hot Wheels");
+const [model, setModel] = useState("");
 
+const [category, setCategory] = useState("Carro");
+const [condition, setCondition] = useState("Novo");
+
+const [description, setDescription] = useState("");
+
+const [price, setPrice] = useState("");
+
+const [startingBid, setStartingBid] = useState("");
+const [durationDays, setDurationDays] = useState("7");
+
+const [ticketPrice, setTicketPrice] = useState("1");
+const [totalTickets, setTotalTickets] = useState("99");
+async function testSupabase() {
+  const { data, error } = await supabase
+    .from("listings")
+    .insert([
+      {
+        brand: "Hot Wheels",
+        model: "Porsche 911 GT3",
+        category: "Carro",
+        condition: "Novo",
+        listing_type: "sale",
+        price: 5,
+        description: "Primeiro teste Garagem164",
+      },
+    ])
+    .select();
+
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
+}
 return ( <main className="min-h-screen bg-black text-white">
 
 ```
@@ -265,9 +298,12 @@ return ( <main className="min-h-screen bg-black text-white">
 
       {/* BUTTON */}
 
-      <button className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]">
-        Publicar Miniatura
-      </button>
+      <button
+  onClick={testSupabase}
+  className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]"
+>
+  Publicar Miniatura
+</button>
 
     </div>
 
