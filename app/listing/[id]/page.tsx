@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import { mockListing } from "@/app/listing/[id]/mockListing";
 
 import RaffleTicketGrid from "@/app/components/listing/RaffleTicketGrid";
@@ -10,10 +14,10 @@ import ListingBidHistory from "@/app/components/listing/ListingBidHistory";
 import RelatedListings from "@/app/components/listing/RelatedListings";
 
 export default function ListingPage() {
+  const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+
   return (
     <main className="min-h-screen bg-black text-white">
-
-      {/* HERO */}
 
       <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-10">
 
@@ -21,13 +25,13 @@ export default function ListingPage() {
 
           <ListingGallery />
 
-          <ListingSidebar />
+          <ListingSidebar
+            selectedTickets={selectedTickets}
+          />
 
         </div>
 
       </section>
-
-      {/* CONTENT */}
 
       <section className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-20">
 
@@ -40,7 +44,10 @@ export default function ListingPage() {
             <ListingDetails />
 
             {mockListing.type === "raffle" && (
-              <RaffleTicketGrid />
+              <RaffleTicketGrid
+                selectedTickets={selectedTickets}
+                setSelectedTickets={setSelectedTickets}
+              />
             )}
 
             {mockListing.type === "auction" && (
@@ -50,9 +57,7 @@ export default function ListingPage() {
           </div>
 
           <div>
-
             <ListingSeller />
-
           </div>
 
         </div>

@@ -2,7 +2,24 @@ import { mockListing } from "@/app/listing/[id]/mockListing";
 
 const listingType = mockListing.type;
 
-export default function ListingSidebar() {
+type Props = {
+  selectedTickets: number[];
+};
+
+export default function ListingSidebar({
+  selectedTickets,
+}: Props) {
+  const raffleTotal =
+    selectedTickets.length *
+    mockListing.raffle.ticketPrice;
+
+  const sortedTickets = [...selectedTickets].sort(
+    (a, b) => a - b
+  );
+
+  const hasSelection =
+    selectedTickets.length > 0;
+
   return (
     <div className="sticky top-24">
       <div className="rounded-[32px] border border-[#ffb800]/20 bg-zinc-950 p-8">
@@ -19,47 +36,6 @@ export default function ListingSidebar() {
           {listingType === "raffle" &&
             `${mockListing.raffle.ticketPrice}€`}
         </div>
-
-        {listingType === "auction" && (
-          <>
-            <div className="h-px bg-white/10 my-8" />
-
-            <div className="text-zinc-500 text-xs uppercase tracking-[2px]">
-              Termina em
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mt-4">
-
-              <div className="h-24 rounded-2xl border border-white/10 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black">
-                  {mockListing.auction.days}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  Dias
-                </span>
-              </div>
-
-              <div className="h-24 rounded-2xl border border-white/10 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black">
-                  {mockListing.auction.hours}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  Horas
-                </span>
-              </div>
-
-              <div className="h-24 rounded-2xl border border-white/10 flex flex-col items-center justify-center">
-                <span className="text-3xl font-black">
-                  {mockListing.auction.minutes}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  Min
-                </span>
-              </div>
-
-            </div>
-          </>
-        )}
 
         {listingType === "raffle" && (
           <>
@@ -98,27 +74,70 @@ export default function ListingSidebar() {
             <div className="mt-6 rounded-2xl border border-white/10 p-4">
 
               <div className="text-xs uppercase tracking-wider text-zinc-500">
-                Sorteio
+                Seleção Atual
               </div>
 
-              <div className="mt-2 text-sm text-zinc-300">
-                Máximo de {mockListing.raffle.totalTickets} números.
+              <div className="mt-3 text-sm text-zinc-400">
+                Tickets Selecionados
               </div>
 
-              <div className="mt-1 text-sm text-zinc-300">
-                Máximo de {mockListing.raffle.maxTicketsPerUser} tickets por utilizador.
+              <div className="mt-1 font-bold break-words">
+                {sortedTickets.length > 0
+                  ? sortedTickets
+                      .map((n) =>
+                        n.toString().padStart(2, "0")
+                      )
+                      .join(", ")
+                  : "Nenhum"}
+              </div>
+
+              <div className="mt-4 flex justify-between">
+                <span className="text-zinc-400">
+                  Quantidade
+                </span>
+
+                <span className="font-bold">
+                  {selectedTickets.length}
+                </span>
+              </div>
+
+              <div className="mt-2 flex justify-between font-black">
+                <span>Total</span>
+
+                <span className="text-[#ffb800]">
+                  {raffleTotal.toFixed(2)}€
+                </span>
               </div>
 
             </div>
           </>
         )}
 
-        <button className="mt-8 w-full h-14 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition text-black font-black uppercase">
+        <button
+          disabled={
+            listingType === "raffle" &&
+            !hasSelection
+          }
+          className={`mt-8 w-full h-14 rounded-2xl font-black uppercase transition ${
+            listingType === "raffle" && !hasSelection
+              ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+              : "bg-[#ffb800] hover:bg-[#ffc933] text-black"
+          }`}
+        >
+          {listingType === "auction" &&
+            "Licitar Agora"}
 
-          {listingType === "auction" && "Licitar Agora"}
-          {listingType === "sale" && "Comprar Agora"}
-          {listingType === "raffle" && "Escolher Números"}
+          {listingType === "sale" &&
+            "Comprar Agora"}
 
+          {listingType === "raffle" &&
+            (hasSelection
+              ? `Comprar ${selectedTickets.length} Ticket${
+                  selectedTickets.length === 1
+                    ? ""
+                    : "s"
+                }`
+              : "Seleciona os teus números")}
         </button>
 
         <button className="mt-3 w-full h-14 rounded-2xl border border-white/10 hover:border-[#ffb800] transition font-black uppercase">

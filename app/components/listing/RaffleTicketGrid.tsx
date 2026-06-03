@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { mockListing } from "@/app/listing/[id]/mockListing";
 
-export default function RaffleTicketGrid() {
+type Props = {
+  selectedTickets: number[];
+  setSelectedTickets: React.Dispatch<
+    React.SetStateAction<number[]>
+  >;
+};
+
+export default function RaffleTicketGrid({
+  selectedTickets,
+  setSelectedTickets,
+}: Props) {
   const tickets = Array.from(
     { length: mockListing.raffle.totalTickets },
     (_, i) => i + 1
   );
-
-  const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
-
-  const ticketPrice = mockListing.raffle.ticketPrice;
 
   const soldTickets = mockListing.raffle.soldTickets;
   const reservedTickets = mockListing.raffle.reservedTickets;
@@ -30,9 +35,6 @@ export default function RaffleTicketGrid() {
       return [...current, ticket];
     });
   }
-
-  const totalPrice =
-    selectedTickets.length * ticketPrice;
 
   return (
     <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-8">
@@ -110,50 +112,6 @@ export default function RaffleTicketGrid() {
 
       <div className="mt-4 text-sm text-zinc-500">
         Máximo de {maxTicketsPerUser} tickets por utilizador
-      </div>
-
-      <div className="mt-8 rounded-2xl border border-white/10 p-5">
-
-        <div className="text-sm text-zinc-500 uppercase tracking-wider">
-          Resumo
-        </div>
-
-        <div className="mt-4">
-
-          <div className="text-zinc-400">
-            Tickets Selecionados
-          </div>
-
-          <div className="mt-2 font-bold break-words">
-            {selectedTickets.length > 0
-              ? selectedTickets
-                  .map((n) => n.toString().padStart(2, "0"))
-                  .join(", ")
-              : "Nenhum"}
-          </div>
-
-        </div>
-
-        <div className="mt-4 flex justify-between">
-          <span className="text-zinc-400">
-            Quantidade
-          </span>
-
-          <span className="font-bold">
-            {selectedTickets.length}
-          </span>
-        </div>
-
-        <div className="mt-2 flex justify-between text-xl font-black">
-
-          <span>Total</span>
-
-          <span className="text-[#ffb800]">
-            {totalPrice.toFixed(2)}€
-          </span>
-
-        </div>
-
       </div>
 
     </div>
