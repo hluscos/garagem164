@@ -1,5 +1,3 @@
-import { mockListing } from "@/app/listing/[id]/mockListing";
-
 function Detail({
   label,
   value,
@@ -20,7 +18,13 @@ function Detail({
   );
 }
 
-export default function ListingDetails() {
+type Props = {
+  listing: any;
+};
+
+export default function ListingDetails({
+  listing,
+}: Props) {
   return (
     <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-6">
 
@@ -30,12 +34,12 @@ export default function ListingDetails() {
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
 
-        <Detail label="Marca" value={mockListing.details.brand} />
-        <Detail label="Modelo" value={mockListing.details.model} />
-        <Detail label="Escala" value={mockListing.details.scale} />
-        <Detail label="Estado" value={mockListing.details.condition} />
-        <Detail label="Caixa" value={mockListing.details.box} />
-        <Detail label="Localização" value={mockListing.details.location} />
+        <Detail label="Marca" value={listing.brand || "-"} />
+        <Detail label="Modelo" value={listing.model || "-"} />
+        <Detail label="Categoria" value={listing.category || "-"} />
+        <Detail label="Estado" value={listing.condition || "-"} />
+        <Detail label="Tipo" value={listing.listing_type || "-"} />
+        <Detail label="Preço" value={`${listing.price || 0}€`} />
 
       </div>
 

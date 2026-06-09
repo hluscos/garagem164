@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
-import { mockListing } from "@/app/listing/[id]/mockListing";
+import { supabase } from "@/lib/supabase";
 
 import RaffleTicketGrid from "@/app/components/listing/RaffleTicketGrid";
 import ListingGallery from "@/app/components/listing/ListingGallery";
@@ -14,18 +15,67 @@ import ListingBidHistory from "@/app/components/listing/ListingBidHistory";
 import RelatedListings from "@/app/components/listing/RelatedListings";
 
 export default function ListingPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const [listing, setListing] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+
+  useEffect(() => {
+    async function loadListing() {
+      if (!id) return;
+
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      console.log("LISTING:", data);
+      console.log("ERROR:", error);
+
+      if (data) {
+        setListing(data);
+      }
+
+      setLoading(false);
+    }
+
+    loadListing();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        A carregar anúncio...
+      </main>
+    );
+  }
+
+  if (!listing) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        Anúncio não encontrado.
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
 
+      
       <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-10">
 
         <div className="grid lg:grid-cols-[1.6fr_0.55fr] gap-8">
 
-          <ListingGallery />
+          <ListingGallery
+  listing={listing}
+/>
 
           <ListingSidebar
+           listing={listing}
             selectedTickets={selectedTickets}
           />
 
@@ -39,32 +89,37 @@ export default function ListingPage() {
 
           <div className="space-y-8">
 
-            <ListingDescription />
+            <ListingDescription
+  listing={listing}
+/>
+            <ListingDetails
+  listing={listing}
+/>
 
-            <ListingDetails />
-
-            {mockListing.type === "raffle" && (
+            {listing.listing_type === "raffle" && (
               <RaffleTicketGrid
                 selectedTickets={selectedTickets}
                 setSelectedTickets={setSelectedTickets}
               />
             )}
 
-            {mockListing.type === "auction" && (
+            {listing.listing_type === "auction" && (
               <ListingBidHistory />
             )}
 
           </div>
 
           <div>
-            <ListingSeller />
+           <ListingSeller />
           </div>
 
         </div>
 
       </section>
 
-      <RelatedListings />
+      <RelatedListings
+  listings={[]}
+/>
 
     </main>
   );

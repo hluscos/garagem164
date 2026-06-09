@@ -1,7 +1,5 @@
 "use client";
 
-import { mockListing } from "@/app/listing/[id]/mockListing";
-
 type Props = {
   selectedTickets: number[];
   setSelectedTickets: React.Dispatch<
@@ -13,14 +11,16 @@ export default function RaffleTicketGrid({
   selectedTickets,
   setSelectedTickets,
 }: Props) {
+  const totalTickets = 99;
+
   const tickets = Array.from(
-    { length: mockListing.raffle.totalTickets },
+    { length: totalTickets },
     (_, i) => i + 1
   );
 
-  const soldTickets = mockListing.raffle.soldTickets;
-  const reservedTickets = mockListing.raffle.reservedTickets;
-  const maxTicketsPerUser = mockListing.raffle.maxTicketsPerUser;
+  const soldTickets: number[] = [];
+  const reservedTickets: number[] = [];
+  const maxTicketsPerUser = 10;
 
   function toggleTicket(ticket: number) {
     setSelectedTickets((current) => {

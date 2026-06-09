@@ -1,5 +1,3 @@
-import { mockListing } from "@/app/listing/[id]/mockListing";
-
 function BidRow({
   user,
   bid,
@@ -10,6 +8,7 @@ function BidRow({
   return (
     <div className="flex items-center justify-between border border-white/10 rounded-2xl p-4">
       <span>{user}</span>
+
       <span className="font-bold text-[#ffb800]">
         {bid}€
       </span>
@@ -18,6 +17,13 @@ function BidRow({
 }
 
 export default function ListingBidHistory() {
+  const bids = [
+    {
+      user: "Utilizador",
+      amount: 0,
+    },
+  ];
+
   return (
     <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-8">
 
@@ -27,7 +33,7 @@ export default function ListingBidHistory() {
 
       <div className="mt-6 space-y-4">
 
-        {mockListing.bids.map((bid, index) => (
+        {bids.map((bid, index) => (
           <BidRow
             key={index}
             user={bid.user}

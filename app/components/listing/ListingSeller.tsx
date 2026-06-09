@@ -1,5 +1,3 @@
-import { mockListing } from "@/app/listing/[id]/mockListing";
-
 export default function ListingSeller() {
   return (
     <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-6">
@@ -15,11 +13,11 @@ export default function ListingSeller() {
         <div>
 
           <div className="text-lg font-bold">
-            {mockListing.seller.name}
+            Garagem164
           </div>
 
           <div className="text-zinc-400 text-sm">
-            ⭐ {mockListing.seller.rating}
+            Perfil em desenvolvimento
           </div>
 
         </div>
@@ -34,7 +32,7 @@ export default function ListingSeller() {
           </div>
 
           <div className="font-bold mt-1">
-            {mockListing.seller.sales}
+            —
           </div>
         </div>
 
@@ -44,7 +42,7 @@ export default function ListingSeller() {
           </div>
 
           <div className="font-bold mt-1">
-            {mockListing.seller.memberSince}
+            —
           </div>
         </div>
 

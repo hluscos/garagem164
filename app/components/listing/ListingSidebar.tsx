@@ -1,17 +1,19 @@
-import { mockListing } from "@/app/listing/[id]/mockListing";
-
-const listingType = mockListing.type;
-
 type Props = {
+  listing: any;
   selectedTickets: number[];
 };
 
 export default function ListingSidebar({
+  listing,
   selectedTickets,
 }: Props) {
+  const listingType = listing.listing_type;
+
+  const ticketPrice = listing.ticket_price || 0;
+  const totalTickets = listing.total_tickets || 0;
+
   const raffleTotal =
-    selectedTickets.length *
-    mockListing.raffle.ticketPrice;
+    selectedTickets.length * ticketPrice;
 
   const sortedTickets = [...selectedTickets].sort(
     (a, b) => a - b
@@ -31,10 +33,16 @@ export default function ListingSidebar({
         </div>
 
         <div className="mt-2 text-[42px] font-black text-[#ffb800]">
-          {listingType === "auction" && `${mockListing.currentBid}€`}
-          {listingType === "sale" && `${mockListing.price}€`}
+
+          {listingType === "sale" &&
+            `${listing.price || 0}€`}
+
+          {listingType === "auction" &&
+            `${listing.starting_bid || 0}€`}
+
           {listingType === "raffle" &&
-            `${mockListing.raffle.ticketPrice}€`}
+            `${ticketPrice}€`}
+
         </div>
 
         {listingType === "raffle" && (
@@ -42,33 +50,11 @@ export default function ListingSidebar({
             <div className="h-px bg-white/10 my-8" />
 
             <div className="text-zinc-500 text-xs uppercase tracking-[2px]">
-              Tickets Vendidos
+              Tickets Disponíveis
             </div>
 
             <div className="mt-3 text-2xl font-black">
-              {mockListing.raffle.soldTickets.length} / {mockListing.raffle.totalTickets}
-            </div>
-
-            <div className="mt-2 text-sm text-zinc-400">
-              {Math.round(
-                (mockListing.raffle.soldTickets.length /
-                  mockListing.raffle.totalTickets) *
-                  100
-              )}
-              % vendido
-            </div>
-
-            <div className="mt-4 h-3 rounded-full bg-zinc-800 overflow-hidden">
-              <div
-                className="h-full bg-[#ffb800]"
-                style={{
-                  width: `${
-                    (mockListing.raffle.soldTickets.length /
-                      mockListing.raffle.totalTickets) *
-                    100
-                  }%`,
-                }}
-              />
+              {totalTickets}
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 p-4">

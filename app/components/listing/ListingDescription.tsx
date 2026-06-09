@@ -1,6 +1,10 @@
-import { mockListing } from "@/app/listing/[id]/mockListing";
+type Props = {
+  description: string;
+};
 
-export default function ListingDescription() {
+export default function ListingDescription({
+  description,
+}: Props) {
   return (
     <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-6">
 
@@ -9,7 +13,7 @@ export default function ListingDescription() {
       </h2>
 
       <p className="mt-4 text-zinc-400 leading-relaxed text-sm">
-        {mockListing.description}
+        {description}
       </p>
 
     </div>

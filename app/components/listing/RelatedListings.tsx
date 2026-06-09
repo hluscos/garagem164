@@ -1,4 +1,18 @@
-export default function RelatedListings() {
+"use client";
+
+import Link from "next/link";
+
+type Props = {
+  listings?: any[];
+};
+
+export default function RelatedListings({
+  listings = [],
+}: Props) {
+  if (listings.length === 0) {
+    return null;
+  }
+
   return (
     <section className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-20">
 
@@ -8,34 +22,35 @@ export default function RelatedListings() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        {[1, 2, 3, 4].map((item) => (
-          <div
-            key={item}
-            className="rounded-[28px] border border-white/10 bg-zinc-950 overflow-hidden"
+        {listings.map((item) => (
+          <Link
+            key={item.id}
+            href={`/listing/${item.id}`}
+            className="rounded-[28px] border border-white/10 bg-zinc-950 overflow-hidden hover:border-[#ffb800]/40 transition"
           >
             <img
-              src={`https://placehold.co/600x400?text=${item}`}
-              alt=""
+              src="https://placehold.co/600x400"
+              alt={item.model}
               className="w-full aspect-[4/3] object-cover"
             />
 
             <div className="p-5">
 
               <div className="font-bold">
-                Ferrari F40 LM
+                {item.model}
               </div>
 
               <div className="text-zinc-500 text-sm mt-1">
-                Inno64
+                {item.brand}
               </div>
 
               <div className="mt-4 text-[#ffb800] font-black">
-                72€
+                {item.price}€
               </div>
 
             </div>
 
-          </div>
+          </Link>
         ))}
 
       </div>

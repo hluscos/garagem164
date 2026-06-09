@@ -25,6 +25,8 @@ const [totalTickets, setTotalTickets] = useState("99");
 const [loading, setLoading] = useState(false);
 const [message, setMessage] = useState("");
 
+const [images, setImages] = useState<File[]>([]);
+
 async function handleSubmit() {
   try {
     setLoading(true);
@@ -66,22 +68,57 @@ async function handleSubmit() {
 
     console.log("PAYLOAD:", payload);
 
-    const result = await supabase
+    const { data: listing, error } = await supabase
   .from("listings")
-  .insert([payload]);
+  .insert([payload])
+  .select()
+  .single();
 
-console.log("SUPABASE RESULT:", result);
-
-if (result.error) {
-  console.log("ERROR FULL:", result.error);
-  console.log("ERROR MESSAGE:", result.error.message);
-  console.log("ERROR DETAILS:", result.error.details);
-
-  setMessage(result.error.message);
+if (error) {
+  setMessage(error.message);
   return;
 }
+const uploadedImages: string[] = [];
 
-    setMessage("Anúncio criado com sucesso.");
+for (const file of images) {
+  const fileName =
+    `${Date.now()}-${Math.random()}-${file.name}`;
+
+  const { error: uploadError } =
+    await supabase.storage
+      .from("listing-images")
+      .upload(fileName, file);
+
+  if (uploadError) {
+  console.error("UPLOAD ERROR:", uploadError);
+
+  setMessage(
+    `Erro upload: ${uploadError.message}`
+  );
+
+  return;
+}
+  const {
+    data: { publicUrl },
+  } = supabase.storage
+    .from("listing-images")
+    .getPublicUrl(fileName);
+
+  uploadedImages.push(publicUrl);
+}
+for (let i = 0; i < uploadedImages.length; i++) {
+  await supabase
+    .from("listing_images")
+    .insert({
+      listing_id: listing.id,
+      image_url: uploadedImages[i],
+      sort_order: i + 1,
+    });
+}
+
+   setMessage(
+  `Anúncio criado com sucesso. (${uploadedImages.length} fotos)`
+);
   } catch (error) {
     console.error(error);
     setMessage("Erro inesperado.");
@@ -347,10 +384,16 @@ return (
         </label>
 
         <input
-          type="file"
-          multiple
-          className="w-full rounded-2xl bg-black border border-white/10 p-4"
-        />
+  type="file"
+  multiple
+  accept="image/*"
+  onChange={(e) => {
+    if (!e.target.files) return;
+
+    setImages(Array.from(e.target.files));
+  }}
+  className="w-full rounded-2xl bg-black border border-white/10 p-4"
+/>
 
       </div>
 
