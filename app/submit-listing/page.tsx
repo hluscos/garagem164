@@ -1,13 +1,98 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 
 export default function SubmitListingPage() {
 const [listingType, setListingType] = useState("sale");
 
-return ( <main className="min-h-screen bg-black text-white">
+const [brand, setBrand] = useState("Hot Wheels");
+const [model, setModel] = useState("");
 
-```
+const [category, setCategory] = useState("Carro");
+const [condition, setCondition] = useState("Novo");
+
+const [description, setDescription] = useState("");
+
+const [price, setPrice] = useState("");
+
+const [startingBid, setStartingBid] = useState("");
+const [durationDays, setDurationDays] = useState("7");
+
+const [ticketPrice, setTicketPrice] = useState("1");
+const [totalTickets, setTotalTickets] = useState("99");
+
+const [loading, setLoading] = useState(false);
+const [message, setMessage] = useState("");
+
+async function handleSubmit() {
+  try {
+    setLoading(true);
+    setMessage("");
+
+    const payload = {
+      brand,
+      model,
+      category,
+      condition,
+      listing_type: listingType,
+      description,
+
+      price:
+        listingType === "sale"
+          ? Number(price)
+          : null,
+
+      starting_bid:
+        listingType === "auction"
+          ? Number(startingBid)
+          : null,
+
+      duration_days:
+        listingType === "auction"
+          ? Number(durationDays)
+          : null,
+
+      ticket_price:
+        listingType === "raffle"
+          ? Number(ticketPrice)
+          : null,
+
+      total_tickets:
+        listingType === "raffle"
+          ? Number(totalTickets)
+          : null,
+    };
+
+    console.log("PAYLOAD:", payload);
+
+    const result = await supabase
+  .from("listings")
+  .insert([payload]);
+
+console.log("SUPABASE RESULT:", result);
+
+if (result.error) {
+  console.log("ERROR FULL:", result.error);
+  console.log("ERROR MESSAGE:", result.error.message);
+  console.log("ERROR DETAILS:", result.error.details);
+
+  setMessage(result.error.message);
+  return;
+}
+
+    setMessage("Anúncio criado com sucesso.");
+  } catch (error) {
+    console.error(error);
+    setMessage("Erro inesperado.");
+  } finally {
+    setLoading(false);
+  }
+}
+return (
+  
+  <main className="min-h-screen bg-black text-white">
+
   {/* HERO */}
 
   <section className="border-b border-white/5">
@@ -73,10 +158,12 @@ return ( <main className="min-h-screen bg-black text-white">
           </label>
 
           <input
-            type="text"
-            placeholder="Ex: Ferrari F40"
-            className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
-          />
+  type="text"
+  value={model}
+  onChange={(e) => setModel(e.target.value)}
+  placeholder="Ex: Ferrari F40"
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+/>
 
         </div>
 
@@ -145,10 +232,12 @@ return ( <main className="min-h-screen bg-black text-white">
             </label>
 
             <input
-              type="number"
-              placeholder="0.00"
-              className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
-            />
+  type="number"
+  value={price}
+  onChange={(e) => setPrice(e.target.value)}
+  placeholder="0.00"
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+/>
 
           </div>
 
@@ -240,10 +329,12 @@ return ( <main className="min-h-screen bg-black text-white">
         </label>
 
         <textarea
-          rows={6}
-          className="w-full rounded-2xl bg-black border border-white/10 p-4"
-          placeholder="Descreve a miniatura..."
-        />
+  rows={6}
+  value={description}
+  onChange={(e) => setDescription(e.target.value)}
+  className="w-full rounded-2xl bg-black border border-white/10 p-4"
+  placeholder="Descreve a miniatura..."
+/>
 
       </div>
 
@@ -263,17 +354,25 @@ return ( <main className="min-h-screen bg-black text-white">
 
       </div>
 
-      {/* BUTTON */}
+           {/* BUTTON */}
 
-      <button className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]">
-        Publicar Miniatura
+      <button
+        onClick={handleSubmit}
+        className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px]"
+      >
+        {loading ? "A publicar..." : "Publicar Miniatura"}
       </button>
 
-    </div>
+      {message && (
+        <div className="mt-4 text-zinc-300">
+          {message}
+        </div>
+      )}
+          </div>
 
   </section>
 
-</main>
+  </main>
 
 );
 }
