@@ -1,4 +1,37 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
 export default function rafflePage() {
+
+  const [raffles, setRaffles] = useState<any[]>([]);
+
+ useEffect(() => {
+  async function loadRaffles() {
+    const { data, error } = await supabase
+      .from("listings")
+      .select(`
+        *,
+        listing_images (
+          image_url,
+          sort_order
+        )
+      `)
+      .eq("listing_type", "raffle")
+      .order("created_at", { ascending: false });
+
+    console.log("RAFFLES:", data);
+    console.log("ERROR:", error);
+
+    if (data) {
+      setRaffles(data);
+    }
+  }
+
+  loadRaffles();
+}, []);
+
   return (
 
     <main className="min-h-screen bg-black text-white overflow-hidden">
@@ -76,10 +109,10 @@ export default function rafflePage() {
 
         <div className="grid grid-cols-4 gap-6">
 
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+  {raffles.map((item) => (
 
             <div
-              key={item}
+              key={item.id}
               className="group rounded-[28px] border border-white/5 bg-zinc-950 overflow-hidden hover:border-[#ffb800]/30 transition-all duration-500"
             >
 
@@ -94,10 +127,13 @@ export default function rafflePage() {
                 </div>
 
                 <img
-                  src="/images/hero/cars/clio-williams.png"
-                  alt=""
-                  className="relative z-10 w-[82%] mx-auto mt-10 group-hover:scale-105 transition-all duration-700"
-                />
+  src={
+    item.listing_images?.[0]?.image_url ||
+    "/images/hero/cars/clio-williams.png"
+  }
+  alt={item.model}
+  className="relative z-10 w-[82%] mx-auto mt-10 group-hover:scale-105 transition-all duration-700"
+/>
 
                 <div className="absolute top-4 left-4 h-[32px] px-4 rounded-full bg-[#ffb800] text-black flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
 
@@ -111,13 +147,13 @@ export default function rafflePage() {
 
                 <div className="text-zinc-500 text-[11px] uppercase tracking-[2px] font-bold">
 
-                  Ticket €1
+                  Ticket €{item.ticket_price}
 
                 </div>
 
                 <h3 className="mt-3 text-[22px] font-black leading-tight">
 
-                  Renault Clio Williams
+                  {item.model}
 
                 </h3>
 
@@ -126,21 +162,21 @@ export default function rafflePage() {
                   <div>
 
                     <div className="text-zinc-500 text-[11px] uppercase tracking-[2px] font-bold">
-
-                      Bilhetes Vendidos
+  Bilhetes Disponíveis
 
                     </div>
 
                     <div className="mt-1 text-[28px] font-black text-[#ffb800]">
 
-                      328
+                      {item.total_tickets}
 
                     </div>
 
                   </div>
 
                   <a
-  href="/raffles/clio-williams"
+  href={`/giveaways/${item.id}`}
+  
   className="h-[48px] px-5 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[12px] font-black uppercase tracking-[1px] inline-flex items-center justify-center"
 >
 

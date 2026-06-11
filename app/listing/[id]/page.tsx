@@ -90,7 +90,7 @@ export default function ListingPage() {
           <div className="space-y-8">
 
             <ListingDescription
-  listing={listing}
+  description={listing.description}
 />
             <ListingDetails
   listing={listing}

@@ -1,4 +1,47 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
 export default function raffleDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const [raffle, setRaffle] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadRaffle() {
+      const { data } = await supabase
+        .from("listings")
+        .select(`
+          *,
+          listing_images (
+            image_url,
+            sort_order
+          )
+        `)
+        .eq("id", id)
+        .single();
+
+      if (data) {
+        setRaffle(data);
+      }
+    }
+
+    if (id) {
+      loadRaffle();
+    }
+  }, [id]);
+
+  if (!raffle) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        A carregar...
+      </main>
+    );
+  }
+
   return (
 
     <main className="min-h-screen bg-black text-white">
@@ -22,9 +65,12 @@ export default function raffleDetailPage() {
             </div>
 
             <img
-              src="/images/hero/cars/clio-williams.png"
-              alt="Renault Clio Williams"
-              className="relative z-10 w-[85%] mx-auto py-16"
+              src={
+  raffle.listing_images?.[0]?.image_url ||
+  "/images/hero/cars/clio-williams.png"
+}
+              alt={raffle.model}
+              className="relative z-10 w-[75%] mx-auto py-16"
             />
 
           </div>
@@ -41,16 +87,24 @@ export default function raffleDetailPage() {
 
             <h1 className="mt-6 text-[64px] leading-none font-black italic uppercase tracking-[-3px]">
 
-              Renault
-              <br />
-              Clio Williams
+              {raffle.model}
             </h1>
 
-            <p className="mt-6 text-zinc-400 text-lg leading-relaxed max-w-[600px]">
+              <div className="mt-6 flex gap-3 flex-wrap">
 
-              Participa neste sorteio exclusivo e habilita-te a ganhar
-              uma miniatura premium para a tua coleção.
-            </p>
+  <div className="h-[36px] px-4 rounded-full border border-white/10 bg-zinc-950 flex items-center text-[12px] font-bold">
+    {raffle.brand}
+  </div>
+
+  <div className="h-[36px] px-4 rounded-full border border-white/10 bg-zinc-950 flex items-center text-[12px] font-bold">
+    {raffle.condition}
+  </div>
+
+  <div className="h-[36px] px-4 rounded-full border border-white/10 bg-zinc-950 flex items-center text-[12px] font-bold">
+    {raffle.category}
+  </div>
+
+</div>
 
             {/* STATS */}
 
@@ -66,7 +120,7 @@ export default function raffleDetailPage() {
 
                 <div className="mt-2 text-3xl font-black text-[#ffb800]">
 
-                  €1
+                  €{raffle.ticket_price}
 
                 </div>
 
@@ -82,7 +136,7 @@ export default function raffleDetailPage() {
 
                 <div className="mt-2 text-3xl font-black">
 
-                  328
+                  0
 
                 </div>
 
@@ -98,7 +152,7 @@ export default function raffleDetailPage() {
 
                 <div className="mt-2 text-3xl font-black">
 
-                  500
+                  {raffle.total_tickets}
 
                 </div>
 
@@ -112,14 +166,14 @@ export default function raffleDetailPage() {
 
               <div className="flex justify-between text-sm text-zinc-400 mb-3">
 
-                <span>328 / 500 bilhetes vendidos</span>
-                <span>65%</span>
+                <span>0 / {raffle.total_tickets} bilhetes vendidos</span>
+                <span>0%</span>
 
               </div>
 
               <div className="h-4 rounded-full bg-zinc-900 overflow-hidden">
 
-                <div className="h-full w-[65%] bg-[#ffb800]" />
+                <div className="h-full w-[0%] bg-[#ffb800]" />
 
               </div>
 
@@ -132,6 +186,24 @@ export default function raffleDetailPage() {
               Comprar Tickets
 
             </button>
+
+            {/* DESCRIÇÃO */}
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950 p-8">
+
+              <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
+
+                Descrição
+
+              </div>
+
+              <p className="mt-4 text-zinc-300 leading-relaxed">
+
+                {raffle.description}
+
+              </p>
+
+            </div>
 
           </div>
 

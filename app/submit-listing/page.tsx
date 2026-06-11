@@ -2,8 +2,10 @@
 
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SubmitListingPage() {
+const router = useRouter();  
 const [listingType, setListingType] = useState("sale");
 
 const [brand, setBrand] = useState("Hot Wheels");
@@ -107,18 +109,27 @@ for (const file of images) {
   uploadedImages.push(publicUrl);
 }
 for (let i = 0; i < uploadedImages.length; i++) {
-  await supabase
+  const { error: imageError } = await supabase
     .from("listing_images")
     .insert({
       listing_id: listing.id,
       image_url: uploadedImages[i],
       sort_order: i + 1,
     });
+
+ console.error(
+  "IMAGE INSERT ERROR:",
+  JSON.stringify(imageError, null, 2)
+);
 }
 
-   setMessage(
+  setMessage(
   `Anúncio criado com sucesso. (${uploadedImages.length} fotos)`
 );
+
+setTimeout(() => {
+  router.push(`/listing/${listing.id}`);
+}, 1000);
   } catch (error) {
     console.error(error);
     setMessage("Erro inesperado.");
@@ -159,30 +170,32 @@ return (
 
     <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
 
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8">
 
         {/* MARCA */}
 
         <div>
-
-          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-            Marca
-          </label>
-
-          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-            <option>Hot Wheels</option>
-            <option>Mini GT</option>
-            <option>Inno64</option>
-            <option>Tarmac Works</option>
-            <option>Matchbox</option>
-            <option>Pop Race</option>
-            <option>Greenlight</option>
-            <option>Johnny Lightning</option>
-            <option>Kaido House</option>
-            <option>M2 Machines</option>
-            <option>Auto World</option>
-            <option>Outro</option>
-          </select>
+<label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+  Marca
+</label>
+          <select
+  value={brand}
+  onChange={(e) => setBrand(e.target.value)}
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+>
+  <option>Hot Wheels</option>
+  <option>Mini GT</option>
+  <option>Inno64</option>
+  <option>Tarmac Works</option>
+  <option>Matchbox</option>
+  <option>Pop Race</option>
+  <option>Greenlight</option>
+  <option>Johnny Lightning</option>
+  <option>Kaido House</option>
+  <option>M2 Machines</option>
+  <option>Auto World</option>
+  <option>Outro</option>
+</select>
 
         </div>
 
@@ -190,7 +203,7 @@ return (
 
         <div>
 
-          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+          <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
             Modelo
           </label>
 
@@ -207,42 +220,46 @@ return (
         {/* CATEGORIA */}
 
         <div>
-
-          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-            Categoria
-          </label>
-
-          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-            <option>Carro</option>
-            <option>Camião</option>
-            <option>Carrinha</option>
-            <option>Motociclo</option>
-            <option>Transportador</option>
-          </select>
+<label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+  Categoria
+</label>
+         <select
+  value={category}
+  onChange={(e) => setCategory(e.target.value)}
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+>
+  <option>Carro</option>
+  <option>Camião</option>
+  <option>Carrinha</option>
+  <option>Motociclo</option>
+  <option>Transportador</option>
+</select>
 
         </div>
 
         {/* ESTADO */}
 
         <div>
-
-          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-            Estado
-          </label>
-
-          <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-            <option>Novo</option>
-            <option>Como Novo</option>
-            <option>Usado</option>
-          </select>
+<label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+  Estado
+</label>
+          <select
+  value={condition}
+  onChange={(e) => setCondition(e.target.value)}
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+>
+  <option>Novo</option>
+  <option>Como Novo</option>
+  <option>Usado</option>
+</select>
 
         </div>
 
         {/* TIPO */}
 
-        <div>
+        <div className="col-span-2">
 
-          <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+          <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
             Tipo de Anúncio
           </label>
 
@@ -262,7 +279,7 @@ return (
 
         {listingType === "sale" && (
 
-          <div>
+  <div>
 
             <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
               Preço
@@ -280,42 +297,48 @@ return (
 
         )}
 
-        {/* AUCTION */}
+      {/* AUCTION */}
 
-        {listingType === "auction" && (
+{listingType === "auction" && (
 
-          <>
-            <div>
+  <>
+    <div>
 
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-                Licitação Inicial
-              </label>
+      <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+        Licitação Inicial
+      </label>
 
-              <input
-                type="number"
-                placeholder="0.00"
-                className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
-              />
+      <input
+        type="number"
+        value={startingBid}
+        onChange={(e) => setStartingBid(e.target.value)}
+        placeholder="0.00"
+        className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+      />
 
-            </div>
+    </div>
 
-            <div>
+    <div>
 
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-                Duração
-              </label>
+      <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+        Duração
+      </label>
 
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-                <option>3 dias</option>
-                <option>5 dias</option>
-                <option>7 dias</option>
-                <option>10 dias</option>
-              </select>
+      <select
+        value={durationDays}
+        onChange={(e) => setDurationDays(e.target.value)}
+        className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+      >
+        <option value="3">3 dias</option>
+        <option value="5">5 dias</option>
+        <option value="7">7 dias</option>
+        <option value="10">10 dias</option>
+      </select>
 
-            </div>
-          </>
+    </div>
+  </>
 
-        )}
+)}  
 
         {/* RAFFLE */}
 
@@ -324,31 +347,39 @@ return (
           <>
             <div>
 
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-                Preço por Ticket
-              </label>
+  <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+    Preço por Ticket
+  </label>
 
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-                <option>0.25€</option>
-                <option>0.50€</option>
-                <option>1€</option>
-                <option>2€</option>
-              </select>
+  <select
+    value={ticketPrice}
+  onChange={(e) => setTicketPrice(e.target.value)}
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+>
+  <option value="0.25">0.25€</option>
+  <option value="0.50">0.50€</option>
+  <option value="1">1€</option>
+  <option value="2">2€</option>
+</select>
 
             </div>
 
             <div>
 
-              <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-                Número de Tickets
-              </label>
+  <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+    Número de Tickets
+  </label>
 
-              <select className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4">
-                <option>25</option>
-                <option>50</option>
-                <option>75</option>
-                <option>99</option>
-              </select>
+  <select
+    value={totalTickets}value={totalTickets}
+  onChange={(e) => setTotalTickets(e.target.value)}
+  className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
+>
+  <option value="25">25</option>
+  <option value="50">50</option>
+  <option value="75">75</option>
+  <option value="99">99</option>
+</select>
 
             </div>
           </>
@@ -361,12 +392,12 @@ return (
 
       <div className="mt-8">
 
-        <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+        <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
           Descrição
         </label>
 
         <textarea
-  rows={6}
+  rows={4}
   value={description}
   onChange={(e) => setDescription(e.target.value)}
   className="w-full rounded-2xl bg-black border border-white/10 p-4"
@@ -379,23 +410,49 @@ return (
 
       <div className="mt-8">
 
-        <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
-          Fotos
-        </label>
+  <label className="block mb-3 text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+    Fotos
+  </label>
 
-        <input
-  type="file"
-  multiple
-  accept="image/*"
-  onChange={(e) => {
-    if (!e.target.files) return;
+  <label className="flex flex-col items-center justify-center gap-3 h-[180px] rounded-[24px] border-2 border-dashed border-white/10 bg-black hover:border-[#ffb800]/50 cursor-pointer transition-all duration-300">
 
-    setImages(Array.from(e.target.files));
-  }}
-  className="w-full rounded-2xl bg-black border border-white/10 p-4"
-/>
+    <div className="text-5xl">
+      📷
+    </div>
 
-      </div>
+    <div className="text-lg font-bold">
+      Arrasta fotos para aqui
+    </div>
+
+    <div className="text-zinc-500 text-sm">
+      ou clica para selecionar
+    </div>
+
+    <div className="px-5 py-2 rounded-xl bg-[#ffb800] text-black font-bold text-sm">
+      Selecionar Fotos
+    </div>
+
+    <input
+      type="file"
+      multiple
+      accept="image/*"
+      onChange={(e) => {
+        if (!e.target.files) return;
+
+        setImages(Array.from(e.target.files));
+      }}
+      className="hidden"
+    />
+
+  </label>
+
+  {images.length > 0 && (
+    <div className="mt-4 text-sm text-zinc-400">
+      {images.length} foto{images.length > 1 ? "s" : ""} selecionada{images.length > 1 ? "s" : ""}
+    </div>
+  )}
+
+</div>
 
            {/* BUTTON */}
 
