@@ -10,6 +10,12 @@ export default function raffleDetailPage() {
 
   const [raffle, setRaffle] = useState<any>(null);
 
+  const [showModal, setShowModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
+  const total =
+    quantity * (raffle?.ticket_price || 0);
+
   useEffect(() => {
     async function loadRaffle() {
       const { data } = await supabase
@@ -35,14 +41,17 @@ export default function raffleDetailPage() {
   }, [id]);
 
   if (!raffle) {
-    return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+
+   return (
+
+<main className="min-h-screen bg-black text-white"> 
         A carregar...
       </main>
     );
   }
 
   return (
+  <>
 
     <main className="min-h-screen bg-black text-white">
 
@@ -180,9 +189,10 @@ export default function raffleDetailPage() {
             </div>
 
             {/* BUTTON */}
-
-            <button className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)]">
-
+            <button
+  onClick={() => setShowModal(true)}
+  className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)]"
+>
               Comprar Tickets
 
             </button>
@@ -268,5 +278,74 @@ export default function raffleDetailPage() {
 
     </main>
 
-  );
-}
+    {showModal && (
+
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+
+        <div className="w-full max-w-md rounded-[32px] border border-white/10 bg-zinc-950 p-8">
+
+          <h2 className="text-3xl font-black text-white">
+            Comprar Tickets
+          </h2>
+
+          <div className="mt-8 flex items-center justify-center gap-6">
+
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="w-12 h-12 rounded-xl bg-zinc-900 text-white text-2xl font-black"
+            >
+              -
+            </button>
+
+            <div className="text-5xl font-black text-white min-w-[80px] text-center">
+              {quantity}
+            </div>
+
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="w-12 h-12 rounded-xl bg-zinc-900 text-white text-2xl font-black"
+            >
+              +
+            </button>
+
+          </div>
+
+          <div className="mt-8 text-center">
+
+            <div className="text-zinc-500">
+              Total
+            </div>
+
+            <div className="mt-2 text-4xl font-black text-[#ffb800]">
+              €{total}
+            </div>
+
+          </div>
+
+          <div className="mt-8 flex gap-4">
+
+            <button
+  onClick={() => setShowModal(false)}
+  className="flex-1 h-12 rounded-xl border border-white/10 text-white hover:bg-zinc-900"
+>
+          
+              Cancelar
+            </button>
+
+            <button
+              className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
+            >
+              Confirmar
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    )}
+
+  </>
+);
+} 

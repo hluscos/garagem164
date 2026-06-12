@@ -370,8 +370,8 @@ return (
     Número de Tickets
   </label>
 
-  <select
-    value={totalTickets}value={totalTickets}
+ <select
+  value={totalTickets}
   onChange={(e) => setTotalTickets(e.target.value)}
   className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
 >
