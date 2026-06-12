@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,20 @@ const [loading, setLoading] = useState(false);
 const [message, setMessage] = useState("");
 
 const [images, setImages] = useState<File[]>([]);
+
+useEffect(() => {
+  async function checkAuth() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      router.push("/login");
+    }
+  }
+
+  checkAuth();
+}, [router]);
 
 async function handleSubmit() {
   try {

@@ -139,18 +139,12 @@ export default function Header() {
             </a>
 
             <a
-              href="/login"
-              className="text-[#ffb800] hover:text-[#ffc933] transition font-black"
+             href={session ? "/submit-listing" : "/login"}
+             className="text-[#ffb800] hover:text-[#ffc933] transition font-black"
             >
-              Vender
+            Vender
             </a>
-
-            <a
-              href="/collections"
-              className="hover:text-[#ffb800] transition"
-            >
               Coleções
-            </a>
 
             <a
               href="#"
