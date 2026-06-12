@@ -9,21 +9,13 @@ import Footer from "./components/Footer";
 export default function Home() {
   return (
     <main className="bg-black min-h-screen text-white overflow-hidden">
-
       <Header />
-
       <Hero />
-
       <StatsBar />
-
       <BrandsRow />
-
       <FeatureCards />
-
       <AuctionGrid />
-
       <Footer />
-
     </main>
   );
 }

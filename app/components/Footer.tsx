@@ -43,7 +43,7 @@ export default function Footer() {
                 Vender
               </a>
 
-              <a href="/raffle" className="hover:text-white transition">
+              <a href="/raffles" className="hover:text-white transition">
                 Sorteios
               </a>
 
@@ -98,7 +98,7 @@ export default function Footer() {
               <a href="/cookies" className="hover:text-white transition">
                 Política de Cookies
               </a>
-             <a href="/raffle-rules" className="hover:text-white transition">
+             <a href="/raffles-rules" className="hover:text-white transition">
   Regras dos Sorteios
 </a>
             </div>

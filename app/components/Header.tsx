@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import {
   Search,
   ShoppingCart,
@@ -9,7 +13,25 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 
+import { supabase } from "@/lib/supabase";
+
 export default function Header() {
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <>
       {/* TOPBAR */}
@@ -110,7 +132,7 @@ export default function Header() {
             </a>
 
             <a
-              href="/raffle"
+              href="/raffles"
               className="hover:text-[#ffb800] transition"
             >
               Sorteios
@@ -172,27 +194,42 @@ export default function Header() {
 
             </button>
 
-            {/* LOGIN */}
+            {session ? (
+  <>
+    <a
+      href="/account"
+      className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
+    >
+      Minha Conta
+    </a>
 
-            <a
-              href="/login"
-              className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
-            >
+    <button
+      onClick={async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/";
+      }}
+      className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
+    >
+      Terminar Sessão
+    </button>
+  </>
+) : (
+  <>
+    <a
+      href="/login"
+      className="h-[56px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb800] transition-all duration-300 text-[14px] font-bold uppercase tracking-[0.5px] flex items-center justify-center"
+    >
+      Entrar
+    </a>
 
-              Entrar
-
-            </a>
-
-            {/* REGISTER */}
-
-            <a
-              href="/register"
-              className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
-            >
-
-              Registar
-
-            </a>
+    <a
+      href="/register"
+      className="h-[56px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[14px] font-black uppercase tracking-[0.5px] shadow-[0_0_40px_rgba(255,184,0,0.16)] flex items-center justify-center"
+    >
+      Registar
+    </a>
+  </>
+)}
 
           </div>
 

@@ -175,7 +175,7 @@ export default function rafflePage() {
                   </div>
 
                   <a
-  href={`/giveaways/${item.id}`}
+  href={`/raffles/${item.id}`}
   
   className="h-[48px] px-5 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[12px] font-black uppercase tracking-[1px] inline-flex items-center justify-center"
 >
