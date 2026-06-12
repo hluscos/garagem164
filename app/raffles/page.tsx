@@ -10,18 +10,22 @@ export default function rafflePage() {
  useEffect(() => {
   async function loadRaffles() {
     const { data, error } = await supabase
-      .from("listings")
-      .select(`
-        *,
-        listing_images (
-          image_url,
-          sort_order
-        )
-      `)
-      .eq("listing_type", "raffle")
-      .order("created_at", { ascending: false });
+  .from("listings")
+.select(`
+  *,
+  listing_images (
+    image_url,
+    sort_order
+  )
+`)
+.eq("listing_type", "raffle")
+.order("created_at", { ascending: false });
 
-    console.log("RAFFLES:", data);
+console.log("USER:", await supabase.auth.getUser());
+console.log("DATA:", data);
+console.log("ERROR:", error);
+
+    console.log("TESTE HUGO", data);
     console.log("ERROR:", error);
 
     if (data) {

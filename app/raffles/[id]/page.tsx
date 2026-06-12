@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function raffleDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
   const [raffle, setRaffle] = useState<any>(null);
@@ -190,7 +191,18 @@ export default function raffleDetailPage() {
 
             {/* BUTTON */}
             <button
-  onClick={() => setShowModal(true)}
+ onClick={async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    router.push("/login");
+    return;
+  }
+
+  setShowModal(true);
+}}
   className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)]"
 >
               Comprar Tickets
