@@ -95,20 +95,27 @@ console.log("DELETE OK");
               </div>
 
               <div className="mt-4 flex gap-3">
-                <a
-                  href={`/listing/${listing.id}`}
-                  className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-sm font-black uppercase"
-                >
-                  Ver Anúncio
-                </a>
+  <a
+    href={`/listing/${listing.id}`}
+    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-sm font-black uppercase"
+  >
+    Ver Anúncio
+  </a>
 
-                <button
-                  onClick={() => deleteListing(listing.id)}
-                  className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-black uppercase"
-                >
-                  Eliminar
-                </button>
-              </div>
+  <a
+    href={`/account/listings/${listing.id}/edit`}
+    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 text-sm font-black uppercase"
+  >
+    Editar
+  </a>
+
+  <button
+    onClick={() => deleteListing(listing.id)}
+    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-black uppercase"
+  >
+    Eliminar
+  </button>
+</div>
             </div>
           ))}
         </div>

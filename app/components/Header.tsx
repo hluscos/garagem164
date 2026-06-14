@@ -89,7 +89,7 @@ export default function Header() {
           </div>
 
         </div>
-
+Coleções
       </div>
 
       {/* MAIN HEADER */}
