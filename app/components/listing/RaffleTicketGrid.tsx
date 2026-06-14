@@ -1,6 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
 type Props = {
+  listingId: string;
   selectedTickets: number[];
   setSelectedTickets: React.Dispatch<
     React.SetStateAction<number[]>
@@ -8,17 +12,35 @@ type Props = {
 };
 
 export default function RaffleTicketGrid({
+  listingId,
   selectedTickets,
   setSelectedTickets,
 }: Props) {
   const totalTickets = 99;
+const [soldTickets, setSoldTickets] = useState<number[]>([]);
+useEffect(() => {
+  async function loadSoldTickets() {
+    const { data } = await supabase
+      .from("raffle_tickets")
+      .select("ticket_number")
+      .eq("raffle_id", listingId);
 
+    if (data) {
+      setSoldTickets(
+        data
+          .map((ticket) => ticket.ticket_number)
+          .filter(Boolean)
+      );
+    }
+  }
+
+  loadSoldTickets();
+}, [listingId]);
   const tickets = Array.from(
     { length: totalTickets },
     (_, i) => i + 1
   );
 
-  const soldTickets: number[] = [];
   const reservedTickets: number[] = [];
   const maxTicketsPerUser = 10;
 

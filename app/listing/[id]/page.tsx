@@ -98,9 +98,10 @@ export default function ListingPage() {
 
             {listing.listing_type === "raffle" && (
               <RaffleTicketGrid
-                selectedTickets={selectedTickets}
-                setSelectedTickets={setSelectedTickets}
-              />
+  listingId={listing.id}
+  selectedTickets={selectedTickets}
+  setSelectedTickets={setSelectedTickets}
+/>
             )}
 
             {listing.listing_type === "auction" && (
