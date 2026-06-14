@@ -7,6 +7,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [confirmedAt, setConfirmedAt] = useState("");
+  const [listingCount, setListingCount] = useState(0);
 
   useEffect(() => {
     async function checkUser() {
@@ -23,6 +24,14 @@ setEmail(session.user.email || "");
 setConfirmedAt(
   session.user.email_confirmed_at || ""
 );
+
+const { count } = await supabase
+  .from("listings")
+  .select("*", { count: "exact", head: true })
+  .eq("user_id", session.user.id);
+
+setListingCount(count || 0);
+
 console.log(session.user);
 setLoading(false);
     }
@@ -70,7 +79,13 @@ setLoading(false);
 <div className="grid grid-cols-4 gap-6 mt-12">
 
           <div className="rounded-[28px] border border-white/10 bg-zinc-950 p-8">
-            <h2 className="text-xl font-black">Meus Anúncios</h2>
+            <div className="text-4xl font-black text-[#ffb800]">
+  {listingCount}
+</div>
+
+<h2 className="mt-2 text-xl font-black">
+  Meus Anúncios
+</h2>
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-zinc-950 p-8">

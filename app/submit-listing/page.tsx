@@ -49,6 +49,10 @@ async function handleSubmit() {
     setLoading(true);
     setMessage("");
 
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
+
     const payload = {
       brand,
       model,
@@ -56,6 +60,8 @@ async function handleSubmit() {
       condition,
       listing_type: listingType,
       description,
+
+      user_id: session?.user.id,
 
       price:
         listingType === "sale"
