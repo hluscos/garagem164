@@ -7,6 +7,36 @@ export default function MyListingsPage() {
   const [loading, setLoading] = useState(true);
   const [listings, setListings] = useState<any[]>([]);
 
+  async function deleteListing(id: string) {
+    const confirmed = window.confirm(
+      "Tem a certeza que pretende eliminar este anúncio?"
+    );
+
+    if (!confirmed) return;
+
+   const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const { error } = await supabase
+  .from("listings")
+  .delete()
+  .eq("id", id)
+  .eq("user_id", session?.user.id);
+
+    if (error) {
+  console.error(error);
+  alert(error.message);
+  return;
+}
+
+console.log("DELETE OK");
+
+    setListings((current) =>
+      current.filter((listing) => listing.id !== id)
+    );
+  }
+
   useEffect(() => {
     async function loadListings() {
       const {
@@ -42,7 +72,6 @@ export default function MyListingsPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-[1480px] mx-auto px-12 py-16">
-
         <h1 className="text-[64px] font-black italic uppercase tracking-[-3px]">
           Meus Anúncios
         </h1>
@@ -52,31 +81,37 @@ export default function MyListingsPage() {
         </p>
 
         <div className="mt-10 space-y-4">
-
           {listings.map((listing) => (
-  <div
-    key={listing.id}
-    className="rounded-2xl border border-white/10 bg-zinc-950 p-6"
-  >
-    <div className="text-2xl font-black">
-      {listing.model}
-    </div>
+            <div
+              key={listing.id}
+              className="rounded-2xl border border-white/10 bg-zinc-950 p-6"
+            >
+              <div className="text-2xl font-black">
+                {listing.model}
+              </div>
 
-    <div className="mt-2 text-zinc-400">
-      {listing.listing_type}
-    </div>
+              <div className="mt-2 text-zinc-400">
+                {listing.listing_type}
+              </div>
 
-    <a
-      href={`/listing/${listing.id}`}
-      className="mt-4 inline-flex items-center justify-center h-[44px] px-5 rounded-xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-sm font-black uppercase"
-    >
-      Ver Anúncio
-    </a>
-  </div>
-))}
+              <div className="mt-4 flex gap-3">
+                <a
+                  href={`/listing/${listing.id}`}
+                  className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-sm font-black uppercase"
+                >
+                  Ver Anúncio
+                </a>
 
+                <button
+                  onClick={() => deleteListing(listing.id)}
+                  className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-black uppercase"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-
       </section>
     </main>
   );
