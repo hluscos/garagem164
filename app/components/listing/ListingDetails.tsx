@@ -38,8 +38,31 @@ export default function ListingDetails({
         <Detail label="Modelo" value={listing.model || "-"} />
         <Detail label="Categoria" value={listing.category || "-"} />
         <Detail label="Estado" value={listing.condition || "-"} />
-        <Detail label="Tipo" value={listing.listing_type || "-"} />
-        <Detail label="Preço" value={`${listing.price || 0}€`} />
+       <Detail
+  label="Tipo"
+  value={
+    listing.listing_type === "sale"
+      ? "Venda"
+      : listing.listing_type === "auction"
+      ? "Leilão"
+      : listing.listing_type === "raffle"
+      ? "Sorteio"
+      : "-"
+  }
+/>
+
+<Detail
+  label={
+    listing.listing_type === "raffle"
+      ? "Preço por Ticket"
+      : "Preço"
+  }
+  value={
+    listing.listing_type === "raffle"
+      ? `${listing.ticket_price || 0}€`
+      : `${listing.price || 0}€`
+  }
+/>
 
       </div>
 
