@@ -9,12 +9,16 @@ type Props = {
   setSelectedTickets: React.Dispatch<
     React.SetStateAction<number[]>
   >;
+  setSoldCount: React.Dispatch<
+    React.SetStateAction<number>
+  >;
 };
 
 export default function RaffleTicketGrid({
   listingId,
   selectedTickets,
   setSelectedTickets,
+  setSoldCount,
 }: Props) {
   const totalTickets = 99;
 const [soldTickets, setSoldTickets] = useState<number[]>([]);
@@ -26,11 +30,15 @@ useEffect(() => {
       .eq("raffle_id", listingId);
 
     if (data) {
-      setSoldTickets(
-        data
-          .map((ticket) => ticket.ticket_number)
-          .filter(Boolean)
-      );
+      const sold = data
+        .map((ticket) => ticket.ticket_number)
+        .filter(Boolean);
+
+      setSoldTickets(sold);
+
+console.log("SOLD LENGTH:", sold.length);
+
+setSoldCount(sold.length);
     }
   }
 

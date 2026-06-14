@@ -1,11 +1,13 @@
 type Props = {
   listing: any;
   selectedTickets: number[];
+  soldCount: number;
 };
 
 export default function ListingSidebar({
   listing,
   selectedTickets,
+  soldCount,
 }: Props) {
   const listingType = listing.listing_type;
 
@@ -50,12 +52,12 @@ export default function ListingSidebar({
             <div className="h-px bg-white/10 my-8" />
 
             <div className="text-zinc-500 text-xs uppercase tracking-[2px]">
-              Tickets Disponíveis
-            </div>
+  Tickets Vendidos
+</div>
 
-            <div className="mt-3 text-2xl font-black">
-              {totalTickets}
-            </div>
+<div className="mt-3 text-2xl font-black">
+  {soldCount} / {totalTickets}
+</div>
 
             <div className="mt-6 rounded-2xl border border-white/10 p-4">
 

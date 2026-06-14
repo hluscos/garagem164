@@ -22,6 +22,9 @@ export default function ListingPage() {
   const [loading, setLoading] = useState(true);
 
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+  const [soldCount, setSoldCount] = useState(0);
+
+  console.log("SOLD COUNT:", soldCount);
 
   useEffect(() => {
     async function loadListing() {
@@ -75,9 +78,10 @@ export default function ListingPage() {
 />
 
           <ListingSidebar
-           listing={listing}
-            selectedTickets={selectedTickets}
-          />
+  listing={listing}
+  selectedTickets={selectedTickets}
+  soldCount={soldCount}
+/>
 
         </div>
 
@@ -101,6 +105,7 @@ export default function ListingPage() {
   listingId={listing.id}
   selectedTickets={selectedTickets}
   setSelectedTickets={setSelectedTickets}
+  setSoldCount={setSoldCount}
 />
             )}
 
