@@ -78,15 +78,18 @@ setLoading(false);
 
 <div className="grid grid-cols-4 gap-6 mt-12">
 
-          <div className="rounded-[28px] border border-white/10 bg-zinc-950 p-8">
-            <div className="text-4xl font-black text-[#ffb800]">
-  {listingCount}
-</div>
+         <a
+  href="/account/listings"
+  className="rounded-[28px] border border-white/10 bg-zinc-950 p-8 block hover:border-[#ffb800] transition-all duration-300"
+>
+  <div className="text-4xl font-black text-[#ffb800]">
+    {listingCount}
+  </div>
 
-<h2 className="mt-2 text-xl font-black">
-  Meus Anúncios
-</h2>
-          </div>
+  <h2 className="mt-2 text-xl font-black">
+    Meus Anúncios
+  </h2>
+</a>
 
           <div className="rounded-[28px] border border-white/10 bg-zinc-950 p-8">
             <h2 className="text-xl font-black">Meus Leilões</h2>
