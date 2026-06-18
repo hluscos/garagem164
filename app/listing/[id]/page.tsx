@@ -79,6 +79,7 @@ export default function ListingPage() {
 
           <ListingSidebar
   listing={listing}
+  listingId={listing.id}
   selectedTickets={selectedTickets}
   soldCount={soldCount}
 />

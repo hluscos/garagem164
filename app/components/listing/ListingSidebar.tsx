@@ -1,15 +1,20 @@
+import { supabase } from "@/lib/supabase";
+
 type Props = {
   listing: any;
+  listingId: string;
   selectedTickets: number[];
   soldCount: number;
 };
 
 export default function ListingSidebar({
   listing,
+  listingId,
   selectedTickets,
   soldCount,
 }: Props) {
   const listingType = listing.listing_type;
+  console.log("SIDEBAR LISTING ID:", listingId);
 
   const ticketPrice = listing.ticket_price || 0;
   const totalTickets = listing.total_tickets || 0;
@@ -22,7 +27,11 @@ export default function ListingSidebar({
   );
 
   const hasSelection =
-    selectedTickets.length > 0;
+  selectedTickets.length > 0;
+
+async function handleBuyTickets() {
+  alert("Checkout ainda não implementado.");
+}
 
   return (
     <div className="sticky top-24">
@@ -102,11 +111,12 @@ export default function ListingSidebar({
         )}
 
         <button
-          disabled={
-            listingType === "raffle" &&
-            !hasSelection
-          }
-          className={`mt-8 w-full h-14 rounded-2xl font-black uppercase transition ${
+  onClick={handleBuyTickets}
+  disabled={
+    listingType === "raffle" &&
+    !hasSelection
+  }
+  className={`mt-8 w-full h-14 rounded-2xl font-black uppercase transition ${ 
             listingType === "raffle" && !hasSelection
               ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
               : "bg-[#ffb800] hover:bg-[#ffc933] text-black"
