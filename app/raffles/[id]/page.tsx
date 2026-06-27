@@ -345,10 +345,13 @@ export default function raffleDetailPage() {
             </button>
 
             <button
-              className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
-            >
-              Confirmar
-            </button>
+  onClick={() => {
+    alert("Botão Confirmar funciona!");
+  }}
+  className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
+>
+  Confirmar
+</button>
 
           </div>
 

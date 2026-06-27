@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import RaffleCheckoutModal from "./RaffleCheckoutModal";
 
 type Props = {
   listing: any;
@@ -14,6 +18,7 @@ export default function ListingSidebar({
   soldCount,
 }: Props) {
   const listingType = listing.listing_type;
+
   console.log("SIDEBAR LISTING ID:", listingId);
 
   const ticketPrice = listing.ticket_price || 0;
@@ -27,13 +32,20 @@ export default function ListingSidebar({
   );
 
   const hasSelection =
-  selectedTickets.length > 0;
+    selectedTickets.length > 0;
 
-async function handleBuyTickets() {
-  alert("Checkout ainda não implementado.");
+  const [showCheckout, setShowCheckout] =
+    useState(false);
+
+  function handleBuyTickets() {
+  console.log("BOTÃO CLICADO");
+  setShowCheckout(true);
 }
 
+    console.log("showCheckout:", showCheckout);
+
   return (
+
     <div className="sticky top-24">
       <div className="rounded-[32px] border border-[#ffb800]/20 bg-zinc-950 p-8">
 
@@ -143,6 +155,14 @@ async function handleBuyTickets() {
         </button>
 
       </div>
+
+      <RaffleCheckoutModal
+        open={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        selectedTickets={selectedTickets}
+        ticketPrice={ticketPrice}
+      />
+
     </div>
   );
 }
