@@ -336,24 +336,45 @@ export default function raffleDetailPage() {
 
           <div className="mt-8 flex gap-4">
 
-            <button
-  onClick={() => setShowModal(false)}
-  className="flex-1 h-12 rounded-xl border border-white/10 text-white hover:bg-zinc-900"
->
-          
-              Cancelar
-            </button>
+  <button
+    onClick={() => setShowModal(false)}
+    className="flex-1 h-12 rounded-xl border border-white/10 text-white hover:bg-zinc-900"
+  >
+    Cancelar
+  </button>
 
-            <button
-  onClick={() => {
-    alert("Botão Confirmar funciona!");
-  }}
-  className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
->
-  Confirmar
-</button>
+  <button
+    onClick={async () => {
+      try {
+        const response = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quantity,
+            ticketPrice: raffle.ticket_price,
+          }),
+        });
 
-          </div>
+        const data = await response.json();
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Não foi possível iniciar o pagamento.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Erro ao iniciar o checkout.");
+      }
+    }}
+    className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
+  >
+    Confirmar
+  </button>
+
+</div>
 
         </div>
 
