@@ -345,30 +345,36 @@ export default function raffleDetailPage() {
 
   <button
     onClick={async () => {
-      try {
-        const response = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            quantity,
-            ticketPrice: raffle.ticket_price,
-          }),
-        });
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-        const data = await response.json();
+    const response = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        listingId: raffle.id,
+        userId: session?.user.id,
+        quantity,
+        ticketPrice: raffle.ticket_price,
+      }),
+    });
 
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          alert("Não foi possível iniciar o pagamento.");
-        }
-      } catch (error) {
-        console.error(error);
-        alert("Erro ao iniciar o checkout.");
-      }
-    }}
+    const data = await response.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Não foi possível iniciar o pagamento.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao iniciar o checkout.");
+  }
+}}
     className="flex-1 h-12 rounded-xl bg-[#ffb800] text-black font-black"
   >
     Confirmar

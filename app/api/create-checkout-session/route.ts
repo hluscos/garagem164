@@ -5,28 +5,39 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { quantity, ticketPrice } = await req.json();
+    const {
+  listingId,
+  userId,
+  quantity,
+  ticketPrice,
+} = await req.json();
    
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+  mode: "payment",
 
-      payment_method_types: ["card"],
+  payment_method_types: ["card"],
 
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
+  line_items: [
+    {
+      price_data: {
+        currency: "eur",
 
-            product_data: {
-              name: `${quantity} Ticket(s) Garagem164`,
-            },
-
-            unit_amount: Math.round(ticketPrice * 100),
-          },
-
-          quantity,
+        product_data: {
+          name: `${quantity} Ticket(s) Garagem164`,
         },
-      ],
+
+        unit_amount: Math.round(ticketPrice * 100),
+      },
+
+      quantity,
+    },
+  ],
+
+  metadata: {
+    listingId,
+    userId,
+    quantity: quantity.toString(),
+  },
 
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/payment-success`,
 
