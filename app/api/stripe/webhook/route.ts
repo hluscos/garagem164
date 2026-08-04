@@ -47,6 +47,13 @@ export async function POST(req: NextRequest) {
       const raffleId = session.metadata?.listingId;
       const userId = session.metadata?.userId;
       const quantity = Number(session.metadata?.quantity);
+      const selectedTickets = JSON.parse(
+  session.metadata?.selectedTickets || "[]"
+);
+      console.log("====================================");
+console.log("METADATA:", session.metadata);
+console.log("SELECTED TICKETS:", selectedTickets);
+console.log("====================================");
 
       console.log("Raffle ID:", raffleId);
       console.log("User ID:", userId);
@@ -76,45 +83,32 @@ if (error) {
 } else {
   console.log("✅ Pagamento gravado no Supabase.");
 }
+const ticketPrice =
+  (session.amount_total ?? 0) / quantity / 100;
 
-const { data: lastTicket } = await supabaseAdmin
-  .from("raffle_tickets")
-  .select("ticket_number")
-  .eq("raffle_id", raffleId)
-  .order("ticket_number", { ascending: false })
-  .limit(1)
-  .maybeSingle();
-
-const startNumber = lastTicket?.ticket_number
-  ? lastTicket.ticket_number + 1
-  : 1;
-
-const tickets = [];
-
-for (let i = 0; i < quantity; i++) {
-  tickets.push({
-    raffle_id: raffleId,
-    user_id: userId,
-    quantity: 1,
-    total_price: (session.amount_total ?? 0) / quantity / 100,
-    ticket_number: startNumber + i,
-    stripe_session_id: session.id,
-    payment_intent:
-      typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : null,
-  });
-}
+const tickets = selectedTickets.map((ticketNumber: number) => ({
+  raffle_id: raffleId,
+  user_id: userId,
+  ticket_number: ticketNumber,
+  quantity: 1,
+  total_price: ticketPrice,
+  stripe_session_id: session.id,
+  payment_intent:
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : null,
+}));
 
 const { error: ticketError } = await supabaseAdmin
   .from("raffle_tickets")
   .insert(tickets);
 
 if (ticketError) {
-  console.error("❌ Erro ao criar bilhetes:", ticketError);
+  console.error("❌ Erro ao gravar bilhetes:", ticketError);
 } else {
-  console.log(`🎟️ ${tickets.length} bilhetes criados.`);
+  console.log(`🎟️ ${tickets.length} bilhetes gravados.`);
 }
+
       break;
 
     default:

@@ -10,6 +10,7 @@ export async function POST(req: Request) {
   userId,
   quantity,
   ticketPrice,
+  selectedTickets,
 } = await req.json();
    
     const session = await stripe.checkout.sessions.create({
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
     listingId,
     userId,
     quantity: quantity.toString(),
+    selectedTickets: JSON.stringify(selectedTickets),
   },
 
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/payment-success`,
