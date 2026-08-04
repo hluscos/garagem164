@@ -13,11 +13,14 @@ export default function raffleDetailPage() {
 
   const [soldTickets, setSoldTickets] = useState<number[]>([]);
 
+  const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   const total =
-    quantity * (raffle?.ticket_price || 0);
+  selectedTickets.length *
+  (raffle?.ticket_price || 0);
 
   useEffect(() => {
     async function loadRaffle() {
@@ -327,43 +330,66 @@ const percentage =
             Comprar Tickets
           </h2>
 
-          <div className="mt-8 flex items-center justify-center gap-6">
+          <div className="mt-8">
 
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-12 h-12 rounded-xl bg-zinc-900 text-white text-2xl font-black"
-            >
-              -
-            </button>
+  <div className="grid grid-cols-10 gap-2">
 
-            <div className="text-5xl font-black text-white min-w-[80px] text-center">
-              {quantity}
-            </div>
+    {Array.from(
+      { length: raffle.total_tickets },
+      (_, i) => i + 1
+    ).map((number) => {
 
-            <button
-              onClick={() => {
-  if (quantity < availableTickets) {
-    setQuantity(quantity + 1);
-  }
-}}
-              className="w-12 h-12 rounded-xl bg-zinc-900 text-white text-2xl font-black"
-            >
-              +
-            </button>
+      const sold = soldTickets.includes(number);
 
-          </div>
+      const selected =
+        selectedTickets.includes(number);
 
-          <div className="mt-8 text-center">
+      return (
 
-            <div className="text-zinc-500">
-              Total
-            </div>
+        <button
+          key={number}
+          disabled={sold}
+          onClick={() => {
 
-            <div className="mt-2 text-4xl font-black text-[#ffb800]">
-              €{total}
-            </div>
+            if (sold) return;
 
-          </div>
+            if (selected) {
+
+              setSelectedTickets(
+                selectedTickets.filter(
+                  (n) => n !== number
+                )
+              );
+
+            } else {
+
+              setSelectedTickets([
+                ...selectedTickets,
+                number,
+              ]);
+
+            }
+
+          }}
+          className={`aspect-square rounded-lg text-sm font-black transition-all
+          ${
+            sold
+              ? "bg-red-600 text-white cursor-not-allowed"
+              : selected
+              ? "bg-[#ffb800] text-black"
+              : "bg-zinc-900 text-white hover:bg-zinc-800"
+          }`}
+        >
+          {number}
+        </button>
+
+      );
+
+    })}
+
+  </div>
+
+</div>
 
           <div className="mt-8 flex gap-4">
 
@@ -387,11 +413,12 @@ const percentage =
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        listingId: raffle.id,
-        userId: session?.user.id,
-        quantity,
-        ticketPrice: raffle.ticket_price,
-      }),
+  listingId: raffle.id,
+  userId: session?.user.id,
+  selectedTickets,
+  quantity: selectedTickets.length,
+  ticketPrice: raffle.ticket_price,
+}),
     });
 
     const data = await response.json();
