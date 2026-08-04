@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function rafflePage() {
 
   const [raffles, setRaffles] = useState<any[]>([]);
+  const [soldCounts, setSoldCounts] = useState<Record<string, number>>({});
 
  useEffect(() => {
   async function loadRaffles() {
@@ -30,6 +31,20 @@ console.log("ERROR:", error);
 
     if (data) {
       setRaffles(data);
+      const { data: tickets } = await supabase
+  .from("raffle_tickets")
+  .select("raffle_id");
+
+if (tickets) {
+  const counts: Record<string, number> = {};
+
+  tickets.forEach((ticket) => {
+    counts[ticket.raffle_id] =
+      (counts[ticket.raffle_id] || 0) + 1;
+  });
+
+  setSoldCounts(counts);
+}
     }
   }
 
@@ -113,10 +128,15 @@ console.log("ERROR:", error);
 
         <div className="grid grid-cols-4 gap-6">
 
-  {raffles.map((item) => (
+  {raffles.map((item) => {
 
-            <div
-              key={item.id}
+  const sold = soldCounts[item.id] || 0;
+  const available = item.total_tickets - sold;
+
+  return (
+
+    <div
+      key={item.id}
               className="group rounded-[28px] border border-white/5 bg-zinc-950 overflow-hidden hover:border-[#ffb800]/30 transition-all duration-500"
             >
 
@@ -172,34 +192,37 @@ console.log("ERROR:", error);
 
                     <div className="mt-1 text-[28px] font-black text-[#ffb800]">
 
-                      {item.total_tickets}
+                      {available}
 
                     </div>
 
                   </div>
 
                   <a
-  href={`/raffles/${item.id}`}
-  
-  className="h-[48px] px-5 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-[12px] font-black uppercase tracking-[1px] inline-flex items-center justify-center"
+  href={available > 0 ? `/raffles/${item.id}` : "#"}
+  className={`h-[48px] px-5 rounded-2xl text-[12px] font-black uppercase tracking-[1px] inline-flex items-center justify-center transition-all duration-300 ${
+    available > 0
+      ? "bg-[#ffb800] hover:bg-[#ffc933] text-black"
+      : "bg-zinc-700 text-zinc-400 cursor-not-allowed pointer-events-none"
+  }`}
 >
-
-  Participar
-
+  {available > 0 ? "Participar" : "Esgotado"}
 </a>
-                </div>
-
               </div>
 
             </div>
 
-          ))}
+          </div>
 
-        </div>
+        );
 
-      </section>
+      })}
 
-    </main>
+      </div>
 
-  );
+    </section>
+
+  </main>
+
+);
 }

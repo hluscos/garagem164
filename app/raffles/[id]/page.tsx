@@ -11,6 +11,8 @@ export default function raffleDetailPage() {
 
   const [raffle, setRaffle] = useState<any>(null);
 
+  const [soldTickets, setSoldTickets] = useState<number[]>([]);
+
   const [showModal, setShowModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
@@ -33,6 +35,17 @@ export default function raffleDetailPage() {
 
       if (data) {
         setRaffle(data);
+
+        const { data: tickets } = await supabase
+  .from("raffle_tickets")
+  .select("ticket_number")
+  .eq("raffle_id", id);
+
+if (tickets) {
+  setSoldTickets(
+    tickets.map((ticket) => ticket.ticket_number)
+  );
+}
       }
     }
 
@@ -50,6 +63,15 @@ export default function raffleDetailPage() {
       </main>
     );
   }
+
+  const soldCount = soldTickets.length;
+
+const percentage =
+  raffle.total_tickets > 0
+    ? Math.round((soldCount / raffle.total_tickets) * 100)
+    : 0;
+
+    const availableTickets = raffle.total_tickets - soldCount;
 
   return (
   <>
@@ -146,7 +168,7 @@ export default function raffleDetailPage() {
 
                 <div className="mt-2 text-3xl font-black">
 
-                  0
+                  {soldCount}
 
                 </div>
 
@@ -176,14 +198,19 @@ export default function raffleDetailPage() {
 
               <div className="flex justify-between text-sm text-zinc-400 mb-3">
 
-                <span>0 / {raffle.total_tickets} bilhetes vendidos</span>
-                <span>0%</span>
+                <span>
+  {soldCount} / {raffle.total_tickets} bilhetes vendidos
+</span>
+                <span>{percentage}%</span>
 
               </div>
 
               <div className="h-4 rounded-full bg-zinc-900 overflow-hidden">
 
-                <div className="h-full w-[0%] bg-[#ffb800]" />
+                <div
+  className="h-full bg-[#ffb800] transition-all duration-500"
+  style={{ width: `${percentage}%` }}
+/>
 
               </div>
 
@@ -314,7 +341,11 @@ export default function raffleDetailPage() {
             </div>
 
             <button
-              onClick={() => setQuantity(quantity + 1)}
+              onClick={() => {
+  if (quantity < availableTickets) {
+    setQuantity(quantity + 1);
+  }
+}}
               className="w-12 h-12 rounded-xl bg-zinc-900 text-white text-2xl font-black"
             >
               +
