@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+
 type ListingImage = {
   image_url: string | null;
   sort_order: number | null;
@@ -34,7 +35,8 @@ export default function RaffleDetailPage() {
   const [reservedTickets, setReservedTickets] = useState<number[]>([]);
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
-  useEffect(() => {
+
+    useEffect(() => {
     if (!id) {
       return;
     }
@@ -118,9 +120,7 @@ return session;
       </main>
     );
   }
-  console.log("Sold:", soldTickets);
-console.log("Reserved:", reservedTickets);
-
+  
   const soldCount = soldTickets.length;
   const percentage =
     raffle.total_tickets > 0
@@ -284,14 +284,22 @@ setShowModal(true);
           </div>
 
           {/* BUTTON */}
-          <button
-            onClick={handleOpenPurchaseModal}
-            className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)]"
-          >
-            Comprar Tickets
-          </button>
 
-          {/* DESCRIÇÃO */}
+<button
+  onClick={handleOpenPurchaseModal}
+  className="mt-10 h-[60px] px-10 rounded-2xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)]"
+>
+  Comprar Tickets
+</button>
+
+<div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+  <p className="text-sm text-amber-300">
+    Após clicar em <strong>Confirmar</strong>, os bilhetes ficam reservados durante
+    <strong> 4 minutos</strong> para concluíres o pagamento.
+  </p>
+</div>
+
+{/* DESCRIÇÃO */}
           <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950 p-8">
             <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
               Descrição
