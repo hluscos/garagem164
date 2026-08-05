@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Reserva durante 10 minutos
     const expiresAt = new Date(
-      Date.now() + 10 * 60 * 1000
+      Date.now() + 4 * 60 * 1000
     ).toISOString();
 
     const reservations = selectedTickets.map(

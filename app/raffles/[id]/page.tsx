@@ -31,6 +31,7 @@ export default function RaffleDetailPage() {
   const id = Array.isArray(paramId) ? paramId[0] : paramId;
   const [raffle, setRaffle] = useState<Raffle | null>(null);
   const [soldTickets, setSoldTickets] = useState<number[]>([]);
+  const [reservedTickets, setReservedTickets] = useState<number[]>([]);
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
   const [showModal, setShowModal] = useState(false);
   useEffect(() => {
@@ -75,6 +76,22 @@ async function loadRaffle() {
           typeof ticketNumber === "number",
       ),
   );
+  const { data: reservations } = await supabase
+  .from("raffle_ticket_reservations")
+  .select("ticket_number")
+  .eq("raffle_id", id)
+  .gt("expires_at", new Date().toISOString());
+
+if (reservations && isActive) {
+  setReservedTickets(
+    reservations
+      .map((ticket) => ticket.ticket_number)
+      .filter(
+        (ticketNumber): ticketNumber is number =>
+          typeof ticketNumber === "number",
+      ),
+  );
+}
 }
 
 void loadRaffle();
@@ -101,6 +118,9 @@ return session;
       </main>
     );
   }
+  console.log("Sold:", soldTickets);
+console.log("Reserved:", reservedTickets);
+
   const soldCount = soldTickets.length;
   const percentage =
     raffle.total_tickets > 0
@@ -334,16 +354,17 @@ setShowModal(true);
               (_, index) => index + 1,
             ).map((number) => {
               const sold = soldTickets.includes(number);
-              const selected = selectedTickets.includes(number);
+const reserved = reservedTickets.includes(number);
+const selected = selectedTickets.includes(number);
 
               return (
                 <button
                   key={number}
-                  disabled={sold}
+                  disabled={sold || reserved}
                   onClick={() => {
-                    if (sold) {
-                      return;
-                    }
+                    if (sold || reserved) {
+  return;
+}
 
                     setSelectedTickets((currentTickets) =>
                       selected
@@ -355,11 +376,13 @@ setShowModal(true);
                   }}
                   className={`aspect-square rounded-lg text-sm font-black transition-all
                     ${
-                      sold
-                        ? "bg-red-600 text-white cursor-not-allowed"
-                        : selected
-                          ? "bg-[#ffb800] text-black"
-                          : "bg-zinc-900 text-white hover:bg-zinc-800"
+  sold
+    ? "bg-red-600 text-white cursor-not-allowed"
+    : reserved
+      ? "bg-orange-500 text-white cursor-not-allowed"
+      : selected
+        ? "bg-[#ffb800] text-black"
+        : "bg-zinc-900 text-white hover:bg-zinc-800"
                     }`}
                 >
                   {number}
