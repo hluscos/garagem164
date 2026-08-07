@@ -44,6 +44,20 @@ export async function POST(req: NextRequest) {
 
       const session = event.data.object as Stripe.Checkout.Session;
 
+      const { data: existingPayment } = await supabaseAdmin
+  .from("stripe_payments")
+  .select("id")
+  .eq("stripe_session_id", session.id)
+  .maybeSingle();
+
+if (existingPayment) {
+  console.log("⚠️ Webhook já processado:", session.id);
+
+  return NextResponse.json({
+    received: true,
+  });
+}
+
       const raffleId = session.metadata?.listingId;
       const userId = session.metadata?.userId;
       const quantity = Number(session.metadata?.quantity);
