@@ -12,6 +12,15 @@ export async function POST(req: Request) {
   ticketPrice,
   selectedTickets,
 } = await req.json();
+
+console.log("CHECKOUT DATA");
+console.log({
+  listingId,
+  userId,
+  quantity,
+  ticketPrice,
+  selectedTickets,
+});
    
     const session = await stripe.checkout.sessions.create({
   mode: "payment",

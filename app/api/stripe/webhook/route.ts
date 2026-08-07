@@ -108,7 +108,17 @@ if (ticketError) {
 } else {
   console.log(`🎟️ ${tickets.length} bilhetes gravados.`);
 }
+const { error: reservationError } = await supabaseAdmin
+  .from("raffle_ticket_reservations")
+  .delete()
+  .eq("raffle_id", raffleId)
+  .in("ticket_number", selectedTickets);
 
+if (reservationError) {
+  console.error("❌ Erro ao remover reservas:", reservationError);
+} else {
+  console.log("🗑️ Reservas removidas.");
+}
       break;
 
     default:
