@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import {
   Search,
@@ -18,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function Header() {
   const [session, setSession] = useState<any>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -32,6 +34,21 @@ export default function Header() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+
+    return pathname.startsWith(path);
+  };
+
+  const navLinkClass = (path: string) =>
+    `transition ${
+      isActive(path)
+        ? "text-[#ffb800]"
+        : "text-white hover:text-[#ffb800]"
+    }`;
 
   return (
     <>
@@ -99,16 +116,16 @@ export default function Header() {
 
       {/* MAIN HEADER */}
 
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-black/85 backdrop-blur-2xl">
+      <header className="sticky top-0 z-50 h-[100px] border-b border-white/5 bg-black">
 
-        <div className="mx-auto flex h-[92px] max-w-[1600px] items-center justify-between px-12">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-12">
 
-          {/* LOGO — HOMEPAGE */}
+          {/* LOGO → HOMEPAGE */}
 
           <Link
             href="/"
             aria-label="Garagem164 — Homepage"
-            className="mr-14 flex shrink-0 items-center select-none"
+            className="mr-14 flex h-full shrink-0 items-center select-none"
           >
             <img
               src="/logo.png"
@@ -123,21 +140,21 @@ export default function Header() {
 
             <Link
               href="/"
-              className="transition hover:text-[#ffb800]"
+              className={navLinkClass("/")}
             >
               Início
             </Link>
 
             <Link
               href="/auctions"
-              className="transition hover:text-[#ffb800]"
+              className={navLinkClass("/auctions")}
             >
               Leilões
             </Link>
 
             <Link
               href="/raffles"
-              className="transition hover:text-[#ffb800]"
+              className={navLinkClass("/raffles")}
             >
               Sorteios
             </Link>
@@ -151,16 +168,16 @@ export default function Header() {
 
             <Link
               href="/collections"
-              className="transition hover:text-[#ffb800]"
+              className={navLinkClass("/collections")}
             >
               Coleções
             </Link>
 
-            <span className="cursor-default text-zinc-600">
+            <span className="cursor-default text-white">
               Comunidade
             </span>
 
-            <span className="cursor-default text-zinc-600">
+            <span className="cursor-default text-white">
               Sobre Nós
             </span>
 
@@ -175,7 +192,7 @@ export default function Header() {
             <button
               type="button"
               aria-label="Pesquisar"
-              className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 transition-all duration-300 hover:border-[#ffb800]"
+              className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
             >
               <Search size={20} />
             </button>
@@ -185,7 +202,7 @@ export default function Header() {
             <button
               type="button"
               aria-label="Carrinho"
-              className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 transition-all duration-300 hover:border-[#ffb800]"
+              className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
             >
               <ShoppingCart size={19} />
 
@@ -201,7 +218,7 @@ export default function Header() {
 
                 <Link
                   href="/account"
-                  className="hidden h-[52px] items-center justify-center rounded-2xl border border-white/10 px-6 text-[13px] font-black uppercase tracking-[0.5px] transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:flex"
+                  className="hidden h-[52px] items-center justify-center rounded-2xl border border-white/10 px-6 text-[13px] font-black uppercase tracking-[0.5px] text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:flex"
                 >
                   Minha Conta
                 </Link>
@@ -223,7 +240,7 @@ export default function Header() {
 
                 <Link
                   href="/login"
-                  className="hidden h-[52px] items-center justify-center rounded-2xl border border-white/10 px-6 text-[13px] font-black uppercase tracking-[0.5px] transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:flex"
+                  className="hidden h-[52px] items-center justify-center rounded-2xl border border-white/10 px-6 text-[13px] font-black uppercase tracking-[0.5px] text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:flex"
                 >
                   Entrar
                 </Link>

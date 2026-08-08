@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 type Props = {
   listingId: string;
+  totalTickets: number;
   selectedTickets: number[];
   setSelectedTickets: React.Dispatch<
     React.SetStateAction<number[]>
@@ -12,53 +13,136 @@ type Props = {
   setSoldCount: React.Dispatch<
     React.SetStateAction<number>
   >;
+  disabled?: boolean;
 };
 
 export default function RaffleTicketGrid({
   listingId,
+  totalTickets,
   selectedTickets,
   setSelectedTickets,
   setSoldCount,
+  disabled = false,
 }: Props) {
-  const totalTickets = 99;
-const [soldTickets, setSoldTickets] = useState<number[]>([]);
-useEffect(() => {
-  async function loadSoldTickets() {
-    const { data } = await supabase
-      .from("raffle_tickets")
-      .select("ticket_number")
-      .eq("raffle_id", listingId);
+  const [soldTickets, setSoldTickets] =
+    useState<number[]>([]);
 
-    if (data) {
-      const sold = data
-        .map((ticket) => ticket.ticket_number)
-        .filter(Boolean);
+  const [reservedTickets, setReservedTickets] =
+    useState<number[]>([]);
 
-      setSoldTickets(sold);
-
-console.log("SOLD LENGTH:", sold.length);
-
-setSoldCount(sold.length);
-    }
-  }
-
-  loadSoldTickets();
-}, [listingId]);
-  const tickets = Array.from(
-    { length: totalTickets },
-    (_, i) => i + 1
-  );
-
-  const reservedTickets: number[] = [];
   const maxTicketsPerUser = 10;
 
-  function toggleTicket(ticket: number) {
-    setSelectedTickets((current) => {
-      if (current.includes(ticket)) {
-        return current.filter((t) => t !== ticket);
+  useEffect(() => {
+    let active = true;
+
+    async function loadTickets() {
+      const now = new Date().toISOString();
+
+      const [
+        { data: soldData },
+        { data: reservationData },
+      ] = await Promise.all([
+        supabase
+          .from("raffle_tickets")
+          .select("ticket_number")
+          .eq("raffle_id", listingId),
+
+        supabase
+          .from("raffle_ticket_reservations")
+          .select("ticket_number")
+          .eq("raffle_id", listingId)
+          .gt("expires_at", now),
+      ]);
+
+      if (!active) {
+        return;
       }
 
-      if (current.length >= maxTicketsPerUser) {
+      const sold =
+        soldData
+          ?.map((ticket) => ticket.ticket_number)
+          .filter(
+            (number): number is number =>
+              typeof number === "number",
+          ) || [];
+
+      const reserved =
+        reservationData
+          ?.map((ticket) => ticket.ticket_number)
+          .filter(
+            (number): number is number =>
+              typeof number === "number",
+          ) || [];
+
+      setSoldTickets(sold);
+      setReservedTickets(reserved);
+      setSoldCount(sold.length);
+
+      /*
+       * Se um ticket selecionado entretanto foi
+       * vendido ou reservado, removê-lo da seleção.
+       */
+
+      setSelectedTickets((current) =>
+        current.filter(
+          (ticket) =>
+            !sold.includes(ticket) &&
+            !reserved.includes(ticket),
+        ),
+      );
+    }
+
+    void loadTickets();
+
+    /*
+     * Atualiza periodicamente o estado dos tickets.
+     * Isto reduz o risco de mostrar disponibilidade
+     * desatualizada enquanto outro utilizador compra.
+     */
+
+    const interval = window.setInterval(
+      loadTickets,
+      10000,
+    );
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [
+    listingId,
+    setSelectedTickets,
+    setSoldCount,
+  ]);
+
+  const tickets = Array.from(
+    { length: totalTickets },
+    (_, index) => index + 1,
+  );
+
+  function toggleTicket(ticket: number) {
+    if (disabled) {
+      return;
+    }
+
+    if (soldTickets.includes(ticket)) {
+      return;
+    }
+
+    if (reservedTickets.includes(ticket)) {
+      return;
+    }
+
+    setSelectedTickets((current) => {
+      if (current.includes(ticket)) {
+        return current.filter(
+          (number) => number !== ticket,
+        );
+      }
+
+      if (
+        current.length >= maxTicketsPerUser
+      ) {
         return current;
       }
 
@@ -67,35 +151,35 @@ setSoldCount(sold.length);
   }
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-zinc-950 p-8">
+    <div>
 
-      <h2 className="text-2xl font-black mb-2">
+      <h2 className="mb-2 text-2xl font-black">
         Selecionar Tickets
       </h2>
 
-      <p className="text-zinc-400 mb-6">
+      <p className="mb-6 text-zinc-400">
         Escolhe os números que pretendes comprar.
       </p>
 
-      <div className="flex flex-wrap gap-4 mb-6 text-sm">
+      <div className="mb-6 flex flex-wrap gap-4 text-sm">
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-zinc-700" />
+          <div className="h-4 w-4 rounded bg-zinc-700" />
           <span>Disponível</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-[#ffb800]" />
+          <div className="h-4 w-4 rounded bg-[#ffb800]" />
           <span>Selecionado</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-orange-500" />
+          <div className="h-4 w-4 rounded bg-orange-500" />
           <span>Reservado</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-600" />
+          <div className="h-4 w-4 rounded bg-red-600" />
           <span>Vendido</span>
         </div>
 
@@ -104,36 +188,46 @@ setSoldCount(sold.length);
       <div className="grid grid-cols-9 gap-3">
 
         {tickets.map((ticket) => {
-          const isSold = soldTickets.includes(ticket);
-          const isReserved = reservedTickets.includes(ticket);
-          const isSelected = selectedTickets.includes(ticket);
+          const isSold =
+            soldTickets.includes(ticket);
+
+          const isReserved =
+            reservedTickets.includes(ticket);
+
+          const isSelected =
+            selectedTickets.includes(ticket);
 
           let buttonClass =
-            "border-white/10 text-white hover:border-[#ffb800]";
+            "border-white/10 bg-zinc-900 text-white hover:border-[#ffb800]";
 
           if (isSold) {
             buttonClass =
-              "bg-red-600 border-red-600 text-white cursor-not-allowed";
+              "cursor-not-allowed border-red-600 bg-red-600 text-white";
           } else if (isReserved) {
             buttonClass =
-              "bg-orange-500 border-orange-500 text-black";
+              "cursor-not-allowed border-orange-500 bg-orange-500 text-white";
           } else if (isSelected) {
             buttonClass =
-              "bg-[#ffb800] border-[#ffb800] text-black";
+              "border-[#ffb800] bg-[#ffb800] text-black";
           }
 
           return (
             <button
               key={ticket}
-              disabled={isSold}
-              onClick={() => {
-                if (!isSold && !isReserved) {
-                  toggleTicket(ticket);
-                }
-              }}
+              type="button"
+              disabled={
+                disabled ||
+                isSold ||
+                isReserved
+              }
+              onClick={() =>
+                toggleTicket(ticket)
+              }
               className={`h-11 rounded-xl border font-bold transition ${buttonClass}`}
             >
-              {ticket.toString().padStart(2, "0")}
+              {ticket
+                .toString()
+                .padStart(2, "0")}
             </button>
           );
         })}
@@ -141,7 +235,8 @@ setSoldCount(sold.length);
       </div>
 
       <div className="mt-4 text-sm text-zinc-500">
-        Máximo de {maxTicketsPerUser} tickets por utilizador
+        Máximo de {maxTicketsPerUser} tickets
+        por compra
       </div>
 
     </div>

@@ -59,15 +59,21 @@ if (tickets) {
 
       <section className="relative h-[420px] border-b border-white/5 overflow-hidden">
 
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage:
-              "url('/images/cards/raffle-card.png')",
-          }}
-        />
+        {/* BACKGROUND */}
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/70 to-black" />
+<div className="absolute inset-0 overflow-hidden">
+
+  <img
+    src="/images/cards/raffle-background.png"
+    alt=""
+    className="absolute inset-0 h-full w-full object-cover opacity-75"
+  />
+
+  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/35 to-black/80" />
+
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20" />
+
+</div>
 
         <div className="relative z-10 max-w-[1480px] mx-auto px-12 h-full flex flex-col justify-center">
 

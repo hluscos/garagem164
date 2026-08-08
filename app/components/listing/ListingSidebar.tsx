@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
 
 type Props = {
@@ -9,6 +8,7 @@ type Props = {
   listingId: string;
   selectedTickets: number[];
   soldCount: number;
+  isOwner?: boolean;
 };
 
 export default function ListingSidebar({
@@ -16,19 +16,19 @@ export default function ListingSidebar({
   listingId,
   selectedTickets,
   soldCount,
+  isOwner = false,
 }: Props) {
   const listingType = listing.listing_type;
 
-  console.log("SIDEBAR LISTING ID:", listingId);
+  const ticketPrice = Number(listing.ticket_price || 0);
 
-  const ticketPrice = listing.ticket_price || 0;
-  const totalTickets = listing.total_tickets || 0;
+  const totalTickets = Number(listing.total_tickets || 0);
 
   const raffleTotal =
     selectedTickets.length * ticketPrice;
 
   const sortedTickets = [...selectedTickets].sort(
-    (a, b) => a - b
+    (a, b) => a - b,
   );
 
   const hasSelection =
@@ -37,22 +37,32 @@ export default function ListingSidebar({
   const [showCheckout, setShowCheckout] =
     useState(false);
 
-  function handleBuyTickets() {
-  console.log("BOTÃO CLICADO");
-  setShowCheckout(true);
-}
+  const handleBuyTickets = () => {
+    if (isOwner) {
+      return;
+    }
 
-    console.log("showCheckout:", showCheckout);
+    if (!hasSelection) {
+      return;
+    }
+
+    setShowCheckout(true);
+  };
 
   return (
-
     <div className="sticky top-24">
+
       <div className="rounded-[32px] border border-[#ffb800]/20 bg-zinc-950 p-8">
 
-        <div className="text-zinc-500 text-xs uppercase tracking-[2px]">
-          {listingType === "auction" && "Licitação Atual"}
-          {listingType === "sale" && "Preço"}
-          {listingType === "raffle" && "Preço por Ticket"}
+        <div className="text-xs uppercase tracking-[2px] text-zinc-500">
+          {listingType === "auction" &&
+            "Licitação Atual"}
+
+          {listingType === "sale" &&
+            "Preço"}
+
+          {listingType === "raffle" &&
+            "Preço por Ticket"}
         </div>
 
         <div className="mt-2 text-[42px] font-black text-[#ffb800]">
@@ -70,15 +80,19 @@ export default function ListingSidebar({
 
         {listingType === "raffle" && (
           <>
-            <div className="h-px bg-white/10 my-8" />
 
-            <div className="text-zinc-500 text-xs uppercase tracking-[2px]">
-  Tickets Vendidos
-</div>
+            <div className="my-8 h-px bg-white/10" />
 
-<div className="mt-3 text-2xl font-black">
-  {soldCount} / {totalTickets}
-</div>
+            <div className="text-xs uppercase tracking-[2px] text-zinc-500">
+              Tickets Vendidos
+            </div>
+
+            <div className="mt-2 text-3xl font-black">
+              {soldCount}
+              <span className="ml-2 text-base font-normal text-zinc-500">
+                / {totalTickets}
+              </span>
+            </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 p-4">
 
@@ -90,11 +104,13 @@ export default function ListingSidebar({
                 Tickets Selecionados
               </div>
 
-              <div className="mt-1 font-bold break-words">
+              <div className="mt-1 break-words font-bold">
                 {sortedTickets.length > 0
                   ? sortedTickets
-                      .map((n) =>
-                        n.toString().padStart(2, "0")
+                      .map((number) =>
+                        number
+                          .toString()
+                          .padStart(2, "0"),
                       )
                       .join(", ")
                   : "Nenhum"}
@@ -111,29 +127,51 @@ export default function ListingSidebar({
               </div>
 
               <div className="mt-2 flex justify-between font-black">
-                <span>Total</span>
+
+                <span>
+                  Total
+                </span>
 
                 <span className="text-[#ffb800]">
                   {raffleTotal.toFixed(2)}€
                 </span>
+
               </div>
 
             </div>
+
           </>
         )}
 
+        {listingType === "raffle" && isOwner && (
+          <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+
+            <div className="text-sm font-black text-amber-300">
+              Este é o teu sorteio
+            </div>
+
+            <div className="mt-1 text-xs leading-relaxed text-amber-200/70">
+              Não podes comprar bilhetes do teu próprio sorteio.
+            </div>
+
+          </div>
+        )}
+
         <button
-  onClick={handleBuyTickets}
-  disabled={
-    listingType === "raffle" &&
-    !hasSelection
-  }
-  className={`mt-8 w-full h-14 rounded-2xl font-black uppercase transition ${ 
-            listingType === "raffle" && !hasSelection
-              ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
-              : "bg-[#ffb800] hover:bg-[#ffc933] text-black"
+          type="button"
+          onClick={handleBuyTickets}
+          disabled={
+            listingType === "raffle" &&
+            (isOwner || !hasSelection)
+          }
+          className={`mt-8 h-14 w-full rounded-2xl font-black uppercase transition ${
+            listingType === "raffle" &&
+            (isOwner || !hasSelection)
+              ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
+              : "bg-[#ffb800] text-black hover:bg-[#ffc933]"
           }`}
         >
+
           {listingType === "auction" &&
             "Licitar Agora"}
 
@@ -141,27 +179,35 @@ export default function ListingSidebar({
             "Comprar Agora"}
 
           {listingType === "raffle" &&
-            (hasSelection
-              ? `Comprar ${selectedTickets.length} Ticket${
-                  selectedTickets.length === 1
-                    ? ""
-                    : "s"
-                }`
-              : "Seleciona os teus números")}
+            (isOwner
+              ? "O teu sorteio"
+              : hasSelection
+                ? `Comprar ${selectedTickets.length} Ticket${
+                    selectedTickets.length === 1
+                      ? ""
+                      : "s"
+                  }`
+                : "Seleciona os teus números")}
+
         </button>
 
-        <button className="mt-3 w-full h-14 rounded-2xl border border-white/10 hover:border-[#ffb800] transition font-black uppercase">
+        <button
+          type="button"
+          className="mt-3 h-14 w-full rounded-2xl border border-white/10 font-black uppercase transition hover:border-[#ffb800]"
+        >
           Favoritos
         </button>
 
       </div>
 
-      <RaffleCheckoutModal
-        open={showCheckout}
-        onClose={() => setShowCheckout(false)}
-        selectedTickets={selectedTickets}
-        ticketPrice={ticketPrice}
-      />
+      {listingType === "raffle" && !isOwner && (
+        <RaffleCheckoutModal
+          open={showCheckout}
+          onClose={() => setShowCheckout(false)}
+          listingId={listingId}
+          selectedTickets={selectedTickets}
+        />
+      )}
 
     </div>
   );

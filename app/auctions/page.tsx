@@ -7,46 +7,31 @@ export default function AuctionsPage() {
 
       <section className="relative h-[420px] border-b border-white/5 overflow-hidden">
 
-        {/* BACKGROUND */}
+  {/* BACKGROUND */}
+  {/* BACKGROUND */}
 
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage:
-              "url('/images/cards/auction-card.png')",
-          }}
-        />
+<div className="absolute inset-0 overflow-hidden">
 
-        {/* OVERLAY */}
+  <img
+    src="/images/cards/auction-background.png"
+    alt=""
+    className="absolute inset-0 h-full w-full object-cover opacity-75"
+  />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/70 to-black" />
+  <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/35 to-black/80" />
 
-        {/* CONTENT */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20" />
 
-        <div className="relative z-10 max-w-[1480px] mx-auto px-12 h-full flex flex-col justify-center">
+</div>
 
-          <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
+  {/* CONTENT */}
+  <div className="relative z-10 max-w-[1480px] mx-auto px-12 h-full flex flex-col justify-center">
 
-            Marketplace Premium
+    ...
+    
+  </div>
 
-          </div>
-
-          <h1 className="mt-5 text-[82px] leading-none font-black italic uppercase tracking-[-4px]">
-
-            Leilões
-
-          </h1>
-
-          <p className="mt-6 text-zinc-400 text-[18px] max-w-[620px] leading-relaxed">
-
-            Descobre miniaturas raras, edições limitadas
-            e peças exclusivas em licitação ao vivo.
-
-          </p>
-
-        </div>
-
-      </section>
+</section>
 
       {/* FILTER BAR */}
 
