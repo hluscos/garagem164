@@ -21,17 +21,20 @@ export default function PurchaseCard({
   totalPaid,
   purchaseDate,
 }: PurchaseCardProps) {
-  const sortedTickets = [...ticketNumbers].sort((a, b) => a - b);
+  const sortedTickets = [...ticketNumbers].sort(
+    (a, b) => a - b,
+  );
 
   const visibleTickets = sortedTickets.slice(0, 8);
-  const remainingTickets = sortedTickets.length - visibleTickets.length;
+  const remainingTickets =
+    sortedTickets.length - visibleTickets.length;
 
   return (
-    <article className="group overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+    <article className="group overflow-hidden rounded-[28px] border border-white/5 bg-zinc-950 transition-all duration-300 hover:border-[#ffb800]/20">
+
+      {/* IMAGEM */}
 
       <div className="flex flex-col md:flex-row">
-
-        {/* IMAGEM */}
 
         <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-6 md:w-[190px]">
 
@@ -45,7 +48,10 @@ export default function PurchaseCard({
               />
             ) : (
               <div className="text-center">
-                <div className="text-4xl opacity-30">🚗</div>
+                <div className="text-4xl opacity-30">
+                  🚗
+                </div>
+
                 <div className="mt-2 text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
                   Garagem164
                 </div>
@@ -123,7 +129,9 @@ export default function PurchaseCard({
 
               <span className="text-xs font-bold text-zinc-500">
                 {ticketNumbers.length}{" "}
-                {ticketNumbers.length === 1 ? "bilhete" : "bilhetes"}
+                {ticketNumbers.length === 1
+                  ? "bilhete"
+                  : "bilhetes"}
               </span>
 
             </div>
@@ -162,7 +170,9 @@ export default function PurchaseCard({
                 </div>
 
                 <div className="mt-1 text-sm font-bold text-zinc-300">
-                  {new Date(purchaseDate).toLocaleDateString("pt-PT")}
+                  {new Date(
+                    purchaseDate,
+                  ).toLocaleDateString("pt-PT")}
                 </div>
 
               </div>
@@ -170,7 +180,7 @@ export default function PurchaseCard({
             </div>
 
             <Link
-              href={`/raffles/${raffleId}`}
+              href={`/listing/${raffleId}`}
               className="group/button inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-[#ffb800] px-6 text-sm font-black text-black transition-all duration-300 hover:bg-[#ffd34d] hover:shadow-[0_8px_30px_rgba(255,184,0,0.18)]"
             >
               Ver Sorteio

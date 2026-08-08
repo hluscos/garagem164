@@ -17,23 +17,15 @@ import RelatedListings from "@/app/components/listing/RelatedListings";
 
 export default function ListingPage() {
   const params = useParams();
-
   const id = params.id as string;
 
-  const [listing, setListing] =
-    useState<any>(null);
+  const [listing, setListing] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+  const [soldCount, setSoldCount] = useState(0);
 
-  const [selectedTickets, setSelectedTickets] =
-    useState<number[]>([]);
-
-  const [soldCount, setSoldCount] =
-    useState(0);
-
-  const [currentUserId, setCurrentUserId] =
-    useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadListing() {
@@ -49,30 +41,21 @@ export default function ListingPage() {
       ] = await Promise.all([
         supabase
           .from("listings")
-          .select(
-            `
-              *,
-              listing_images (
-                image_url,
-                sort_order
-              )
-            `,
-          )
+          .select(`
+            *,
+            listing_images (
+              image_url,
+              sort_order
+            )
+          `)
           .eq("id", id)
           .single(),
 
         supabase.auth.getUser(),
       ]);
 
-      console.log(
-        "LISTING:",
-        listingData,
-      );
-
-      console.log(
-        "ERROR:",
-        listingError,
-      );
+      console.log("LISTING:", listingData);
+      console.log("ERROR:", listingError);
 
       if (user) {
         setCurrentUserId(user.id);
@@ -90,28 +73,34 @@ export default function ListingPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black px-12 py-20 text-white">
-        A carregar anúncio...
+      <main className="min-h-screen bg-black text-white">
+        <div className="mx-auto max-w-[1600px] px-6 py-20 lg:px-12">
+          <div className="text-zinc-400">
+            A carregar anúncio...
+          </div>
+        </div>
       </main>
     );
   }
 
   if (!listing) {
     return (
-      <main className="min-h-screen bg-black px-12 py-20 text-white">
-        Anúncio não encontrado.
+      <main className="min-h-screen bg-black text-white">
+        <div className="mx-auto max-w-[1600px] px-6 py-20 lg:px-12">
+          <div className="text-zinc-400">
+            Anúncio não encontrado.
+          </div>
+        </div>
       </main>
     );
   }
 
-  const isRaffle =
-    listing.listing_type === "raffle";
+  const isRaffle = listing.listing_type === "raffle";
 
-  const isOwner =
-    Boolean(
-      currentUserId &&
-      listing.user_id === currentUserId,
-    );
+  const isOwner = Boolean(
+    currentUserId &&
+      listing.user_id === currentUserId
+  );
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -124,8 +113,7 @@ export default function ListingPage() {
           href={
             isRaffle
               ? "/raffles"
-              : listing.listing_type ===
-                  "auction"
+              : listing.listing_type === "auction"
                 ? "/auctions"
                 : "/"
           }
@@ -134,15 +122,15 @@ export default function ListingPage() {
           ←{" "}
           {isRaffle
             ? "Voltar aos Sorteios"
-            : listing.listing_type ===
-                "auction"
+            : listing.listing_type === "auction"
               ? "Voltar aos Leilões"
               : "Voltar"}
         </Link>
 
       </section>
 
-      {/* MAIN */}
+
+      {/* MAIN LISTING */}
 
       <section className="mx-auto max-w-[1600px] px-6 py-10 lg:px-12">
 
@@ -155,9 +143,7 @@ export default function ListingPage() {
           <ListingSidebar
             listing={listing}
             listingId={listing.id}
-            selectedTickets={
-              selectedTickets
-            }
+            selectedTickets={selectedTickets}
             soldCount={soldCount}
             isOwner={isOwner}
           />
@@ -166,45 +152,43 @@ export default function ListingPage() {
 
       </section>
 
+
       {/* DETAILS */}
 
       <section className="mx-auto max-w-[1600px] px-6 pb-20 lg:px-12">
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
 
+          {/* LEFT COLUMN */}
+
           <div className="space-y-8">
 
             <ListingDescription
-              description={
-                listing.description
-              }
+              description={listing.description}
             />
+
+            {/* RAFFLE TICKETS */}
 
             {isRaffle && (
               <RaffleTicketGrid
                 listingId={listing.id}
-                totalTickets={
-                  Number(
-                    listing.total_tickets || 0,
-                  )
-                }
-                selectedTickets={
-                  selectedTickets
-                }
-                setSelectedTickets={
-                  setSelectedTickets
-                }
-                setSoldCount={
-                  setSoldCount
-                }
+                totalTickets={Number(
+                  listing.total_tickets || 0
+                )}
+                selectedTickets={selectedTickets}
+                setSelectedTickets={setSelectedTickets}
+                setSoldCount={setSoldCount}
                 disabled={isOwner}
               />
             )}
 
-            {listing.listing_type ===
-              "auction" && (
+            {/* AUCTION HISTORY */}
+
+            {listing.listing_type === "auction" && (
               <ListingBidHistory />
             )}
+
+            {/* LISTING DETAILS */}
 
             <ListingDetails
               listing={listing}
@@ -212,15 +196,19 @@ export default function ListingPage() {
 
           </div>
 
+
+          {/* SELLER */}
+
           <div>
-            <ListingSeller
-              listing={listing}
-            />
+            <ListingSeller />
           </div>
 
         </div>
 
       </section>
+
+
+      {/* RELATED LISTINGS */}
 
       <RelatedListings
         listings={[]}
