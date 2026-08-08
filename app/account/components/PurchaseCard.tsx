@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, CalendarDays, Ticket } from "lucide-react";
 import TicketBadge from "./TicketBadge";
 
 interface PurchaseCardProps {
@@ -20,104 +21,164 @@ export default function PurchaseCard({
   totalPaid,
   purchaseDate,
 }: PurchaseCardProps) {
+  const sortedTickets = [...ticketNumbers].sort((a, b) => a - b);
+
+  const visibleTickets = sortedTickets.slice(0, 8);
+  const remainingTickets = sortedTickets.length - visibleTickets.length;
+
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 transition-all duration-300 hover:border-[#ffb800]/60 hover:shadow-[0_0_40px_rgba(255,184,0,0.08)]">
+    <article className="group overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
 
-      <div className="grid md:grid-cols-[320px_1fr]">
+      <div className="flex flex-col md:flex-row">
 
-        <div className="flex items-center justify-center bg-zinc-900 p-6">
+        {/* IMAGEM */}
 
-          {image ? (
-            <img
-              src={image}
-              alt={model}
-              className="h-44 w-44 rounded-2xl object-cover"
-            />
-          ) : (
-            <div className="ml-auto flex h-11 w-44 items-center justify-center rounded-xl bg-[#ffb800] font-black text-black transition-all duration-300 hover:scale-105 hover:bg-[#ffd24a]">
-              📦
-            </div>
-          )}
+        <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-6 md:w-[190px]">
+
+          <div className="relative flex h-[158px] w-[158px] items-center justify-center overflow-hidden rounded-2xl bg-zinc-800/70 ring-1 ring-white/5">
+
+            {image?.trim() ? (
+              <img
+                src={image}
+                alt={model}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <div className="text-center">
+                <div className="text-4xl opacity-30">🚗</div>
+                <div className="mt-2 text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                  Garagem164
+                </div>
+              </div>
+            )}
+
+          </div>
 
         </div>
 
-        <div className="flex flex-col p-8">
+        {/* CONTEÚDO */}
 
-          <div className="text-xs uppercase tracking-[3px] text-zinc-500">
-            {brand}
-          </div>
+        <div className="flex min-w-0 flex-1 flex-col p-7 md:p-8">
 
-          <h2 className="mt-2 text-3xl font-black">
-            {model}
-          </h2>
+          {/* CABEÇALHO */}
 
-          <div className="mt-8">
-
-            <div className="text-xs uppercase tracking-[3px] text-zinc-500">
-              Bilhetes Comprados
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-
-              <div className="flex flex-wrap gap-2">
-
-  {ticketNumbers
-    .sort((a, b) => a - b)
-    .slice(0, 8)
-    .map((ticket) => (
-      <TicketBadge
-        key={ticket}
-        number={ticket}
-      />
-    ))}
-
-  {ticketNumbers.length > 8 && (
-    <div className="flex h-10 items-center rounded-xl border border-[#ffb800]/40 px-4 text-sm font-bold text-[#ffb800]">
-      +{ticketNumbers.length - 8}
-    </div>
-  )}
-
-</div>
-
-            </div>
-
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
             <div>
 
-              <div className="text-xs uppercase tracking-[3px] text-zinc-500">
-                Total Pago
+              <div className="flex items-center gap-2">
+
+                <span className="text-[11px] font-bold uppercase tracking-[4px] text-zinc-500">
+                  {brand}
+                </span>
+
+                <span className="rounded-full border border-[#ffb800]/20 bg-[#ffb800]/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[1.5px] text-[#ffb800]">
+                  Sorteio
+                </span>
+
               </div>
 
-              <div className="mt-2 text-3xl font-black text-[#ffb800]">
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">
+                {model}
+              </h2>
+
+            </div>
+
+            <div className="text-left sm:text-right">
+
+              <div className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                Total pago
+              </div>
+
+              <div className="mt-1 text-2xl font-black text-[#ffb800]">
                 €{totalPaid.toFixed(2)}
               </div>
 
             </div>
 
-            <div>
+          </div>
 
-              <div className="text-xs uppercase tracking-[3px] text-zinc-500">
-                Data da Compra
+          {/* DIVISOR */}
+
+          <div className="my-6 h-px bg-white/5" />
+
+          {/* BILHETES */}
+
+          <div>
+
+            <div className="flex items-center justify-between">
+
+              <div className="flex items-center gap-2">
+
+                <Ticket
+                  size={15}
+                  className="text-[#ffb800]"
+                />
+
+                <span className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-500">
+                  Bilhetes comprados
+                </span>
+
               </div>
 
-              <div className="mt-2 font-semibold">
-                {new Date(purchaseDate).toLocaleDateString("pt-PT")}
-              </div>
+              <span className="text-xs font-bold text-zinc-500">
+                {ticketNumbers.length}{" "}
+                {ticketNumbers.length === 1 ? "bilhete" : "bilhetes"}
+              </span>
+
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+
+              {visibleTickets.map((ticket) => (
+                <TicketBadge
+                  key={ticket}
+                  number={ticket}
+                />
+              ))}
+
+              {remainingTickets > 0 && (
+                <div className="flex h-10 items-center justify-center rounded-xl border border-[#ffb800]/30 bg-[#ffb800]/5 px-4 text-sm font-black text-[#ffb800]">
+                  +{remainingTickets}
+                </div>
+              )}
 
             </div>
 
           </div>
 
-          <div className="mt-auto pt-10">
+          {/* RODAPÉ */}
+
+          <div className="mt-7 flex flex-col gap-5 border-t border-white/5 pt-6 sm:flex-row sm:items-end sm:justify-between">
+
+            <div className="flex items-center gap-2 text-zinc-500">
+
+              <CalendarDays size={15} />
+
+              <div>
+
+                <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
+                  Data da compra
+                </div>
+
+                <div className="mt-1 text-sm font-bold text-zinc-300">
+                  {new Date(purchaseDate).toLocaleDateString("pt-PT")}
+                </div>
+
+              </div>
+
+            </div>
 
             <Link
               href={`/raffles/${raffleId}`}
-              className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#ffb800] font-black text-black transition-all duration-300 hover:scale-[1.02] hover:bg-[#ffd24a]"
+              className="group/button inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-[#ffb800] px-6 text-sm font-black text-black transition-all duration-300 hover:bg-[#ffd34d] hover:shadow-[0_8px_30px_rgba(255,184,0,0.18)]"
             >
               Ver Sorteio
+
+              <ArrowRight
+                size={17}
+                className="transition-transform duration-300 group-hover/button:translate-x-1"
+              />
             </Link>
 
           </div>
@@ -126,6 +187,6 @@ export default function PurchaseCard({
 
       </div>
 
-    </div>
+    </article>
   );
 }

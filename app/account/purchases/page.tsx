@@ -16,6 +16,21 @@ interface GroupedPurchase {
   ticketNumbers: number[];
   totalPaid: number;
   purchaseDate: string;
+  brand: string;
+  model: string;
+  image: string;
+}
+
+interface Listing {
+  id: string;
+  brand: string | null;
+  model: string | null;
+}
+
+interface ListingImage {
+  listing_id: string;
+  image_url: string;
+  sort_order: number | null;
 }
 
 export default function PurchasesPage() {
@@ -43,37 +58,130 @@ export default function PurchasesPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error(error);
-      } else {
-        console.log("PURCHASES", data);
-
-        const grouped: Record<string, GroupedPurchase> = {};
-
-        (data ?? []).forEach((purchase) => {
-          if (!grouped[purchase.raffle_id]) {
-            grouped[purchase.raffle_id] = {
-              raffle_id: purchase.raffle_id,
-              ticketNumbers: [],
-              totalPaid: 0,
-              purchaseDate: purchase.created_at,
-            };
-          }
-
-          grouped[purchase.raffle_id].ticketNumbers.push(
-            purchase.ticket_number
-          );
-
-          grouped[purchase.raffle_id].totalPaid +=
-            purchase.total_price;
-        });
-
-        const groupedArray = Object.values(grouped);
-
-        console.log("GROUPED", groupedArray);
-
-        setGroupedPurchases(groupedArray);
+        console.error("Erro ao carregar compras:", error);
+        setLoading(false);
+        return;
       }
 
+      console.log("PURCHASES", data);
+
+      const purchases = (data ?? []) as Purchase[];
+
+      const grouped: Record<
+        string,
+        {
+          raffle_id: string;
+          ticketNumbers: number[];
+          totalPaid: number;
+          purchaseDate: string;
+        }
+      > = {};
+
+      purchases.forEach((purchase) => {
+        if (!grouped[purchase.raffle_id]) {
+          grouped[purchase.raffle_id] = {
+            raffle_id: purchase.raffle_id,
+            ticketNumbers: [],
+            totalPaid: 0,
+            purchaseDate: purchase.created_at,
+          };
+        }
+
+        grouped[purchase.raffle_id].ticketNumbers.push(
+          purchase.ticket_number
+        );
+
+        grouped[purchase.raffle_id].totalPaid +=
+          Number(purchase.total_price);
+      });
+
+      const groupedArray = Object.values(grouped);
+
+      console.log("GROUPED", groupedArray);
+
+      if (groupedArray.length === 0) {
+        setGroupedPurchases([]);
+        setLoading(false);
+        return;
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * BUSCAR OS ANÚNCIOS
+       * ---------------------------------------------------------
+       */
+
+      const raffleIds = groupedArray.map(
+        (purchase) => purchase.raffle_id
+      );
+
+      const { data: listingsData, error: listingsError } =
+        await supabase
+          .from("listings")
+          .select("id, brand, model")
+          .in("id", raffleIds);
+
+      if (listingsError) {
+        console.error(
+          "Erro ao carregar anúncios:",
+          listingsError
+        );
+      }
+
+      const listings = (listingsData ?? []) as Listing[];
+
+      /*
+       * ---------------------------------------------------------
+       * BUSCAR AS IMAGENS
+       * ---------------------------------------------------------
+       */
+
+      const { data: imagesData, error: imagesError } =
+        await supabase
+          .from("listing_images")
+          .select("listing_id, image_url, sort_order")
+          .in("listing_id", raffleIds)
+          .order("sort_order", { ascending: true });
+
+      if (imagesError) {
+        console.error(
+          "Erro ao carregar imagens:",
+          imagesError
+        );
+      }
+
+      const images = (imagesData ?? []) as ListingImage[];
+
+      /*
+       * ---------------------------------------------------------
+       * JUNTAR COMPRAS + ANÚNCIOS + IMAGENS
+       * ---------------------------------------------------------
+       */
+
+      const finalPurchases: GroupedPurchase[] =
+        groupedArray.map((purchase) => {
+          const listing = listings.find(
+            (item) => item.id === purchase.raffle_id
+          );
+
+          const listingImage = images.find(
+            (image) => image.listing_id === purchase.raffle_id
+          );
+
+          return {
+            ...purchase,
+            brand: listing?.brand || "Garagem164",
+            model: listing?.model || "Miniatura",
+            image: listingImage?.image_url || "",
+          };
+        });
+
+      console.log(
+        "FINAL PURCHASES",
+        finalPurchases
+      );
+
+      setGroupedPurchases(finalPurchases);
       setLoading(false);
     }
 
@@ -82,40 +190,61 @@ export default function PurchasesPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        A carregar...
+      <main className="min-h-screen bg-black px-6 py-10 text-white md:px-10">
+        <div className="w-full max-w-[1050px]">
+          <div className="text-zinc-500">
+            A carregar...
+          </div>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-black text-white p-10">
+    <main className="min-h-screen bg-black px-6 py-10 text-white md:px-10">
+      <div className="w-full max-w-[1050px]">
 
-      <h1 className="text-5xl font-black">
-        As Minhas Compras
-      </h1>
+        <h1 className="text-5xl font-black">
+          As Minhas Compras
+        </h1>
 
-      <p className="mt-2 text-zinc-400">
-        Encontrados {groupedPurchases.length} sorteios.
-      </p>
+        <p className="mt-2 text-zinc-400">
+          Encontrados {groupedPurchases.length}{" "}
+          {groupedPurchases.length === 1
+            ? "sorteio"
+            : "sorteios"}.
+        </p>
 
-      <div className="mt-10 space-y-6">
+        {groupedPurchases.length === 0 ? (
+          <div className="mt-10 rounded-3xl border border-white/10 bg-zinc-950 p-10 text-center">
+            <div className="text-xl font-black">
+              Ainda não tens compras
+            </div>
 
-        {groupedPurchases.map((purchase) => (
-  <PurchaseCard
-    key={purchase.raffle_id}
-    raffleId={purchase.raffle_id}
-    model="Honda Civic EF"
-    brand="Hot Wheels"
-    image=""
-    ticketNumbers={purchase.ticketNumbers}
-    totalPaid={purchase.totalPaid}
-    purchaseDate={purchase.purchaseDate}
-  />
-))}
+            <p className="mt-2 text-zinc-500">
+              Quando comprares bilhetes, eles aparecerão aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-10 space-y-6">
+
+            {groupedPurchases.map((purchase) => (
+              <PurchaseCard
+                key={purchase.raffle_id}
+                raffleId={purchase.raffle_id}
+                model={purchase.model}
+                brand={purchase.brand}
+                image={purchase.image}
+                ticketNumbers={purchase.ticketNumbers}
+                totalPaid={purchase.totalPaid}
+                purchaseDate={purchase.purchaseDate}
+              />
+            ))}
+
+          </div>
+        )}
 
       </div>
-
     </main>
   );
 }

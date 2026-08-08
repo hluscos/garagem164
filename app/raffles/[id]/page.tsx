@@ -145,6 +145,7 @@ setShowModal(true);
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
       raffleId: raffle.id,
@@ -165,6 +166,7 @@ setShowModal(true);
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
       listingId: raffle.id,

@@ -5,7 +5,7 @@ const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 console.log("========== SUPABASE ADMIN ==========");
 console.log("URL:", url);
-console.log("SERVICE ROLE:", key);
+console.log("SERVICE ROLE:", key ? "OK" : "MISSING");
 console.log(
   "SUPABASE VARS:",
   Object.keys(process.env).filter((k) => k.includes("SUPABASE"))
