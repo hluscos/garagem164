@@ -77,40 +77,6 @@ export async function POST(req: NextRequest) {
       const session =
         event.data.object as Stripe.Checkout.Session;
 
-      /*
-       * -------------------------------------------------------
-       * EVITAR DUPLICAÇÃO
-       * -------------------------------------------------------
-       */
-
-      const {
-        data: existingPayment,
-      } = await supabaseAdmin
-        .from("stripe_payments")
-        .select("id")
-        .eq(
-          "stripe_session_id",
-          session.id,
-        )
-        .maybeSingle();
-
-      if (existingPayment) {
-        console.log(
-          "⚠️ Webhook já processado:",
-          session.id,
-        );
-
-        return NextResponse.json({
-          received: true,
-        });
-      }
-
-      /*
-       * -------------------------------------------------------
-       * METADATA
-       * -------------------------------------------------------
-       */
-
       const metadata =
         session.metadata ?? {};
 
@@ -172,14 +138,14 @@ export async function POST(req: NextRequest) {
         const bidId =
           metadata.bidId;
 
-        const metadataAmount =
-          Number(metadata.amount);
-
         /*
          * -----------------------------------------------------
          * VALIDAR METADATA
          * -----------------------------------------------------
          */
+
+        const metadataAmount =
+          Number(metadata.amount);
 
         if (
           !auctionId ||
@@ -211,7 +177,7 @@ export async function POST(req: NextRequest) {
 
         /*
          * -----------------------------------------------------
-         * O CHECKOUT TEM DE ESTAR PAGO
+         * CHECKOUT TEM DE ESTAR PAGO
          * -----------------------------------------------------
          */
 
@@ -499,8 +465,11 @@ export async function POST(req: NextRequest) {
 
         /*
          * -----------------------------------------------------
-         * VERIFICAR PAGAMENTO EXISTENTE
+         * PAGAMENTO STRIPE
          * -----------------------------------------------------
+         *
+         * Pode já existir se o webhook estiver a ser repetido.
+         * Nesse caso NÃO saímos do webhook.
          */
 
         const {
@@ -510,7 +479,14 @@ export async function POST(req: NextRequest) {
         } = await supabaseAdmin
           .from("stripe_payments")
           .select(
-            "id, stripe_session_id",
+            `
+              id,
+              stripe_session_id,
+              payment_intent,
+              auction_id,
+              user_id,
+              amount
+            `,
           )
           .eq(
             "auction_id",
@@ -535,81 +511,405 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        if (
-          existingAuctionPayment
-        ) {
-          console.log(
-            "⚠️ Pagamento do leilão já existe:",
-            auctionId,
-          );
-
-          return NextResponse.json({
-            received: true,
-          });
-        }
-
         /*
          * -----------------------------------------------------
-         * REGISTAR PAGAMENTO DO LEILÃO
+         * REGISTAR PAGAMENTO SE AINDA NÃO EXISTIR
          * -----------------------------------------------------
          */
 
-        const {
-          error: paymentError,
-        } = await supabaseAdmin
-          .from("stripe_payments")
-          .insert({
-            stripe_session_id:
-              session.id,
+        if (
+          !existingAuctionPayment
+        ) {
+          const {
+            error: paymentError,
+          } = await supabaseAdmin
+            .from("stripe_payments")
+            .insert({
+              stripe_session_id:
+                session.id,
 
-            payment_intent:
-              typeof session.payment_intent ===
-              "string"
-                ? session.payment_intent
-                : null,
+              payment_intent:
+                typeof session.payment_intent ===
+                "string"
+                  ? session.payment_intent
+                  : null,
 
-            raffle_id: null,
+              raffle_id:
+                null,
 
-            auction_id:
+              auction_id:
+                auctionId,
+
+              user_id:
+                userId,
+
+              quantity:
+                null,
+
+              amount:
+                session.amount_total ??
+                0,
+            });
+
+          if (paymentError) {
+            console.error(
+              "❌ Erro ao gravar pagamento do leilão:",
+              paymentError,
+            );
+
+            return NextResponse.json(
+              {
+                error:
+                  "Failed to record auction payment.",
+              },
+              { status: 500 },
+            );
+          }
+
+          console.log(
+            "🏆 PAGAMENTO DO LEILÃO REGISTADO:",
+            {
               auctionId,
-
-            user_id:
               userId,
+              bidId,
+              amount:
+                winningAmount,
+              stripeSessionId:
+                session.id,
+            },
+          );
+        } else {
+          console.log(
+            "ℹ️ Pagamento do leilão já existe:",
+            auctionId,
+          );
+        }
 
-            quantity: null,
+        /*
+         * =====================================================
+         * TRANSACTION / ESCROW INTERNO
+         * =====================================================
+         */
 
-            amount:
-              session.amount_total ??
-              0,
-          });
+        const {
+          data: existingTransaction,
+          error:
+            transactionQueryError,
+        } = await supabaseAdmin
+          .from("transactions")
+          .select(
+            `
+              id,
+              amount,
+              platform_fee,
+              seller_amount,
+              currency,
+              commercial_status,
+              financial_status,
+              stripe_payment_intent,
+              stripe_checkout_session
+            `,
+          )
+          .eq(
+            "auction_id",
+            auctionId,
+          )
+          .maybeSingle();
 
-        if (paymentError) {
+        if (transactionQueryError) {
           console.error(
-            "❌ Erro ao gravar pagamento do leilão:",
-            paymentError,
+            "❌ TRANSACTION QUERY ERROR:",
+            transactionQueryError,
           );
 
           return NextResponse.json(
             {
               error:
-                "Failed to record auction payment.",
+                "Failed to verify transaction.",
             },
             { status: 500 },
           );
         }
 
-        console.log(
-          "🏆 PAGAMENTO DO LEILÃO REGISTADO:",
-          {
-            auctionId,
-            userId,
-            bidId,
-            amount:
-              winningAmount,
-            stripeSessionId:
-              session.id,
-          },
-        );
+        let transactionId =
+          existingTransaction?.id;
+
+        /*
+         * -----------------------------------------------------
+         * CRIAR TRANSACTION
+         * -----------------------------------------------------
+         */
+
+        if (
+          !existingTransaction
+        ) {
+          const amount =
+            winningAmount;
+
+          const platformFee =
+            Math.round(
+              amount * 0.03 * 100,
+            ) / 100;
+
+          const sellerAmount =
+            Math.round(
+              (amount -
+                platformFee) *
+                100,
+            ) / 100;
+
+          const {
+            data: newTransaction,
+            error:
+              transactionInsertError,
+          } = await supabaseAdmin
+            .from("transactions")
+            .insert({
+              listing_id:
+                auctionId,
+
+              auction_id:
+                auctionId,
+
+              buyer_id:
+                userId,
+
+              seller_id:
+                auction.user_id,
+
+              amount,
+
+              platform_fee:
+                platformFee,
+
+              seller_amount:
+                sellerAmount,
+
+              currency:
+                "eur",
+
+              commercial_status:
+                "paid",
+
+              financial_status:
+                "held",
+
+              stripe_payment_intent:
+                typeof session.payment_intent ===
+                "string"
+                  ? session.payment_intent
+                  : null,
+
+              stripe_checkout_session:
+                session.id,
+
+              paid_at:
+                new Date().toISOString(),
+            })
+            .select(
+              "id",
+            )
+            .single();
+
+          if (
+            transactionInsertError
+          ) {
+            console.error(
+              "❌ TRANSACTION INSERT ERROR:",
+              transactionInsertError,
+            );
+
+            return NextResponse.json(
+              {
+                error:
+                  "Failed to create transaction.",
+              },
+              { status: 500 },
+            );
+          }
+
+          transactionId =
+            newTransaction.id;
+
+          console.log(
+            "💰 TRANSACTION CRIADA:",
+            {
+              transactionId,
+              auctionId,
+              amount,
+              platformFee,
+              sellerAmount,
+            },
+          );
+        } else {
+          console.log(
+            "ℹ️ Transaction já existe:",
+            transactionId,
+          );
+        }
+
+        /*
+         * -----------------------------------------------------
+         * GARANTIR ESTADO FINANCEIRO
+         * -----------------------------------------------------
+         */
+
+        if (
+          existingTransaction &&
+          existingTransaction.financial_status !==
+            "held"
+        ) {
+          console.warn(
+            "⚠️ Transaction existente com estado financeiro inesperado:",
+            existingTransaction.financial_status,
+          );
+        }
+
+        /*
+         * =====================================================
+         * TRANSACTION EVENT
+         * =====================================================
+         *
+         * Idempotente:
+         * PAYMENT_RECEIVED só pode existir uma vez
+         * para esta transaction.
+         */
+
+        if (transactionId) {
+          const {
+            data: existingEvent,
+            error:
+              eventQueryError,
+          } = await supabaseAdmin
+            .from("transaction_events")
+            .select("id")
+            .eq(
+              "transaction_id",
+              transactionId,
+            )
+            .eq(
+              "event_type",
+              "PAYMENT_RECEIVED",
+            )
+            .maybeSingle();
+
+          if (eventQueryError) {
+            console.error(
+              "❌ TRANSACTION EVENT QUERY ERROR:",
+              eventQueryError,
+            );
+
+            return NextResponse.json(
+              {
+                error:
+                  "Failed to verify transaction event.",
+              },
+              { status: 500 },
+            );
+          }
+
+          if (!existingEvent) {
+            const {
+              data: transactionForEvent,
+              error:
+                transactionForEventError,
+            } = await supabaseAdmin
+              .from("transactions")
+              .select(
+                `
+                  id,
+                  amount,
+                  currency,
+                  financial_status,
+                  stripe_payment_intent,
+                  buyer_id
+                `,
+              )
+              .eq(
+                "id",
+                transactionId,
+              )
+              .single();
+
+            if (
+              transactionForEventError ||
+              !transactionForEvent
+            ) {
+              console.error(
+                "❌ TRANSACTION FOR EVENT ERROR:",
+                transactionForEventError,
+              );
+
+              return NextResponse.json(
+                {
+                  error:
+                    "Failed to load transaction for event.",
+                },
+                { status: 500 },
+              );
+            }
+
+            const {
+              error:
+                transactionEventError,
+            } = await supabaseAdmin
+              .from("transaction_events")
+              .insert({
+                transaction_id:
+                  transactionId,
+
+                event_type:
+                  "PAYMENT_RECEIVED",
+
+                description:
+                  "Pagamento do leilão recebido e fundos colocados em retenção.",
+
+                metadata: {
+                  amount:
+                    transactionForEvent.amount,
+
+                  currency:
+                    transactionForEvent.currency,
+
+                  financial_status:
+                    transactionForEvent.financial_status,
+
+                  stripe_payment_intent:
+                    transactionForEvent.stripe_payment_intent,
+                },
+
+                created_by:
+                  transactionForEvent.buyer_id,
+              });
+
+            if (
+              transactionEventError
+            ) {
+              console.error(
+                "❌ TRANSACTION EVENT INSERT ERROR:",
+                transactionEventError,
+              );
+
+              return NextResponse.json(
+                {
+                  error:
+                    "Failed to create transaction event.",
+                },
+                { status: 500 },
+              );
+            }
+
+            console.log(
+              "📝 PAYMENT_RECEIVED EVENT CRIADO:",
+              transactionId,
+            );
+          } else {
+            console.log(
+              "ℹ️ PAYMENT_RECEIVED event já existe:",
+              transactionId,
+            );
+          }
+        }
 
         break;
       }
@@ -637,6 +937,34 @@ export async function POST(req: NextRequest) {
 
       /*
        * -------------------------------------------------------
+       * IMPEDIR DUPLICAÇÃO DE PAGAMENTO DE SORTEIO
+       * -------------------------------------------------------
+       */
+
+      const {
+        data: existingRafflePayment,
+      } = await supabaseAdmin
+        .from("stripe_payments")
+        .select("id")
+        .eq(
+          "stripe_session_id",
+          session.id,
+        )
+        .maybeSingle();
+
+      if (existingRafflePayment) {
+        console.log(
+          "⚠️ Webhook de sorteio já processado:",
+          session.id,
+        );
+
+        return NextResponse.json({
+          received: true,
+        });
+      }
+
+      /*
+       * -------------------------------------------------------
        * DADOS DO SORTEIO
        * -------------------------------------------------------
        */
@@ -644,7 +972,7 @@ export async function POST(req: NextRequest) {
       const raffleId =
         metadata.listingId;
 
-      const userId =
+      const raffleUserId =
         metadata.userId;
 
       const quantity = Number(
@@ -683,7 +1011,7 @@ export async function POST(req: NextRequest) {
 
       if (
         !raffleId ||
-        !userId ||
+        !raffleUserId ||
         !Number.isInteger(
           quantity,
         ) ||
@@ -698,7 +1026,8 @@ export async function POST(req: NextRequest) {
           "❌ Metadata inválida no Checkout:",
           {
             raffleId,
-            userId,
+            userId:
+              raffleUserId,
             quantity,
             selectedTickets,
           },
@@ -736,10 +1065,11 @@ export async function POST(req: NextRequest) {
           raffle_id:
             raffleId,
 
-          auction_id: null,
+          auction_id:
+            null,
 
           user_id:
-            userId,
+            raffleUserId,
 
           quantity,
 
@@ -787,7 +1117,7 @@ export async function POST(req: NextRequest) {
               raffleId,
 
             user_id:
-              userId,
+              raffleUserId,
 
             ticket_number:
               ticketNumber,
@@ -852,7 +1182,7 @@ export async function POST(req: NextRequest) {
         )
         .eq(
           "user_id",
-          userId,
+          raffleUserId,
         )
         .in(
           "ticket_number",
@@ -897,8 +1227,6 @@ export async function POST(req: NextRequest) {
        * -------------------------------------------------------
        * LEILÃO
        * -------------------------------------------------------
-       *
-       * Não há reservas para libertar.
        */
 
       if (type === "auction") {
@@ -919,7 +1247,7 @@ export async function POST(req: NextRequest) {
       const raffleId =
         metadata.listingId;
 
-      const userId =
+      const raffleUserId =
         metadata.userId;
 
       let selectedTickets: number[] =
@@ -939,7 +1267,7 @@ export async function POST(req: NextRequest) {
 
       if (
         raffleId &&
-        userId &&
+        raffleUserId &&
         Array.isArray(
           selectedTickets,
         ) &&
@@ -959,7 +1287,7 @@ export async function POST(req: NextRequest) {
           )
           .eq(
             "user_id",
-            userId,
+            raffleUserId,
           )
           .in(
             "ticket_number",
