@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -46,10 +46,13 @@ function getEndTime(
   );
 }
 
-function formatCountdown(endTime: number) {
+function formatCountdown(
+  endTime: number,
+  now: number,
+) {
   const remaining = Math.max(
     0,
-    endTime - Date.now(),
+    endTime - now,
   );
 
   const totalSeconds = Math.floor(
@@ -134,6 +137,21 @@ export default function AuctionDetailPage() {
   const [bidMessage, setBidMessage] =
     useState("");
 
+  const [checkoutLoading, setCheckoutLoading] =
+    useState(false);
+
+  const [checkoutMessage, setCheckoutMessage] =
+    useState("");
+
+  const [paymentChecking, setPaymentChecking] =
+    useState(true);
+
+  const [paymentCompleted, setPaymentCompleted] =
+    useState(false);
+
+  const [currentUserId, setCurrentUserId] =
+    useState<string | null>(null);
+
   const [now, setNow] =
     useState(Date.now());
 
@@ -151,6 +169,133 @@ export default function AuctionDetailPage() {
     return () =>
       clearInterval(interval);
   }, []);
+
+  /*
+   * ---------------------------------------------------------
+   * UTILIZADOR ATUAL
+   * ---------------------------------------------------------
+   */
+
+  useEffect(() => {
+    async function loadCurrentUser() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setCurrentUserId(
+        session?.user?.id ?? null,
+      );
+
+      if (!session?.user?.id) {
+        setPaymentChecking(false);
+      }
+    }
+
+    void loadCurrentUser();
+
+    const {
+      data: authListener,
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setCurrentUserId(
+          session?.user?.id ?? null,
+        );
+
+        if (!session?.user?.id) {
+          setPaymentCompleted(false);
+          setPaymentChecking(false);
+        }
+      },
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  /*
+   * ---------------------------------------------------------
+   * VERIFICAR PAGAMENTO
+   * ---------------------------------------------------------
+   */
+
+  async function loadPaymentStatus(
+    userId: string | null,
+  ) {
+    if (!auctionId || !userId) {
+      setPaymentCompleted(false);
+      setPaymentChecking(false);
+      return;
+    }
+
+    try {
+      setPaymentChecking(true);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setPaymentCompleted(false);
+        return;
+      }
+
+      const response = await fetch(
+        `/api/auction-payment-status?auctionId=${encodeURIComponent(auctionId)}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          cache: "no-store",
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error(
+          "AUCTION PAYMENT STATUS API ERROR:",
+          result,
+        );
+
+        setPaymentCompleted(false);
+        return;
+      }
+
+      setPaymentCompleted(
+        result.paid === true,
+      );
+    } catch (err) {
+      console.error(
+        "LOAD PAYMENT STATUS ERROR:",
+        err,
+      );
+
+      setPaymentCompleted(false);
+    } finally {
+      setPaymentChecking(false);
+    }
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * VERIFICAR PAGAMENTO QUANDO TEMOS O UTILIZADOR
+   * ---------------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (!auctionId) {
+      return;
+    }
+
+    void loadPaymentStatus(
+      currentUserId,
+    );
+  }, [
+    auctionId,
+    currentUserId,
+  ]);
 
   /*
    * ---------------------------------------------------------
@@ -215,10 +360,6 @@ export default function AuctionDetailPage() {
         setLoading(true);
         setError("");
 
-        /*
-         * LISTING
-         */
-
         const {
           data: listingData,
           error: listingError,
@@ -278,10 +419,6 @@ export default function AuctionDetailPage() {
           listingData as Listing,
         );
 
-        /*
-         * IMAGENS
-         */
-
         const {
           data: imageData,
           error: imageError,
@@ -309,10 +446,6 @@ export default function AuctionDetailPage() {
           (imageData ??
             []) as ListingImage[],
         );
-
-        /*
-         * LANCES
-         */
 
         await loadBids();
       } catch (err) {
@@ -346,13 +479,6 @@ export default function AuctionDetailPage() {
     return images[0].image_url;
   }, [images]);
 
-  /*
-   * Se não existem lances:
-   * currentBid = null
-   *
-   * O starting_bid não é um lance.
-   */
-
   const currentBid = useMemo<
     number | null
   >(() => {
@@ -367,13 +493,23 @@ export default function AuctionDetailPage() {
     );
   }, [bids]);
 
-  /*
-   * Primeiro lance:
-   * starting_bid
-   *
-   * Lances seguintes:
-   * currentBid + €1
-   */
+  const winningBid = useMemo<
+    Bid | null
+  >(() => {
+    if (bids.length === 0) {
+      return null;
+    }
+
+    return bids[0];
+  }, [bids]);
+
+  const isWinner =
+    Boolean(
+      winningBid &&
+        currentUserId &&
+        winningBid.user_id ===
+          currentUserId,
+    );
 
   const minimumNextBid =
     currentBid === null
@@ -391,15 +527,11 @@ export default function AuctionDetailPage() {
       )
     : 0;
 
-  /*
-   * now é usado para forçar a atualização
-   * do countdown a cada segundo.
-   */
-
-  void now;
-
   const countdown =
-    formatCountdown(endTime);
+    formatCountdown(
+      endTime,
+      now,
+    );
 
   /*
    * ---------------------------------------------------------
@@ -432,10 +564,6 @@ export default function AuctionDetailPage() {
       setBidLoading(true);
       setBidMessage("");
 
-      /*
-       * Obter a sessão atual.
-       */
-
       const {
         data: {
           session,
@@ -449,10 +577,6 @@ export default function AuctionDetailPage() {
 
         return;
       }
-
-      /*
-       * Enviar o lance para o backend.
-       */
 
       const response = await fetch(
         "/api/place-bid",
@@ -477,11 +601,10 @@ export default function AuctionDetailPage() {
       const result =
         await response.json();
 
-      /*
-       * ERRO
-       */
-
-      if (!response.ok || !result.success) {
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         setBidMessage(
           result.message ||
             "Não foi possível registar a licitação.",
@@ -490,20 +613,11 @@ export default function AuctionDetailPage() {
         return;
       }
 
-      /*
-       * SUCESSO
-       */
-
       setBidMessage(
         `Licitação de ${formatMoney(
           Number(result.bid.amount),
         )} registada com sucesso.`,
       );
-
-      /*
-       * Atualizar imediatamente o
-       * histórico e os valores.
-       */
 
       await loadBids();
     } catch (err) {
@@ -517,6 +631,86 @@ export default function AuctionDetailPage() {
       );
     } finally {
       setBidLoading(false);
+    }
+  }
+
+  /*
+   * ---------------------------------------------------------
+   * PAGAR LEILÃO
+   * ---------------------------------------------------------
+   */
+
+  async function handleAuctionPayment() {
+    if (!auctionId || !listing) {
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+      setCheckoutMessage("");
+
+      const {
+        data: {
+          session,
+        },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        router.push(
+          `/login?redirect=/auctions/${auctionId}`,
+        );
+
+        return;
+      }
+
+      const response = await fetch(
+        "/api/create-checkout-session",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${session.access_token}`,
+          },
+
+          body: JSON.stringify({
+            type: "auction",
+            listingId: auctionId,
+          }),
+        },
+      );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.url
+      ) {
+        setCheckoutMessage(
+          result.error ||
+            "Não foi possível iniciar o pagamento.",
+        );
+
+        return;
+      }
+
+      window.location.href =
+        result.url;
+    } catch (err) {
+      console.error(
+        "AUCTION CHECKOUT ERROR:",
+        err,
+      );
+
+      setCheckoutMessage(
+        "Ocorreu um erro ao iniciar o pagamento.",
+      );
+    } finally {
+      setCheckoutLoading(false);
     }
   }
 
@@ -619,12 +813,18 @@ export default function AuctionDetailPage() {
 
           <div>
 
-            <div className="inline-flex items-center h-[36px] px-4 rounded-full bg-[#ffb800] text-black text-[11px] font-black uppercase tracking-[1px]">
+            {/* STATUS */}
 
+            <div
+              className={`inline-flex items-center h-[36px] px-4 rounded-full text-black text-[11px] font-black uppercase tracking-[1px] ${
+                countdown.finished
+                  ? "bg-zinc-400"
+                  : "bg-[#ffb800]"
+              }`}
+            >
               {countdown.finished
                 ? "Leilão Terminado"
                 : "Leilão Ativo"}
-
             </div>
 
             <div className="mt-6 text-zinc-500 text-xs uppercase tracking-[3px] font-black">
@@ -654,9 +854,13 @@ export default function AuctionDetailPage() {
               <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
 
                 <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
-                  {currentBid === null
-                    ? "Lance Inicial"
-                    : "Licitação Atual"}
+
+                  {countdown.finished
+                    ? "Lance Vencedor"
+                    : currentBid === null
+                      ? "Lance Inicial"
+                      : "Licitação Atual"}
+
                 </div>
 
                 <div className="mt-2 text-3xl font-black text-[#ffb800]">
@@ -689,90 +893,203 @@ export default function AuctionDetailPage() {
               <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
 
                 <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
-                  Próximo Lance
+
+                  {countdown.finished
+                    ? "Estado"
+                    : "Próximo Lance"}
+
                 </div>
 
                 <div className="mt-2 text-3xl font-black text-[#ffb800]">
-                  {formatMoney(
-                    minimumNextBid,
-                  )}
+
+                  {countdown.finished
+                    ? "Terminado"
+                    : formatMoney(
+                        minimumNextBid,
+                      )}
+
                 </div>
 
               </div>
 
             </div>
 
-            {/* COUNTDOWN */}
+            {/* COUNTDOWN / RESULTADO */}
 
             <div className="mt-10">
 
               <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
+
                 {countdown.finished
-                  ? "Estado"
+                  ? "Resultado"
                   : "Termina em"}
-              </div>
-
-              <div className="mt-3 text-[42px] font-black text-[#ffb800]">
-
-                {countdown.finished ? (
-                  "Terminado"
-                ) : (
-                  <>
-                    {countdown.days}d{" "}
-                    {countdown.hours
-                      .toString()
-                      .padStart(
-                        2,
-                        "0",
-                      )}
-                    h{" "}
-                    {countdown.minutes
-                      .toString()
-                      .padStart(
-                        2,
-                        "0",
-                      )}
-                    m{" "}
-                    {countdown.seconds
-                      .toString()
-                      .padStart(
-                        2,
-                        "0",
-                      )}
-                    s
-                  </>
-                )}
 
               </div>
+
+              {!countdown.finished ? (
+
+                <div className="mt-3 text-[42px] font-black text-[#ffb800]">
+
+                  {countdown.days}d{" "}
+                  {countdown.hours
+                    .toString()
+                    .padStart(
+                      2,
+                      "0",
+                    )}
+                  h{" "}
+                  {countdown.minutes
+                    .toString()
+                    .padStart(
+                      2,
+                      "0",
+                    )}
+                  m{" "}
+                  {countdown.seconds
+                    .toString()
+                    .padStart(
+                      2,
+                      "0",
+                    )}
+                  s
+
+                </div>
+
+              ) : (
+
+                <div className="mt-4 rounded-2xl border border-[#ffb800]/20 bg-[#ffb800]/5 p-6">
+
+                  {winningBid ? (
+
+                    <>
+                      <div className="text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
+                        Vencedor
+                      </div>
+
+                      <div className="mt-2 text-2xl font-black">
+                        {maskUserId(
+                          winningBid.user_id,
+                        )}
+                      </div>
+
+                      <div className="mt-4 text-zinc-500 text-xs uppercase tracking-[2px] font-bold">
+                        Lance Vencedor
+                      </div>
+
+                      <div className="mt-1 text-3xl font-black text-[#ffb800]">
+                        {formatMoney(
+                          Number(
+                            winningBid.amount,
+                          ),
+                        )}
+                      </div>
+                    </>
+
+                  ) : (
+
+                    <div>
+
+                      <div className="text-xl font-black">
+                        Leilão terminado
+                      </div>
+
+                      <div className="mt-2 text-zinc-500">
+                        Não foram registadas licitações.
+                      </div>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              )}
 
             </div>
 
-            {/* BID BUTTON */}
+            {/* ACTION BUTTON */}
 
-            <button
-              type="button"
-              onClick={handleBid}
-              disabled={
-                countdown.finished ||
-                bidLoading
-              }
-              className={`mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)] transition-all duration-300 ${
-                countdown.finished ||
-                bidLoading
-                  ? "cursor-not-allowed bg-zinc-700 text-zinc-400 shadow-none"
-                  : "bg-[#ffb800] text-black hover:bg-[#ffc933]"
-              }`}
-            >
+            {countdown.finished ? (
 
-              {countdown.finished
-                ? "Leilão Terminado"
-                : bidLoading
+              winningBid && isWinner ? (
+
+                paymentChecking ? (
+
+                  <button
+                    type="button"
+                    disabled
+                    className="mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl bg-zinc-700 text-zinc-400 cursor-not-allowed font-black uppercase tracking-[1px]"
+                  >
+                    A verificar pagamento...
+                  </button>
+
+                ) : paymentCompleted ? (
+
+                  <div className="mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-black uppercase tracking-[1px]">
+                    Pagamento Concluído
+                  </div>
+
+                ) : (
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleAuctionPayment
+                    }
+                    disabled={
+                      checkoutLoading
+                    }
+                    className={`mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)] transition-all duration-300 ${
+                      checkoutLoading
+                        ? "cursor-not-allowed bg-zinc-700 text-zinc-400 shadow-none"
+                        : "bg-[#ffb800] text-black hover:bg-[#ffc933]"
+                    }`}
+                  >
+                    {checkoutLoading
+                      ? "A preparar pagamento..."
+                      : `Pagar ${formatMoney(
+                          Number(
+                            winningBid.amount,
+                          ),
+                        )}`}
+                  </button>
+
+                )
+
+              ) : (
+
+                <button
+                  type="button"
+                  disabled
+                  className="mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl bg-zinc-700 text-zinc-400 cursor-not-allowed font-black uppercase tracking-[1px]"
+                >
+                  Leilão Terminado
+                </button>
+
+              )
+
+            ) : (
+
+              <button
+                type="button"
+                onClick={handleBid}
+                disabled={bidLoading}
+                className={`mt-10 inline-flex items-center justify-center h-[60px] px-10 rounded-2xl font-black uppercase tracking-[1px] shadow-[0_0_50px_rgba(255,184,0,0.2)] transition-all duration-300 ${
+                  bidLoading
+                    ? "cursor-not-allowed bg-zinc-700 text-zinc-400 shadow-none"
+                    : "bg-[#ffb800] text-black hover:bg-[#ffc933]"
+                }`}
+              >
+
+                {bidLoading
                   ? "A registar..."
                   : `Licitar ${formatMoney(
                       minimumNextBid,
                     )}`}
 
-            </button>
+              </button>
+
+            )}
 
             {/* BID MESSAGE */}
 
@@ -787,6 +1104,14 @@ export default function AuctionDetailPage() {
                 }`}
               >
                 {bidMessage}
+              </div>
+            )}
+
+            {/* CHECKOUT MESSAGE */}
+
+            {checkoutMessage && (
+              <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm font-bold text-red-300">
+                {checkoutMessage}
               </div>
             )}
 

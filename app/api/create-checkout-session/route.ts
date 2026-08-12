@@ -12,9 +12,6 @@ export async function POST(req: NextRequest) {
      * ---------------------------------------------------------
      * 1. AUTENTICAÇÃO
      * ---------------------------------------------------------
-     *
-     * O userId enviado pelo browser nunca é considerado
-     * uma fonte de verdade.
      */
 
     const authorization =
@@ -60,22 +57,29 @@ export async function POST(req: NextRequest) {
      * 2. DADOS DO FRONTEND
      * ---------------------------------------------------------
      *
-     * Só aceitamos:
+     * Para sorteios:
+     * - type
      * - listingId
      * - selectedTickets
      *
-     * NÃO aceitamos preço nem userId como fonte
-     * de verdade.
+     * Para leilões:
+     * - type
+     * - listingId
+     *
+     * O preço nunca vem do frontend.
      */
 
+    const body = await req.json();
+
     const {
+      type = "raffle",
       listingId,
       selectedTickets,
-    } = await req.json();
+    } = body;
 
     /*
      * ---------------------------------------------------------
-     * 3. VALIDAR LISTING
+     * 3. VALIDAR LISTING ID
      * ---------------------------------------------------------
      */
 
@@ -85,7 +89,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         {
-          error: "Sorteio inválido.",
+          error: "Anúncio inválido.",
         },
         { status: 400 },
       );
@@ -93,7 +97,365 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 4. VALIDAR BILHETES
+     * 4. FLUXO DE LEILÃO
+     * ---------------------------------------------------------
+     */
+
+    if (type === "auction") {
+      /*
+       * -------------------------------------------------------
+       * 4.1 BUSCAR LEILÃO
+       * -------------------------------------------------------
+       */
+
+      const {
+        data: auction,
+        error: auctionError,
+      } = await supabaseAdmin
+        .from("listings")
+        .select(
+          "id, user_id, listing_type, starting_bid, duration_days, created_at, brand, model",
+        )
+        .eq("id", listingId)
+        .maybeSingle();
+
+      if (auctionError) {
+        console.error(
+          "AUCTION QUERY ERROR:",
+          auctionError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível verificar o leilão.",
+          },
+          { status: 500 },
+        );
+      }
+
+      if (!auction) {
+        return NextResponse.json(
+          {
+            error: "Leilão não encontrado.",
+          },
+          { status: 404 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.2 GARANTIR QUE É LEILÃO
+       * -------------------------------------------------------
+       */
+
+      if (auction.listing_type !== "auction") {
+        return NextResponse.json(
+          {
+            error:
+              "Este anúncio não é um leilão.",
+          },
+          { status: 400 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.3 CALCULAR FIM DO LEILÃO
+       * -------------------------------------------------------
+       */
+
+      const createdAt =
+        new Date(auction.created_at);
+
+      const endTime = new Date(
+        createdAt.getTime() +
+          Number(auction.duration_days) *
+            24 *
+            60 *
+            60 *
+            1000,
+      );
+
+      /*
+       * O leilão tem obrigatoriamente de estar terminado
+       * para poder ser pago.
+       */
+
+      if (new Date() < endTime) {
+        return NextResponse.json(
+          {
+            error:
+              "Este leilão ainda não terminou.",
+            endTime: endTime.toISOString(),
+          },
+          { status: 409 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.4 OBTER O MAIOR LANCE
+       * -------------------------------------------------------
+       */
+
+      const {
+        data: winningBid,
+        error: winningBidError,
+      } = await supabaseAdmin
+        .from("auction_bids")
+        .select(
+          "id, auction_id, user_id, amount, created_at",
+        )
+        .eq("auction_id", auction.id)
+        .order("amount", {
+          ascending: false,
+        })
+        .order("created_at", {
+          ascending: true,
+        })
+        .limit(1)
+        .maybeSingle();
+
+      if (winningBidError) {
+        console.error(
+          "WINNING BID QUERY ERROR:",
+          winningBidError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível determinar o vencedor.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * Um leilão sem lances não pode ser pago.
+       */
+
+      if (!winningBid) {
+        return NextResponse.json(
+          {
+            error:
+              "Este leilão terminou sem licitações.",
+          },
+          { status: 409 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.5 CONFIRMAR QUE O UTILIZADOR É O VENCEDOR
+       * -------------------------------------------------------
+       */
+
+      if (winningBid.user_id !== user.id) {
+        return NextResponse.json(
+          {
+            error:
+              "Apenas o vencedor do leilão pode efetuar o pagamento.",
+          },
+          { status: 403 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.6 GARANTIR QUE O VENCEDOR NÃO É O PROPRIETÁRIO
+       * -------------------------------------------------------
+       */
+
+      if (auction.user_id === user.id) {
+        return NextResponse.json(
+          {
+            error:
+              "O proprietário não pode efetuar o pagamento deste leilão.",
+          },
+          { status: 403 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.7 VERIFICAR SE JÁ EXISTE PAGAMENTO
+       * -------------------------------------------------------
+       */
+
+      const {
+        data: existingPayment,
+        error: existingPaymentError,
+      } = await supabaseAdmin
+        .from("stripe_payments")
+        .select(
+          "id, stripe_session_id, status, amount",
+        )
+        .eq("auction_id", auction.id)
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingPaymentError) {
+        console.error(
+          "EXISTING AUCTION PAYMENT ERROR:",
+          existingPaymentError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível verificar o pagamento.",
+          },
+          { status: 500 },
+        );
+      }
+
+      if (existingPayment) {
+        return NextResponse.json(
+          {
+            error:
+              "Este leilão já tem um pagamento registado.",
+            paid: true,
+          },
+          { status: 409 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 4.8 VALIDAR VALOR DO LANCE
+       * -------------------------------------------------------
+       *
+       * O valor vem exclusivamente da BD.
+       */
+
+      const winningAmount =
+        Number(winningBid.amount);
+
+      if (
+        !Number.isFinite(winningAmount) ||
+        winningAmount <= 0
+      ) {
+        console.error(
+          "INVALID WINNING AMOUNT:",
+          winningBid.amount,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Valor do lance vencedor inválido.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * Stripe trabalha em cêntimos.
+       */
+
+      const amountInCents =
+        Math.round(winningAmount * 100);
+
+      /*
+       * -------------------------------------------------------
+       * 4.9 CRIAR CHECKOUT STRIPE
+       * -------------------------------------------------------
+       */
+
+      const session =
+        await stripe.checkout.sessions.create({
+          mode: "payment",
+
+          payment_method_types: ["card"],
+
+          ...(user.email
+            ? {
+                customer_email: user.email,
+              }
+            : {}),
+
+          line_items: [
+            {
+              price_data: {
+                currency: "eur",
+
+                product_data: {
+                  name:
+                    `${auction.brand} ${auction.model}` +
+                    " — Leilão Garagem164",
+                },
+
+                unit_amount:
+                  amountInCents,
+              },
+
+              quantity: 1,
+            },
+          ],
+
+          /*
+           * Metadata criada exclusivamente pelo servidor.
+           */
+
+          metadata: {
+            type: "auction",
+            listingId: auction.id,
+            auctionId: auction.id,
+            userId: user.id,
+            bidId: winningBid.id,
+            amount: winningAmount.toFixed(2),
+          },
+
+          success_url:
+            `${process.env.NEXT_PUBLIC_SITE_URL}` +
+            `/payment-success` +
+            `?type=auction` +
+            `&listingId=${encodeURIComponent(
+              auction.id,
+            )}`,
+
+          cancel_url:
+            `${process.env.NEXT_PUBLIC_SITE_URL}` +
+            `/auctions/${encodeURIComponent(
+              auction.id,
+            )}`,
+        });
+
+      /*
+       * -------------------------------------------------------
+       * 4.10 DEVOLVER URL DO STRIPE
+       * -------------------------------------------------------
+       */
+
+      return NextResponse.json({
+        url: session.url,
+      });
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 5. FLUXO DE SORTEIO
+     * ---------------------------------------------------------
+     *
+     * A partir daqui mantemos o comportamento original.
+     */
+
+    if (type !== "raffle") {
+      return NextResponse.json(
+        {
+          error:
+            "Tipo de checkout inválido.",
+        },
+        { status: 400 },
+      );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 5.1 VALIDAR BILHETES
      * ---------------------------------------------------------
      */
 
@@ -156,11 +518,8 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5. BUSCAR O SORTEIO DIRETAMENTE DA BD
+     * 5.2 BUSCAR SORTEIO
      * ---------------------------------------------------------
-     *
-     * O preço, proprietário, tipo e número total
-     * de bilhetes vêm sempre da base de dados.
      */
 
     const {
@@ -201,7 +560,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 6. GARANTIR QUE É UM SORTEIO
+     * 5.3 GARANTIR QUE É SORTEIO
      * ---------------------------------------------------------
      */
 
@@ -217,7 +576,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 7. O DONO NUNCA PODE COMPRAR
+     * 5.4 O DONO NÃO PODE COMPRAR
      * ---------------------------------------------------------
      */
 
@@ -233,7 +592,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 8. VALIDAR NÚMEROS DOS BILHETES
+     * 5.5 VALIDAR NÚMEROS
      * ---------------------------------------------------------
      */
 
@@ -255,7 +614,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 9. VERIFICAR BILHETES JÁ VENDIDOS
+     * 5.6 VERIFICAR BILHETES VENDIDOS
      * ---------------------------------------------------------
      */
 
@@ -301,11 +660,8 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 10. VERIFICAR RESERVAS
+     * 5.7 VERIFICAR RESERVAS
      * ---------------------------------------------------------
-     *
-     * Os bilhetes têm de estar reservados pelo
-     * utilizador autenticado e ainda dentro do prazo.
      */
 
     const now =
@@ -360,10 +716,8 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 11. PREÇO REAL
+     * 5.8 PREÇO REAL
      * ---------------------------------------------------------
-     *
-     * Nunca usamos ticketPrice enviado pelo browser.
      */
 
     const ticketPrice = Number(
@@ -390,7 +744,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 12. QUANTIDADE REAL
+     * 5.9 QUANTIDADE REAL
      * ---------------------------------------------------------
      */
 
@@ -399,16 +753,8 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 13. URL DE CANCELAMENTO
+     * 5.10 URL DE CANCELAMENTO
      * ---------------------------------------------------------
-     *
-     * Enviamos para o payment-cancel:
-     *
-     * - listingId
-     * - tickets
-     *
-     * Isto permite libertar imediatamente as reservas
-     * quando o utilizador regressar do Stripe.
      */
 
     const cancelUrl =
@@ -423,7 +769,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 14. CRIAR CHECKOUT STRIPE
+     * 5.11 CRIAR CHECKOUT STRIPE
      * ---------------------------------------------------------
      */
 
@@ -432,6 +778,12 @@ export async function POST(req: NextRequest) {
         mode: "payment",
 
         payment_method_types: ["card"],
+
+        ...(user.email
+          ? {
+              customer_email: user.email,
+            }
+          : {}),
 
         line_items: [
           {
@@ -456,6 +808,7 @@ export async function POST(req: NextRequest) {
          */
 
         metadata: {
+          type: "raffle",
           listingId: raffle.id,
           userId: user.id,
           quantity: quantity.toString(),
@@ -472,7 +825,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 15. DEVOLVER URL DO STRIPE
+     * 5.12 DEVOLVER URL
      * ---------------------------------------------------------
      */
 
