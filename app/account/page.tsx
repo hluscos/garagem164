@@ -131,10 +131,6 @@ export default function AccountPage() {
         return;
       }
 
-      /*
-       * Abrir o onboarding Stripe.
-       */
-
       window.location.href = data.url;
     } catch (error) {
       console.error(
@@ -348,7 +344,7 @@ export default function AccountPage() {
                   </div>
 
                   <div className="mt-3 font-bold">
-                    Meus Anúncios
+                    Os meus anúncios
                   </div>
                 </a>
 
