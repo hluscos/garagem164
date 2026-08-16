@@ -66,6 +66,10 @@ export async function POST(req: NextRequest) {
      * - type
      * - listingId
      *
+     * Para vendas:
+     * - type
+     * - listingId
+     *
      * O preço nunca vem do frontend.
      */
 
@@ -437,7 +441,568 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5. FLUXO DE SORTEIO
+     * 5. FLUXO DE VENDA NORMAL
+     * ---------------------------------------------------------
+     *
+     * A transaction é criada ANTES do Checkout Stripe.
+     *
+     * Isto permite:
+     *
+     * comprador A
+     *      ↓
+     * transaction pending_payment
+     *      ↓
+     * comprador B
+     *      ↓
+     * BLOQUEADO pela constraint única
+     *
+     * O webhook será responsável por concluir a transaction
+     * quando o pagamento for confirmado.
+     */
+
+    if (type === "sale") {
+      /*
+       * -------------------------------------------------------
+       * 5.1 BUSCAR VENDA
+       * -------------------------------------------------------
+       */
+
+      const {
+        data: sale,
+        error: saleError,
+      } = await supabaseAdmin
+        .from("listings")
+        .select(
+          "id, user_id, listing_type, price, brand, model",
+        )
+        .eq("id", listingId)
+        .maybeSingle();
+
+      if (saleError) {
+        console.error(
+          "SALE QUERY ERROR:",
+          saleError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível verificar o anúncio.",
+          },
+          { status: 500 },
+        );
+      }
+
+      if (!sale) {
+        return NextResponse.json(
+          {
+            error: "Anúncio não encontrado.",
+          },
+          { status: 404 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.2 GARANTIR QUE É VENDA
+       * -------------------------------------------------------
+       */
+
+      if (sale.listing_type !== "sale") {
+        return NextResponse.json(
+          {
+            error:
+              "Este anúncio não é uma venda.",
+          },
+          { status: 400 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.3 IMPEDIR COMPRA PELO PRÓPRIO VENDEDOR
+       * -------------------------------------------------------
+       */
+
+      if (sale.user_id === user.id) {
+        return NextResponse.json(
+          {
+            error:
+              "Não podes comprar o teu próprio anúncio.",
+          },
+          { status: 403 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.4 VALIDAR PREÇO REAL
+       * -------------------------------------------------------
+       *
+       * O preço vem exclusivamente da BD.
+       */
+
+      const salePrice = Number(
+        sale.price,
+      );
+
+      if (
+        !Number.isFinite(salePrice) ||
+        salePrice <= 0
+      ) {
+        console.error(
+          "INVALID SALE PRICE:",
+          sale.price,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Preço de venda inválido.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.5 VERIFICAR TRANSACTION ACTIVA
+       * -------------------------------------------------------
+       *
+       * Se o próprio comprador já tiver uma transaction
+       * pendente com Checkout Stripe, reutilizamos essa sessão.
+       *
+       * Se a reserva interna já tiver expirado, cancelamos
+       * a transaction e permitimos uma nova tentativa.
+       */
+
+      const now = new Date();
+
+      const {
+        data: existingTransaction,
+        error: existingTransactionError,
+      } = await supabaseAdmin
+        .from("transactions")
+        .select(
+          "id, buyer_id, commercial_status, financial_status, stripe_checkout_session, checkout_expires_at",
+        )
+        .eq("listing_id", sale.id)
+        .is("auction_id", null)
+        .neq("commercial_status", "cancelled")
+        .neq("commercial_status", "refunded")
+        .limit(1)
+        .maybeSingle();
+
+      if (existingTransactionError) {
+        console.error(
+          "EXISTING SALE TRANSACTION ERROR:",
+          existingTransactionError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível verificar a disponibilidade do anúncio.",
+          },
+          { status: 500 },
+        );
+      }
+
+      if (existingTransaction) {
+        const expiresAt =
+          existingTransaction.checkout_expires_at
+            ? new Date(
+                existingTransaction.checkout_expires_at,
+              )
+            : null;
+
+        /*
+         * Transaction ainda válida.
+         */
+
+        if (
+          expiresAt &&
+          expiresAt > now
+        ) {
+          /*
+           * Se pertence ao próprio comprador e temos uma
+           * Checkout Session, podemos devolvê-la.
+           */
+
+          if (
+            existingTransaction.buyer_id ===
+              user.id &&
+            existingTransaction.stripe_checkout_session
+          ) {
+            try {
+              const existingSession =
+                await stripe.checkout.sessions.retrieve(
+                  existingTransaction.stripe_checkout_session,
+                );
+
+              if (
+                existingSession.status ===
+                "open"
+              ) {
+                return NextResponse.json({
+                  url: existingSession.url,
+                });
+              }
+            } catch (stripeError) {
+              console.error(
+                "EXISTING SALE CHECKOUT RETRIEVE ERROR:",
+                stripeError,
+              );
+            }
+          }
+
+          return NextResponse.json(
+            {
+              error:
+                "Este anúncio está reservado para outro pagamento.",
+            },
+            { status: 409 },
+          );
+        }
+
+        /*
+         * A reserva interna expirou.
+         * Cancelamos a transaction antiga para permitir
+         * uma nova compra.
+         */
+
+        const {
+          error: expireError,
+        } = await supabaseAdmin
+          .from("transactions")
+          .update({
+            commercial_status: "cancelled",
+            cancelled_at: now.toISOString(),
+          })
+          .eq(
+            "id",
+            existingTransaction.id,
+          )
+          .eq(
+            "commercial_status",
+            "pending_payment",
+          );
+
+        if (expireError) {
+          console.error(
+            "EXPIRE SALE TRANSACTION ERROR:",
+            expireError,
+          );
+
+          return NextResponse.json(
+            {
+              error:
+                "Não foi possível libertar a reserva anterior.",
+            },
+            { status: 500 },
+          );
+        }
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.6 CALCULAR VALORES DA TRANSACTION
+       * -------------------------------------------------------
+       *
+       * Comissão da plataforma: 3%.
+       */
+
+      const platformFee =
+        Math.round(
+          salePrice * 0.03 * 100,
+        ) / 100;
+
+      const sellerAmount =
+        Math.round(
+          (salePrice - platformFee) * 100,
+        ) / 100;
+
+      /*
+       * -------------------------------------------------------
+       * 5.7 CRIAR TRANSACTION
+       * -------------------------------------------------------
+       *
+       * A constraint:
+       *
+       * idx_transactions_unique_active_sale
+       *
+       * garante atomicamente que não existe outra transaction
+       * activa para este listing.
+       */
+
+      const checkoutExpiresAt =
+        new Date(
+          now.getTime() +
+            24 * 60 * 60 * 1000,
+        );
+
+      const {
+        data: transaction,
+        error: transactionError,
+      } = await supabaseAdmin
+        .from("transactions")
+        .insert({
+          listing_id: sale.id,
+          auction_id: null,
+          buyer_id: user.id,
+          seller_id: sale.user_id,
+          amount: salePrice,
+          platform_fee: platformFee,
+          seller_amount: sellerAmount,
+          currency: "eur",
+          commercial_status:
+            "pending_payment",
+          financial_status: "unpaid",
+          checkout_expires_at:
+            checkoutExpiresAt.toISOString(),
+        })
+        .select(
+          "id, listing_id, buyer_id, seller_id, amount, platform_fee, seller_amount, commercial_status, financial_status, checkout_expires_at",
+        )
+        .single();
+
+      if (transactionError) {
+        /*
+         * PostgreSQL unique violation.
+         *
+         * Outro comprador conseguiu reservar o anúncio
+         * entretanto.
+         */
+
+        if (
+          transactionError.code ===
+          "23505"
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "Este anúncio acabou de ser reservado por outro comprador.",
+            },
+            { status: 409 },
+          );
+        }
+
+        console.error(
+          "SALE TRANSACTION INSERT ERROR:",
+          transactionError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível reservar o anúncio para pagamento.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.8 CRIAR CHECKOUT STRIPE
+       * -------------------------------------------------------
+       */
+
+      let session: Stripe.Checkout.Session;
+
+      try {
+        session =
+          await stripe.checkout.sessions.create(
+            {
+              mode: "payment",
+
+              payment_method_types: [
+                "card",
+              ],
+
+              ...(user.email
+                ? {
+                    customer_email:
+                      user.email,
+                  }
+                : {}),
+
+              line_items: [
+                {
+                  price_data: {
+                    currency: "eur",
+
+                    product_data: {
+                      name:
+                        `${sale.brand} ${sale.model}` +
+                        " — Garagem164",
+                    },
+
+                    unit_amount:
+                      Math.round(
+                        salePrice * 100,
+                      ),
+                  },
+
+                  quantity: 1,
+                },
+              ],
+
+              metadata: {
+                type: "sale",
+                listingId: sale.id,
+                transactionId:
+                  transaction.id,
+                userId: user.id,
+                sellerId: sale.user_id,
+                amount:
+                  salePrice.toFixed(2),
+                platformFee:
+                  platformFee.toFixed(2),
+                sellerAmount:
+                  sellerAmount.toFixed(2),
+              },
+
+              success_url:
+                `${process.env.NEXT_PUBLIC_SITE_URL}` +
+                `/payment-success` +
+                `?type=sale` +
+                `&listingId=${encodeURIComponent(
+                  sale.id,
+                )}`,
+
+              cancel_url:
+                `${process.env.NEXT_PUBLIC_SITE_URL}` +
+                `/listing/${encodeURIComponent(
+                  sale.id,
+                )}`,
+            },
+            {
+              idempotencyKey:
+                `checkout-sale-${transaction.id}`,
+            },
+          );
+      } catch (stripeError) {
+        console.error(
+          "SALE STRIPE CHECKOUT ERROR:",
+          stripeError,
+        );
+
+        /*
+         * Se o Checkout não puder ser criado,
+         * libertamos imediatamente a transaction.
+         */
+
+        const {
+          error: cancelError,
+        } = await supabaseAdmin
+          .from("transactions")
+          .update({
+            commercial_status:
+              "cancelled",
+            cancelled_at:
+              new Date().toISOString(),
+          })
+          .eq(
+            "id",
+            transaction.id,
+          )
+          .eq(
+            "commercial_status",
+            "pending_payment",
+          );
+
+        if (cancelError) {
+          console.error(
+            "SALE TRANSACTION CANCEL ERROR:",
+            cancelError,
+          );
+        }
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível iniciar o pagamento.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.9 GUARDAR CHECKOUT SESSION
+       * -------------------------------------------------------
+       */
+
+      const {
+        error: checkoutUpdateError,
+      } = await supabaseAdmin
+        .from("transactions")
+        .update({
+          stripe_checkout_session:
+            session.id,
+        })
+        .eq(
+          "id",
+          transaction.id,
+        )
+        .eq(
+          "commercial_status",
+          "pending_payment",
+        );
+
+      if (checkoutUpdateError) {
+        console.error(
+          "SALE CHECKOUT SESSION UPDATE ERROR:",
+          checkoutUpdateError,
+        );
+
+        /*
+         * Tentamos cancelar a transaction local.
+         *
+         * O Checkout Stripe já existe, mas o webhook continua
+         * protegido pelo transactionId presente nos metadata.
+         */
+
+        await supabaseAdmin
+          .from("transactions")
+          .update({
+            commercial_status:
+              "cancelled",
+            cancelled_at:
+              new Date().toISOString(),
+          })
+          .eq(
+            "id",
+            transaction.id,
+          )
+          .eq(
+            "commercial_status",
+            "pending_payment",
+          );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível concluir a preparação do pagamento.",
+          },
+          { status: 500 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.10 DEVOLVER URL DO STRIPE
+       * -------------------------------------------------------
+       */
+
+      return NextResponse.json({
+        url: session.url,
+      });
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 6. FLUXO DE SORTEIO
      * ---------------------------------------------------------
      *
      * A partir daqui mantemos o comportamento original.
@@ -455,7 +1020,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.1 VALIDAR BILHETES
+     * 6.1 VALIDAR BILHETES
      * ---------------------------------------------------------
      */
 
@@ -518,7 +1083,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.2 BUSCAR SORTEIO
+     * 6.2 BUSCAR SORTEIO
      * ---------------------------------------------------------
      */
 
@@ -560,7 +1125,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.3 GARANTIR QUE É SORTEIO
+     * 6.3 GARANTIR QUE É SORTEIO
      * ---------------------------------------------------------
      */
 
@@ -576,7 +1141,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.4 O DONO NÃO PODE COMPRAR
+     * 6.4 O DONO NÃO PODE COMPRAR
      * ---------------------------------------------------------
      */
 
@@ -592,7 +1157,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.5 VALIDAR NÚMEROS
+     * 6.5 VALIDAR NÚMEROS
      * ---------------------------------------------------------
      */
 
@@ -614,7 +1179,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.6 VERIFICAR BILHETES VENDIDOS
+     * 6.6 VERIFICAR BILHETES VENDIDOS
      * ---------------------------------------------------------
      */
 
@@ -660,7 +1225,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.7 VERIFICAR RESERVAS
+     * 6.7 VERIFICAR RESERVAS
      * ---------------------------------------------------------
      */
 
@@ -716,7 +1281,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.8 PREÇO REAL
+     * 6.8 PREÇO REAL
      * ---------------------------------------------------------
      */
 
@@ -744,7 +1309,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.9 QUANTIDADE REAL
+     * 6.9 QUANTIDADE REAL
      * ---------------------------------------------------------
      */
 
@@ -753,7 +1318,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.10 URL DE CANCELAMENTO
+     * 6.10 URL DE CANCELAMENTO
      * ---------------------------------------------------------
      */
 
@@ -769,7 +1334,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.11 CRIAR CHECKOUT STRIPE
+     * 6.11 CRIAR CHECKOUT STRIPE
      * ---------------------------------------------------------
      */
 
@@ -825,7 +1390,7 @@ export async function POST(req: NextRequest) {
 
     /*
      * ---------------------------------------------------------
-     * 5.12 DEVOLVER URL
+     * 6.12 DEVOLVER URL
      * ---------------------------------------------------------
      */
 
