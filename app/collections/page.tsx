@@ -56,7 +56,7 @@ export default function CollectionsPage() {
           </div>
 
           <h1 className="mt-5 text-[82px] leading-none font-black italic uppercase tracking-[-4px]">
-            Coleções
+            Anúncios
           </h1>
 
           <p className="mt-6 text-zinc-400 text-[18px] max-w-[700px] leading-relaxed">
@@ -78,7 +78,7 @@ export default function CollectionsPage() {
 
             <a
               key={brand.name}
-              href={`/collections/${brand.slug}`}
+              href={`/listings/${brand.slug}`}
               className="group rounded-[28px] border border-white/5 bg-zinc-950 p-10 hover:border-[#ffb800]/30 transition-all duration-500 cursor-pointer block"
             >
 

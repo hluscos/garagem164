@@ -35,8 +35,8 @@ export default function Footer() {
                 Leilões
               </a>
 
-              <a href="/collections" className="hover:text-white transition">
-                Coleções
+              <a href="/listings" className="hover:text-white transition">
+                Anúncios
               </a>
 
               <a href="/submit-listing" className="hover:text-white transition">

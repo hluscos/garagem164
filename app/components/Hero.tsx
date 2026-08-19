@@ -83,10 +83,10 @@ export default function Hero() {
             </a>
 
             <a
-              href="/collections"
+              href="/listings"
               className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb000] hover:bg-white/[0.04] transition-all duration-300 text-white font-bold uppercase tracking-[0.5px] text-[15px]"
             >
-              Explorar Coleções
+              Ver Anúncios
             </a>
 
           </div>

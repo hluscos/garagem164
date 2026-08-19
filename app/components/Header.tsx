@@ -183,10 +183,10 @@ export default function Header() {
             </Link>
 
             <Link
-              href="/collections"
-              className={navLinkClass("/collections")}
+              href="/listings"
+              className={navLinkClass("/listings")}
             >
-              Coleções
+              Anúncios
             </Link>
 
             <span className="cursor-default text-white">
