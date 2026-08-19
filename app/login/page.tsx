@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-
-type SocialProvider = "google" | "apple" | "facebook";
+import { FcGoogle } from "react-icons/fc";
+import { FaApple, FaFacebookF } from "react-icons/fa";
+import { Mail } from "lucide-react";
 
 export default function LoginPage() {
+  const [showEmail, setShowEmail] = useState(false);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] =
-    useState<SocialProvider | null>(null);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   async function handleLogin() {
@@ -18,11 +21,10 @@ export default function LoginPage() {
       setLoading(true);
       setMessage("");
 
-      const { error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         setMessage(error.message);
@@ -36,253 +38,225 @@ export default function LoginPage() {
   }
 
   async function handleSocialLogin(
-    provider: SocialProvider,
+    provider: "google" | "apple" | "facebook"
   ) {
     try {
       setSocialLoading(provider);
       setMessage("");
 
-      const redirectTo =
-        `${window.location.origin}/auth/callback`;
-
-      const { error } =
-        await supabase.auth.signInWithOAuth({
-          provider,
-          options: {
-            redirectTo,
-          },
-        });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
       if (error) {
-        console.error(
-          "SOCIAL LOGIN ERROR:",
-          error,
-        );
-
-        setMessage(
-          "Não foi possível iniciar o login.",
-        );
-
+        setMessage(error.message);
         setSocialLoading(null);
       }
-    } catch (error) {
-      console.error(
-        "SOCIAL LOGIN ERROR:",
-        error,
-      );
-
-      setMessage(
-        "Não foi possível iniciar o login.",
-      );
-
+    } catch {
+      setMessage("Não foi possível iniciar o início de sessão.");
       setSocialLoading(null);
     }
   }
 
-  const socialButtonLoading =
-    socialLoading !== null;
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black px-6">
+    <main className="relative min-h-screen overflow-hidden bg-black px-6 py-10 text-white flex items-center justify-center">
 
-      <div className="absolute h-[700px] w-[700px] rounded-full bg-[#ffb800]/10 blur-[180px]" />
+      {/* Glow principal */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffb800]/10 blur-[180px]" />
 
-      <div className="relative z-10 w-full max-w-[460px] rounded-[32px] border border-white/10 bg-zinc-950/90 p-10 shadow-[0_0_80px_rgba(255,184,0,0.08)] backdrop-blur-2xl">
+      {/* Glow inferior */}
+      <div className="pointer-events-none absolute bottom-[-300px] left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-[#ffb800]/10 blur-[160px]" />
 
-        {/* CABEÇALHO */}
+      <div className="relative z-10 w-full max-w-[520px]">
 
-        <div className="mb-10">
+        {/* Caixa */}
+        <div className="relative overflow-hidden rounded-[36px] border border-[#ffb800]/20 bg-[#080808]/95 p-8 shadow-[0_0_100px_rgba(255,184,0,0.08)] sm:p-10">
 
-          <div className="text-[12px] font-bold uppercase tracking-[3px] text-[#ffb800]">
-            Garagem164
-          </div>
+          {/* Linha dourada subtil */}
+          <div className="absolute left-1/2 top-0 h-px w-[180px] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#ffb800] to-transparent shadow-[0_0_20px_rgba(255,184,0,0.7)]" />
 
-          <h1 className="mt-3 text-[52px] font-black italic uppercase leading-none tracking-[-3px] text-white">
-            Entrar
-          </h1>
+          {/* Cabeçalho */}
+          <div className="mb-9">
 
-          <p className="mt-4 leading-relaxed text-zinc-400">
-            Acede à tua garagem, leilões e coleção.
-          </p>
+            <div className="text-[11px] font-black uppercase tracking-[4px] text-[#ffb800]">
+              GARAGEM164
+            </div>
 
-        </div>
+            <h1 className="mt-4 text-[52px] font-black italic uppercase leading-[0.9] tracking-[-4px] text-white sm:text-[58px]">
+              ENTRAR
+            </h1>
 
-        {/* LOGIN SOCIAL */}
-
-        <div className="space-y-3">
-
-          <button
-            type="button"
-            onClick={() =>
-              handleSocialLogin("google")
-            }
-            disabled={
-              loading ||
-              socialButtonLoading
-            }
-            className="flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white text-sm font-bold text-black transition-all duration-300 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-lg font-black">
-              G
-            </span>
-
-            {socialLoading === "google"
-              ? "A ligar..."
-              : "Continuar com Google"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              handleSocialLogin("apple")
-            }
-            disabled={
-              loading ||
-              socialButtonLoading
-            }
-            className="flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white text-sm font-bold text-black transition-all duration-300 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-lg">
-              
-            </span>
-
-            {socialLoading === "apple"
-              ? "A ligar..."
-              : "Continuar com Apple"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              handleSocialLogin("facebook")
-            }
-            disabled={
-              loading ||
-              socialButtonLoading
-            }
-            className="flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white text-sm font-bold text-black transition-all duration-300 hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-lg font-black">
-              f
-            </span>
-
-            {socialLoading === "facebook"
-              ? "A ligar..."
-              : "Continuar com Facebook"}
-          </button>
-
-        </div>
-
-        {/* SEPARADOR */}
-
-        <div className="my-8 flex items-center gap-4">
-
-          <div className="h-px flex-1 bg-white/10" />
-
-          <span className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
-            ou
-          </span>
-
-          <div className="h-px flex-1 bg-white/10" />
-
-        </div>
-
-        {/* LOGIN EMAIL */}
-
-        <div className="space-y-5">
-
-          <div>
-
-            <label className="text-[12px] font-bold uppercase tracking-[2px] text-zinc-500">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="o teu email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              disabled={
-                loading ||
-                socialButtonLoading
-              }
-              className="mt-2 h-[58px] w-full rounded-2xl border border-white/10 bg-black px-5 text-white outline-none focus:border-[#ffb800] disabled:opacity-50"
-            />
+            <p className="mt-5 text-[15px] leading-relaxed text-zinc-400">
+              Acede à tua garagem, leilões e coleção.
+            </p>
 
           </div>
 
-          <div>
+          {!showEmail ? (
+            <>
+              {/* Login social */}
+              <div className="flex items-center justify-center gap-4">
 
-            <label className="text-[12px] font-bold uppercase tracking-[2px] text-zinc-500">
-              Palavra-passe
-            </label>
+                {/* Google */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin("google")}
+                  disabled={socialLoading !== null}
+                  aria-label="Continuar com Google"
+                  className="group flex h-[76px] w-[76px] items-center justify-center rounded-[22px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:bg-zinc-900 hover:shadow-[0_10px_35px_rgba(255,184,0,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {socialLoading === "google" ? (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+                  ) : (
+                    <FcGoogle className="text-[32px]" />
+                  )}
+                </button>
 
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              disabled={
-                loading ||
-                socialButtonLoading
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  void handleLogin();
-                }
-              }}
-              className="mt-2 h-[58px] w-full rounded-2xl border border-white/10 bg-black px-5 text-white outline-none focus:border-[#ffb800] disabled:opacity-50"
-            />
+                {/* Apple */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin("apple")}
+                  disabled={socialLoading !== null}
+                  aria-label="Continuar com Apple"
+                  className="group flex h-[76px] w-[76px] items-center justify-center rounded-[22px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:bg-zinc-900 hover:shadow-[0_10px_35px_rgba(255,184,0,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {socialLoading === "apple" ? (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+                  ) : (
+                    <FaApple className="text-[31px] text-white" />
+                  )}
+                </button>
 
-          </div>
+                {/* Facebook */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialLogin("facebook")}
+                  disabled={socialLoading !== null}
+                  aria-label="Continuar com Facebook"
+                  className="group flex h-[76px] w-[76px] items-center justify-center rounded-[22px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:bg-zinc-900 hover:shadow-[0_10px_35px_rgba(255,184,0,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {socialLoading === "facebook" ? (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+                  ) : (
+                    <FaFacebookF className="text-[29px] text-[#1877F2]" />
+                  )}
+                </button>
 
-          <button
-            type="button"
-            onClick={() =>
-              void handleLogin()
-            }
-            disabled={
-              loading ||
-              socialButtonLoading
-            }
-            className="h-[60px] w-full rounded-2xl bg-[#ffb800] text-[14px] font-black uppercase tracking-[1px] text-black transition-all duration-300 hover:bg-[#ffc933] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading
-              ? "A entrar..."
-              : "Entrar"}
-          </button>
+              </div>
 
+              {/* Divisor */}
+              <div className="my-9 flex items-center gap-5">
+                <div className="h-px flex-1 bg-white/10" />
+
+                <span className="text-[11px] font-black uppercase tracking-[4px] text-zinc-600">
+                  OU
+                </span>
+
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+
+              {/* Email */}
+              <button
+                type="button"
+                onClick={() => setShowEmail(true)}
+                className="group flex h-[62px] w-full items-center justify-center gap-4 rounded-[20px] border border-[#ffb800]/40 bg-transparent text-[#ffb800] transition-all duration-300 hover:border-[#ffb800] hover:bg-[#ffb800]/5 hover:shadow-[0_0_30px_rgba(255,184,0,0.08)]"
+              >
+                <Mail
+                  size={21}
+                  className="transition-transform duration-300 group-hover:-translate-x-1"
+                />
+
+                <span className="text-[13px] font-black uppercase tracking-[1px]">
+                  Continuar com email
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Login por email */}
+              <div className="space-y-5">
+
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-[2px] text-zinc-500">
+                    Email
+                  </label>
+
+                  <input
+                    type="email"
+                    placeholder="o teu email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-2 h-[58px] w-full rounded-2xl border border-white/10 bg-black px-5 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-[#ffb800]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-black uppercase tracking-[2px] text-zinc-500">
+                    Password
+                  </label>
+
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleLogin();
+                      }
+                    }}
+                    className="mt-2 h-[58px] w-full rounded-2xl border border-white/10 bg-black px-5 text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-[#ffb800]"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  disabled={loading}
+                  className="h-[60px] w-full rounded-2xl bg-[#ffb800] text-[13px] font-black uppercase tracking-[1px] text-black transition-all duration-300 hover:bg-[#ffc933] hover:shadow-[0_10px_35px_rgba(255,184,0,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? "A entrar..." : "Entrar"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmail(false);
+                    setMessage("");
+                  }}
+                  className="w-full text-center text-[12px] font-bold text-zinc-500 transition-colors hover:text-white"
+                >
+                  ← Voltar às opções de início de sessão
+                </button>
+
+              </div>
+            </>
+          )}
+
+          {/* Erro */}
           {message && (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-center text-sm text-red-400">
+            <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-center text-sm text-red-300">
               {message}
             </div>
           )}
 
-        </div>
-
-        {/* REGISTO */}
-
-        <div className="mt-8 border-t border-white/5 pt-6 text-center">
-
-          <span className="text-sm text-zinc-500">
-            Ainda não tens conta?
-          </span>
-
-          <a
-            href="/register"
-            className="ml-2 text-sm font-bold text-[#ffb800] hover:text-[#ffd34d]"
-          >
-            Criar conta
-          </a>
+          {/* Registo */}
+          <div className="mt-9 text-center text-sm text-zinc-500">
+            Não tens conta?{" "}
+            <a
+              href="/register"
+              className="font-bold text-[#ffb800] transition-colors hover:text-[#ffc933]"
+            >
+              Registar
+            </a>
+          </div>
 
         </div>
 
       </div>
-
     </main>
   );
 }
