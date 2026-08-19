@@ -7,12 +7,12 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Ticket,
-  Gavel,
   Package,
   Heart,
   Settings,
   UserCircle2,
   BadgeCheck,
+  Store,
 } from "lucide-react";
 
 const menu = [
@@ -27,14 +27,14 @@ const menu = [
     icon: ShoppingBag,
   },
   {
+    href: "/account/sales",
+    label: "Vendas",
+    icon: Store,
+  },
+  {
     href: "/account/raffles",
     label: "Sorteios",
     icon: Ticket,
-  },
-  {
-    href: "/account/auctions",
-    label: "Leilões",
-    icon: Gavel,
   },
   {
     href: "/account/listings",
@@ -65,7 +65,7 @@ export default function AccountSidebar() {
 
         <div className="flex justify-center">
 
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#ffb800]/15 border border-[#ffb800]/30">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#ffb800]/30 bg-[#ffb800]/15">
 
             <UserCircle2
               size={56}
@@ -113,7 +113,12 @@ export default function AccountSidebar() {
         {menu.map((item) => {
           const Icon = item.icon;
 
-          const active = pathname === item.href;
+          const active =
+            pathname === item.href ||
+            (item.href !== "/account" &&
+              pathname.startsWith(
+                `${item.href}/`,
+              ));
 
           return (
             <Link
@@ -121,7 +126,7 @@ export default function AccountSidebar() {
               href={item.href}
               className={`flex items-center gap-4 rounded-2xl px-4 py-3 transition-all duration-300 ${
                 active
-                  ? "bg-[#ffb800] text-black font-black"
+                  ? "bg-[#ffb800] font-black text-black"
                   : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
               }`}
             >

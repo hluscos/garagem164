@@ -39,6 +39,7 @@ export default function AccountPage() {
       }
 
       setEmail(session.user.email || "");
+
       setConfirmedAt(
         session.user.email_confirmed_at || "",
       );
@@ -155,12 +156,17 @@ export default function AccountPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="max-w-[1600px] mx-auto px-10 py-10 flex gap-8">
+      <div className="mx-auto flex max-w-[1600px] gap-8 px-10 py-10">
+
         <AccountSidebar />
 
         <div className="flex-1">
+
+          {/* CABEÇALHO */}
+
           <div className="mb-10">
-            <div className="text-[#ffb800] uppercase tracking-[3px] text-xs font-black">
+
+            <div className="text-xs font-black uppercase tracking-[3px] text-[#ffb800]">
               Área Pessoal
             </div>
 
@@ -168,14 +174,18 @@ export default function AccountPage() {
               Bem-vindo
             </h1>
 
-            <p className="mt-4 text-zinc-400 max-w-3xl">
+            <p className="mt-4 max-w-3xl text-zinc-400">
               Gere os teus anúncios, acompanha os sorteios,
               consulta as tuas compras e controla toda a tua
               atividade no Garagem164.
             </p>
+
           </div>
 
+          {/* DASHBOARD */}
+
           <div className="grid grid-cols-4 gap-6">
+
             <DashboardCard
               title="Anúncios"
               value={listingCount}
@@ -199,6 +209,7 @@ export default function AccountPage() {
               value={0}
               subtitle="Licitações"
             />
+
           </div>
 
           {/* =====================================================
@@ -206,9 +217,12 @@ export default function AccountPage() {
               ===================================================== */}
 
           <div className="mt-10 rounded-[32px] border border-white/5 bg-zinc-950 p-8">
+
             <div className="flex items-start justify-between gap-8">
+
               <div>
-                <div className="text-xs uppercase tracking-[2px] text-zinc-500 font-bold">
+
+                <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                   Pagamentos
                 </div>
 
@@ -221,24 +235,28 @@ export default function AccountPage() {
                   receber o dinheiro das suas vendas e leilões
                   através do Garagem164.
                 </p>
+
               </div>
 
               <div
-                className={`shrink-0 rounded-full px-4 py-2 text-xs font-black uppercase tracking-[1px] ${
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[1px] ${
                   connectReady
-                    ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                    : "bg-[#ffb800]/10 text-[#ffb800] border border-[#ffb800]/20"
+                    ? "border-green-500/20 bg-green-500/10 text-green-400"
+                    : "border-[#ffb800]/20 bg-[#ffb800]/10 text-[#ffb800]"
                 }`}
               >
                 {connectReady
                   ? "Conta ativa"
                   : "Configuração necessária"}
               </div>
+
             </div>
 
             <div className="mt-8 grid grid-cols-3 gap-4">
+
               <div className="rounded-2xl border border-white/10 bg-black p-5">
-                <div className="text-xs uppercase tracking-[1.5px] text-zinc-500 font-bold">
+
+                <div className="text-xs font-bold uppercase tracking-[1.5px] text-zinc-500">
                   Conta Stripe
                 </div>
 
@@ -247,10 +265,12 @@ export default function AccountPage() {
                     ? "Criada"
                     : "Por configurar"}
                 </div>
+
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black p-5">
-                <div className="text-xs uppercase tracking-[1.5px] text-zinc-500 font-bold">
+
+                <div className="text-xs font-bold uppercase tracking-[1.5px] text-zinc-500">
                   Dados submetidos
                 </div>
 
@@ -259,10 +279,12 @@ export default function AccountPage() {
                     ? "Concluído"
                     : "Pendente"}
                 </div>
+
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black p-5">
-                <div className="text-xs uppercase tracking-[1.5px] text-zinc-500 font-bold">
+
+                <div className="text-xs font-bold uppercase tracking-[1.5px] text-zinc-500">
                   Pagamentos
                 </div>
 
@@ -271,7 +293,9 @@ export default function AccountPage() {
                     ? "Ativos"
                     : "Pendente"}
                 </div>
+
               </div>
+
             </div>
 
             {connectMessage && (
@@ -281,6 +305,7 @@ export default function AccountPage() {
             )}
 
             <div className="mt-8">
+
               <button
                 type="button"
                 onClick={setupStripeConnect}
@@ -295,16 +320,25 @@ export default function AccountPage() {
                       ? "Continuar configuração"
                       : "Configurar pagamentos"}
               </button>
+
             </div>
+
           </div>
 
+          {/* CONTA + ACESSO RÁPIDO */}
+
           <div className="mt-10 grid grid-cols-2 gap-6">
+
+            {/* CONTA */}
+
             <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-8">
-              <div className="text-xs uppercase tracking-[2px] text-zinc-500 font-bold">
+
+              <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                 Conta
               </div>
 
               <div className="mt-6">
+
                 <div className="text-sm text-zinc-500">
                   Email
                 </div>
@@ -312,9 +346,11 @@ export default function AccountPage() {
                 <div className="mt-2 text-lg font-bold">
                   {email}
                 </div>
+
               </div>
 
               <div className="mt-8">
+
                 <div className="text-sm text-zinc-500">
                   Conta confirmada
                 </div>
@@ -326,19 +362,28 @@ export default function AccountPage() {
                       ).toLocaleDateString("pt-PT")
                     : "-"}
                 </div>
+
               </div>
+
             </div>
 
+            {/* ACESSO RÁPIDO */}
+
             <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-8">
-              <div className="text-xs uppercase tracking-[2px] text-zinc-500 font-bold">
+
+              <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                 Acesso rápido
               </div>
 
               <div className="mt-8 grid grid-cols-2 gap-4">
+
+                {/* ANÚNCIOS */}
+
                 <a
                   href="/account/listings"
-                  className="rounded-2xl border border-white/10 bg-black p-6 hover:border-[#ffb800] transition-all duration-300"
+                  className="rounded-2xl border border-white/10 bg-black p-6 transition-all duration-300 hover:border-[#ffb800]"
                 >
+
                   <div className="text-3xl font-black text-[#ffb800]">
                     {listingCount}
                   </div>
@@ -346,9 +391,16 @@ export default function AccountPage() {
                   <div className="mt-3 font-bold">
                     Os meus anúncios
                   </div>
+
                 </a>
 
-                <div className="rounded-2xl border border-white/10 bg-black p-6 opacity-60">
+                {/* COMPRAS */}
+
+                <a
+                  href="/account/purchases"
+                  className="rounded-2xl border border-white/10 bg-black p-6 transition-all duration-300 hover:border-[#ffb800]"
+                >
+
                   <div className="text-3xl font-black text-[#ffb800]">
                     0
                   </div>
@@ -356,9 +408,16 @@ export default function AccountPage() {
                   <div className="mt-3 font-bold">
                     Compras
                   </div>
-                </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black p-6 opacity-60">
+                </a>
+
+                {/* SORTEIOS */}
+
+                <a
+                  href="/raffles"
+                  className="rounded-2xl border border-white/10 bg-black p-6 transition-all duration-300 hover:border-[#ffb800]"
+                >
+
                   <div className="text-3xl font-black text-[#ffb800]">
                     0
                   </div>
@@ -366,21 +425,34 @@ export default function AccountPage() {
                   <div className="mt-3 font-bold">
                     Sorteios
                   </div>
-                </div>
 
-                <div className="rounded-2xl border border-white/10 bg-black p-6 opacity-60">
+                </a>
+
+                {/* VENDAS */}
+
+                <a
+                  href="/account/sales"
+                  className="rounded-2xl border border-white/10 bg-black p-6 transition-all duration-300 hover:border-[#ffb800]"
+                >
+
                   <div className="text-3xl font-black text-[#ffb800]">
                     0
                   </div>
 
                   <div className="mt-3 font-bold">
-                    Leilões
+                    As minhas vendas
                   </div>
-                </div>
+
+                </a>
+
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
     </main>
   );
