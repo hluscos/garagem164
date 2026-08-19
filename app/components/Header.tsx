@@ -22,17 +22,39 @@ export default function Header() {
   const pathname = usePathname();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    let mounted = true;
+
+    async function loadSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (mounted) {
+        setSession(session);
+      }
+    }
+
+    loadSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      if (mounted) {
+        setSession(session);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    const handleFocus = () => {
+      loadSession();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   const isActive = (path: string) => {
@@ -81,8 +103,6 @@ export default function Header() {
 
           </div>
 
-          {/* SOCIALS */}
-
           <div className="ml-8 flex items-center gap-3">
 
             <button
@@ -120,8 +140,6 @@ export default function Header() {
 
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-12">
 
-          {/* LOGO → HOMEPAGE */}
-
           <Link
             href="/"
             aria-label="Garagem164 — Homepage"
@@ -133,8 +151,6 @@ export default function Header() {
               className="h-[115px] w-auto object-contain"
             />
           </Link>
-
-          {/* NAVIGATION */}
 
           <nav className="hidden items-center gap-9 text-[15px] font-bold uppercase tracking-[0.5px] xl:flex">
 
@@ -183,11 +199,7 @@ export default function Header() {
 
           </nav>
 
-          {/* RIGHT SIDE */}
-
           <div className="flex items-center gap-4">
-
-            {/* SEARCH */}
 
             <button
               type="button"
@@ -196,8 +208,6 @@ export default function Header() {
             >
               <Search size={20} />
             </button>
-
-            {/* CART */}
 
             <button
               type="button"
@@ -210,8 +220,6 @@ export default function Header() {
                 2
               </div>
             </button>
-
-            {/* ACCOUNT */}
 
             {session ? (
               <div className="flex items-center gap-3">
@@ -227,6 +235,7 @@ export default function Header() {
                   type="button"
                   onClick={async () => {
                     await supabase.auth.signOut();
+                    setSession(null);
                     window.location.href = "/";
                   }}
                   className="flex h-[52px] items-center justify-center rounded-2xl bg-[#ffb800] px-8 text-[13px] font-black uppercase tracking-[0.5px] text-black shadow-[0_0_40px_rgba(255,184,0,0.16)] transition-all duration-300 hover:bg-[#ffc933]"
