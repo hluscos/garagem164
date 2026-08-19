@@ -4,27 +4,49 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PurchaseCard from "../components/PurchaseCard";
 
-interface Purchase {
+type PurchaseType = "raffle" | "sale" | "auction";
+
+type CommercialStatus =
+  | "pending_payment"
+  | "paid"
+  | "awaiting_shipment"
+  | "shipped"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "disputed";
+
+type FinancialStatus =
+  | "unpaid"
+  | "held"
+  | "ready_for_payout"
+  | "transferred"
+  | "refunded"
+  | "disputed";
+
+interface RaffleTicket {
   raffle_id: string;
   ticket_number: number;
   total_price: number;
   created_at: string;
 }
 
-interface GroupedPurchase {
-  raffle_id: string;
-  ticketNumbers: number[];
-  totalPaid: number;
-  purchaseDate: string;
-  brand: string;
-  model: string;
-  image: string;
+interface Transaction {
+  id: string;
+  listing_id: string;
+  auction_id: string | null;
+  buyer_id: string;
+  amount: number;
+  commercial_status: CommercialStatus;
+  financial_status: FinancialStatus;
+  created_at: string;
 }
 
 interface Listing {
   id: string;
   brand: string | null;
   model: string | null;
+  listing_type: PurchaseType;
 }
 
 interface ListingImage {
@@ -33,11 +55,25 @@ interface ListingImage {
   sort_order: number | null;
 }
 
+interface PurchaseItem {
+  id: string;
+  type: PurchaseType;
+  listingId: string;
+  ticketNumbers: number[];
+  totalPaid: number;
+  purchaseDate: string;
+  brand: string;
+  model: string;
+  image: string;
+  commercialStatus?: CommercialStatus;
+  financialStatus?: FinancialStatus;
+}
+
 export default function PurchasesPage() {
   const [loading, setLoading] = useState(true);
 
-  const [groupedPurchases, setGroupedPurchases] = useState<
-    GroupedPurchase[]
+  const [purchases, setPurchases] = useState<
+    PurchaseItem[]
   >([]);
 
   useEffect(() => {
@@ -51,23 +87,41 @@ export default function PurchasesPage() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("raffle_tickets")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
+      /*
+       * ---------------------------------------------------------
+       * 1. SORTEIOS
+       * ---------------------------------------------------------
+       */
 
-      if (error) {
-        console.error("Erro ao carregar compras:", error);
-        setLoading(false);
-        return;
+      const {
+        data: raffleTicketsData,
+        error: raffleTicketsError,
+      } = await supabase
+        .from("raffle_tickets")
+        .select(
+          "raffle_id, ticket_number, total_price, created_at",
+        )
+        .eq("user_id", session.user.id)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (raffleTicketsError) {
+        console.error(
+          "Erro ao carregar bilhetes:",
+          raffleTicketsError,
+        );
       }
 
-      console.log("PURCHASES", data);
+      const raffleTickets =
+        (raffleTicketsData ??
+          []) as RaffleTicket[];
 
-      const purchases = (data ?? []) as Purchase[];
+      /*
+       * Agrupar bilhetes por sorteio.
+       */
 
-      const grouped: Record<
+      const groupedRaffles: Record<
         string,
         {
           raffle_id: string;
@@ -77,111 +131,265 @@ export default function PurchasesPage() {
         }
       > = {};
 
-      purchases.forEach((purchase) => {
-        if (!grouped[purchase.raffle_id]) {
-          grouped[purchase.raffle_id] = {
-            raffle_id: purchase.raffle_id,
+      raffleTickets.forEach((ticket) => {
+        if (!groupedRaffles[ticket.raffle_id]) {
+          groupedRaffles[ticket.raffle_id] = {
+            raffle_id: ticket.raffle_id,
             ticketNumbers: [],
             totalPaid: 0,
-            purchaseDate: purchase.created_at,
+            purchaseDate: ticket.created_at,
           };
         }
 
-        grouped[purchase.raffle_id].ticketNumbers.push(
-          purchase.ticket_number
+        groupedRaffles[
+          ticket.raffle_id
+        ].ticketNumbers.push(
+          ticket.ticket_number,
         );
 
-        grouped[purchase.raffle_id].totalPaid +=
-          Number(purchase.total_price);
+        groupedRaffles[
+          ticket.raffle_id
+        ].totalPaid += Number(
+          ticket.total_price,
+        );
       });
 
-      const groupedArray = Object.values(grouped);
-
-      console.log("GROUPED", groupedArray);
-
-      if (groupedArray.length === 0) {
-        setGroupedPurchases([]);
-        setLoading(false);
-        return;
-      }
-
       /*
        * ---------------------------------------------------------
-       * BUSCAR OS ANÚNCIOS
+       * 2. TRANSAÇÕES
        * ---------------------------------------------------------
        */
 
-      const raffleIds = groupedArray.map(
-        (purchase) => purchase.raffle_id
-      );
-
-      const { data: listingsData, error: listingsError } =
-        await supabase
-          .from("listings")
-          .select("id, brand, model")
-          .in("id", raffleIds);
-
-      if (listingsError) {
-        console.error(
-          "Erro ao carregar anúncios:",
-          listingsError
-        );
-      }
-
-      const listings = (listingsData ?? []) as Listing[];
-
-      /*
-       * ---------------------------------------------------------
-       * BUSCAR AS IMAGENS
-       * ---------------------------------------------------------
-       */
-
-      const { data: imagesData, error: imagesError } =
-        await supabase
-          .from("listing_images")
-          .select("listing_id, image_url, sort_order")
-          .in("listing_id", raffleIds)
-          .order("sort_order", { ascending: true });
-
-      if (imagesError) {
-        console.error(
-          "Erro ao carregar imagens:",
-          imagesError
-        );
-      }
-
-      const images = (imagesData ?? []) as ListingImage[];
-
-      /*
-       * ---------------------------------------------------------
-       * JUNTAR COMPRAS + ANÚNCIOS + IMAGENS
-       * ---------------------------------------------------------
-       */
-
-      const finalPurchases: GroupedPurchase[] =
-        groupedArray.map((purchase) => {
-          const listing = listings.find(
-            (item) => item.id === purchase.raffle_id
-          );
-
-          const listingImage = images.find(
-            (image) => image.listing_id === purchase.raffle_id
-          );
-
-          return {
-            ...purchase,
-            brand: listing?.brand || "Garagem164",
-            model: listing?.model || "Miniatura",
-            image: listingImage?.image_url || "",
-          };
+      const {
+        data: transactionsData,
+        error: transactionsError,
+      } = await supabase
+        .from("transactions")
+        .select(
+          `
+            id,
+            listing_id,
+            auction_id,
+            buyer_id,
+            amount,
+            commercial_status,
+            financial_status,
+            created_at
+          `,
+        )
+        .eq("buyer_id", session.user.id)
+        .order("created_at", {
+          ascending: false,
         });
 
-      console.log(
-        "FINAL PURCHASES",
-        finalPurchases
+      if (transactionsError) {
+        console.error(
+          "Erro ao carregar transações:",
+          transactionsError,
+        );
+      }
+
+      const transactions =
+        (transactionsData ??
+          []) as Transaction[];
+
+      /*
+       * ---------------------------------------------------------
+       * 3. OBTER TODOS OS LISTING IDS
+       * ---------------------------------------------------------
+       */
+
+      const listingIds = [
+        ...new Set([
+          ...Object.keys(groupedRaffles),
+          ...transactions.map(
+            (transaction) =>
+              transaction.listing_id,
+          ),
+        ]),
+      ];
+
+      let listings: Listing[] = [];
+
+      let images: ListingImage[] = [];
+
+      if (listingIds.length > 0) {
+        /*
+         * -------------------------------------------------------
+         * ANÚNCIOS
+         * -------------------------------------------------------
+         */
+
+        const {
+          data: listingsData,
+          error: listingsError,
+        } = await supabase
+          .from("listings")
+          .select(
+            "id, brand, model, listing_type",
+          )
+          .in("id", listingIds);
+
+        if (listingsError) {
+          console.error(
+            "Erro ao carregar anúncios:",
+            listingsError,
+          );
+        }
+
+        listings =
+          (listingsData ?? []) as Listing[];
+
+        /*
+         * -------------------------------------------------------
+         * IMAGENS
+         * -------------------------------------------------------
+         */
+
+        const {
+          data: imagesData,
+          error: imagesError,
+        } = await supabase
+          .from("listing_images")
+          .select(
+            "listing_id, image_url, sort_order",
+          )
+          .in("listing_id", listingIds)
+          .order("sort_order", {
+            ascending: true,
+          });
+
+        if (imagesError) {
+          console.error(
+            "Erro ao carregar imagens:",
+            imagesError,
+          );
+        }
+
+        images =
+          (imagesData ??
+            []) as ListingImage[];
+      }
+
+      /*
+       * ---------------------------------------------------------
+       * 4. CONSTRUIR COMPRAS DE SORTEIOS
+       * ---------------------------------------------------------
+       */
+
+      const rafflePurchases: PurchaseItem[] =
+        Object.values(groupedRaffles).map(
+          (raffle) => {
+            const listing = listings.find(
+              (item) =>
+                item.id === raffle.raffle_id,
+            );
+
+            const listingImage = images.find(
+              (image) =>
+                image.listing_id ===
+                raffle.raffle_id,
+            );
+
+            return {
+              id: `raffle-${raffle.raffle_id}`,
+              type: "raffle",
+              listingId: raffle.raffle_id,
+              ticketNumbers:
+                raffle.ticketNumbers,
+              totalPaid:
+                raffle.totalPaid,
+              purchaseDate:
+                raffle.purchaseDate,
+              brand:
+                listing?.brand ||
+                "Garagem164",
+              model:
+                listing?.model ||
+                "Miniatura",
+              image:
+                listingImage?.image_url ||
+                "",
+            };
+          },
+        );
+
+      /*
+       * ---------------------------------------------------------
+       * 5. CONSTRUIR COMPRAS DE TRANSAÇÕES
+       * ---------------------------------------------------------
+       */
+
+      const transactionPurchases: PurchaseItem[] =
+        transactions.map(
+          (transaction) => {
+            const listing = listings.find(
+              (item) =>
+                item.id ===
+                transaction.listing_id,
+            );
+
+            const listingImage = images.find(
+              (image) =>
+                image.listing_id ===
+                transaction.listing_id,
+            );
+
+            const type: PurchaseType =
+              transaction.auction_id
+                ? "auction"
+                : listing?.listing_type ===
+                    "auction"
+                  ? "auction"
+                  : "sale";
+
+            return {
+              id: transaction.id,
+              type,
+              listingId:
+                transaction.listing_id,
+              ticketNumbers: [],
+              totalPaid:
+                Number(transaction.amount),
+              purchaseDate:
+                transaction.created_at,
+              brand:
+                listing?.brand ||
+                "Garagem164",
+              model:
+                listing?.model ||
+                "Miniatura",
+              image:
+                listingImage?.image_url ||
+                "",
+              commercialStatus:
+                transaction.commercial_status,
+              financialStatus:
+                transaction.financial_status,
+            };
+          },
+        );
+
+      /*
+       * ---------------------------------------------------------
+       * 6. JUNTAR E ORDENAR
+       * ---------------------------------------------------------
+       */
+
+      const allPurchases = [
+        ...rafflePurchases,
+        ...transactionPurchases,
+      ].sort(
+        (a, b) =>
+          new Date(
+            b.purchaseDate,
+          ).getTime() -
+          new Date(
+            a.purchaseDate,
+          ).getTime(),
       );
 
-      setGroupedPurchases(finalPurchases);
+      setPurchases(allPurchases);
       setLoading(false);
     }
 
@@ -209,35 +417,52 @@ export default function PurchasesPage() {
         </h1>
 
         <p className="mt-2 text-zinc-400">
-          Encontrados {groupedPurchases.length}{" "}
-          {groupedPurchases.length === 1
-            ? "sorteio"
-            : "sorteios"}.
+          Encontradas {purchases.length}{" "}
+          {purchases.length === 1
+            ? "compra"
+            : "compras"}.
         </p>
 
-        {groupedPurchases.length === 0 ? (
+        {purchases.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-white/10 bg-zinc-950 p-10 text-center">
+
             <div className="text-xl font-black">
               Ainda não tens compras
             </div>
 
             <p className="mt-2 text-zinc-500">
-              Quando comprares bilhetes, eles aparecerão aqui.
+              Quando fizeres uma compra, ela aparecerá aqui.
             </p>
+
           </div>
         ) : (
           <div className="mt-10 space-y-6">
 
-            {groupedPurchases.map((purchase) => (
+            {purchases.map((purchase) => (
               <PurchaseCard
-                key={purchase.raffle_id}
-                raffleId={purchase.raffle_id}
+                key={purchase.id}
+                type={purchase.type}
+                listingId={
+                  purchase.listingId
+                }
                 model={purchase.model}
                 brand={purchase.brand}
                 image={purchase.image}
-                ticketNumbers={purchase.ticketNumbers}
-                totalPaid={purchase.totalPaid}
-                purchaseDate={purchase.purchaseDate}
+                ticketNumbers={
+                  purchase.ticketNumbers
+                }
+                totalPaid={
+                  purchase.totalPaid
+                }
+                purchaseDate={
+                  purchase.purchaseDate
+                }
+                commercialStatus={
+                  purchase.commercialStatus
+                }
+                financialStatus={
+                  purchase.financialStatus
+                }
               />
             ))}
 

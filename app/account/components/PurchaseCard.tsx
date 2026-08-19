@@ -1,40 +1,193 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Ticket } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Gavel,
+  PackageCheck,
+  Ticket,
+} from "lucide-react";
 import TicketBadge from "./TicketBadge";
 
+type PurchaseType = "raffle" | "sale" | "auction";
+
+type CommercialStatus =
+  | "pending_payment"
+  | "paid"
+  | "awaiting_shipment"
+  | "shipped"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "disputed";
+
+type FinancialStatus =
+  | "unpaid"
+  | "held"
+  | "ready_for_payout"
+  | "transferred"
+  | "refunded"
+  | "disputed";
+
 interface PurchaseCardProps {
-  raffleId: string;
+  type: PurchaseType;
+  listingId: string;
   model: string;
   brand: string;
   image: string;
-  ticketNumbers: number[];
   totalPaid: number;
   purchaseDate: string;
+
+  ticketNumbers?: number[];
+
+  commercialStatus?: CommercialStatus;
+  financialStatus?: FinancialStatus;
+}
+
+function getTypeLabel(type: PurchaseType) {
+  if (type === "sale") {
+    return "Venda";
+  }
+
+  if (type === "auction") {
+    return "Leilão";
+  }
+
+  return "Sorteio";
+}
+
+function getStatusLabel(
+  commercialStatus?: CommercialStatus,
+  financialStatus?: FinancialStatus,
+) {
+  if (commercialStatus === "pending_payment") {
+    return "Pagamento pendente";
+  }
+
+  if (commercialStatus === "paid") {
+    return "Pagamento confirmado";
+  }
+
+  if (commercialStatus === "awaiting_shipment") {
+    return "A aguardar envio";
+  }
+
+  if (commercialStatus === "shipped") {
+    return "Enviado";
+  }
+
+  if (commercialStatus === "delivered") {
+    return "Entregue";
+  }
+
+  if (commercialStatus === "completed") {
+    return "Concluído";
+  }
+
+  if (commercialStatus === "cancelled") {
+    return "Cancelado";
+  }
+
+  if (commercialStatus === "disputed") {
+    return "Em disputa";
+  }
+
+  if (financialStatus === "held") {
+    return "Pagamento confirmado";
+  }
+
+  if (financialStatus === "refunded") {
+    return "Reembolsado";
+  }
+
+  if (financialStatus === "disputed") {
+    return "Em disputa";
+  }
+
+  if (financialStatus === "unpaid") {
+    return "Pagamento pendente";
+  }
+
+  return "Compra registada";
+}
+
+function getStatusClass(
+  commercialStatus?: CommercialStatus,
+  financialStatus?: FinancialStatus,
+) {
+  if (
+    commercialStatus === "cancelled" ||
+    commercialStatus === "disputed" ||
+    financialStatus === "refunded" ||
+    financialStatus === "disputed"
+  ) {
+    return "border-red-500/20 bg-red-500/10 text-red-300";
+  }
+
+  if (
+    commercialStatus === "completed" ||
+    commercialStatus === "delivered"
+  ) {
+    return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
+  }
+
+  if (
+    commercialStatus === "shipped" ||
+    commercialStatus === "awaiting_shipment"
+  ) {
+    return "border-blue-500/20 bg-blue-500/10 text-blue-300";
+  }
+
+  if (
+    commercialStatus === "paid" ||
+    financialStatus === "held"
+  ) {
+    return "border-[#ffb800]/20 bg-[#ffb800]/10 text-[#ffb800]";
+  }
+
+  return "border-white/10 bg-white/5 text-zinc-400";
 }
 
 export default function PurchaseCard({
-  raffleId,
+  type,
+  listingId,
   model,
   brand,
   image,
-  ticketNumbers,
   totalPaid,
   purchaseDate,
+  ticketNumbers = [],
+  commercialStatus,
+  financialStatus,
 }: PurchaseCardProps) {
   const sortedTickets = [...ticketNumbers].sort(
     (a, b) => a - b,
   );
 
   const visibleTickets = sortedTickets.slice(0, 8);
+
   const remainingTickets =
     sortedTickets.length - visibleTickets.length;
+
+  const typeLabel = getTypeLabel(type);
+
+  const statusLabel = getStatusLabel(
+    commercialStatus,
+    financialStatus,
+  );
+
+  const statusClass = getStatusClass(
+    commercialStatus,
+    financialStatus,
+  );
+
+  const isRaffle = type === "raffle";
 
   return (
     <article className="group overflow-hidden rounded-[28px] border border-white/5 bg-zinc-950 transition-all duration-300 hover:border-[#ffb800]/20">
 
-      {/* IMAGEM */}
-
       <div className="flex flex-col md:flex-row">
+
+        {/* IMAGEM */}
 
         <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-6 md:w-[190px]">
 
@@ -72,14 +225,20 @@ export default function PurchaseCard({
 
             <div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
 
                 <span className="text-[11px] font-bold uppercase tracking-[4px] text-zinc-500">
                   {brand}
                 </span>
 
                 <span className="rounded-full border border-[#ffb800]/20 bg-[#ffb800]/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[1.5px] text-[#ffb800]">
-                  Sorteio
+                  {typeLabel}
+                </span>
+
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[1.5px] ${statusClass}`}
+                >
+                  {statusLabel}
                 </span>
 
               </div>
@@ -108,52 +267,86 @@ export default function PurchaseCard({
 
           <div className="my-6 h-px bg-white/5" />
 
-          {/* BILHETES */}
+          {/* INFORMAÇÃO ESPECÍFICA */}
 
-          <div>
+          {isRaffle ? (
+            <div>
 
-            <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
 
-              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
 
-                <Ticket
-                  size={15}
-                  className="text-[#ffb800]"
-                />
+                  <Ticket
+                    size={15}
+                    className="text-[#ffb800]"
+                  />
 
-                <span className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-500">
-                  Bilhetes comprados
+                  <span className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-500">
+                    Bilhetes comprados
+                  </span>
+
+                </div>
+
+                <span className="text-xs font-bold text-zinc-500">
+                  {ticketNumbers.length}{" "}
+                  {ticketNumbers.length === 1
+                    ? "bilhete"
+                    : "bilhetes"}
                 </span>
 
               </div>
 
-              <span className="text-xs font-bold text-zinc-500">
-                {ticketNumbers.length}{" "}
-                {ticketNumbers.length === 1
-                  ? "bilhete"
-                  : "bilhetes"}
-              </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+
+                {visibleTickets.map((ticket) => (
+                  <TicketBadge
+                    key={ticket}
+                    number={ticket}
+                  />
+                ))}
+
+                {remainingTickets > 0 && (
+                  <div className="flex h-10 items-center justify-center rounded-xl border border-[#ffb800]/30 bg-[#ffb800]/5 px-4 text-sm font-black text-[#ffb800]">
+                    +{remainingTickets}
+                  </div>
+                )}
+
+              </div>
 
             </div>
+          ) : (
+            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
 
-            <div className="mt-3 flex flex-wrap gap-2">
+              <div className="flex items-center gap-3">
 
-              {visibleTickets.map((ticket) => (
-                <TicketBadge
-                  key={ticket}
-                  number={ticket}
-                />
-              ))}
+                {type === "auction" ? (
+                  <Gavel
+                    size={18}
+                    className="text-[#ffb800]"
+                  />
+                ) : (
+                  <PackageCheck
+                    size={18}
+                    className="text-[#ffb800]"
+                  />
+                )}
 
-              {remainingTickets > 0 && (
-                <div className="flex h-10 items-center justify-center rounded-xl border border-[#ffb800]/30 bg-[#ffb800]/5 px-4 text-sm font-black text-[#ffb800]">
-                  +{remainingTickets}
+                <div>
+
+                  <div className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                    Estado da encomenda
+                  </div>
+
+                  <div className="mt-1 text-sm font-black text-zinc-200">
+                    {statusLabel}
+                  </div>
+
                 </div>
-              )}
+
+              </div>
 
             </div>
-
-          </div>
+          )}
 
           {/* RODAPÉ */}
 
@@ -180,10 +373,10 @@ export default function PurchaseCard({
             </div>
 
             <Link
-              href={`/listing/${raffleId}`}
+              href={`/listing/${listingId}`}
               className="group/button inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-[#ffb800] px-6 text-sm font-black text-black transition-all duration-300 hover:bg-[#ffd34d] hover:shadow-[0_8px_30px_rgba(255,184,0,0.18)]"
             >
-              Ver Sorteio
+              Ver anúncio
 
               <ArrowRight
                 size={17}
