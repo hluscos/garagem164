@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
 
 type Props = {
@@ -20,16 +21,20 @@ export default function ListingSidebar({
 }: Props) {
   const listingType = listing.listing_type;
 
-  const ticketPrice = Number(listing.ticket_price || 0);
+  const ticketPrice = Number(
+    listing.ticket_price || 0,
+  );
 
-  const totalTickets = Number(listing.total_tickets || 0);
+  const totalTickets = Number(
+    listing.total_tickets || 0,
+  );
 
   const raffleTotal =
     selectedTickets.length * ticketPrice;
 
-  const sortedTickets = [...selectedTickets].sort(
-    (a, b) => a - b,
-  );
+  const sortedTickets = [
+    ...selectedTickets,
+  ].sort((a, b) => a - b);
 
   const hasSelection =
     selectedTickets.length > 0;
@@ -37,7 +42,19 @@ export default function ListingSidebar({
   const [showCheckout, setShowCheckout] =
     useState(false);
 
-  const handleBuyTickets = () => {
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  /*
+   * ---------------------------------------------------------
+   * COMPRA DE SORTEIO
+   * ---------------------------------------------------------
+   */
+
+  const handleBuyRaffleTickets = () => {
     if (isOwner) {
       return;
     }
@@ -48,6 +65,86 @@ export default function ListingSidebar({
 
     setShowCheckout(true);
   };
+
+  /*
+   * ---------------------------------------------------------
+   * COMPRA NORMAL
+   * ---------------------------------------------------------
+   */
+
+  const handleBuySale = async () => {
+    if (isOwner || loading) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const response = await fetch(
+        "/api/create-checkout-session",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+
+          body: JSON.stringify({
+            type: "sale",
+            listingId,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        setError(
+          data.error ||
+            "Não foi possível iniciar o pagamento.",
+        );
+
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(
+        "SALE CHECKOUT ERROR:",
+        error,
+      );
+
+      setError(
+        "Ocorreu um erro ao iniciar o pagamento. Tenta novamente.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * ---------------------------------------------------------
+   * PREÇO DO ANÚNCIO
+   * ---------------------------------------------------------
+   */
+
+  const displayPrice =
+    listingType === "sale"
+      ? Number(listing.price || 0)
+      : listingType === "auction"
+        ? Number(listing.starting_bid || 0)
+        : ticketPrice;
 
   return (
     <div className="sticky top-24">
@@ -62,33 +159,24 @@ export default function ListingSidebar({
             "Preço"}
 
           {listingType === "raffle" &&
-            "Preço por Ticket"}
+            "Preço por Bilhete"}
         </div>
 
         <div className="mt-2 text-[42px] font-black text-[#ffb800]">
-
-          {listingType === "sale" &&
-            `${listing.price || 0}€`}
-
-          {listingType === "auction" &&
-            `${listing.starting_bid || 0}€`}
-
-          {listingType === "raffle" &&
-            `${ticketPrice}€`}
-
+          {displayPrice.toFixed(2)}€
         </div>
 
         {listingType === "raffle" && (
           <>
-
             <div className="my-8 h-px bg-white/10" />
 
             <div className="text-xs uppercase tracking-[2px] text-zinc-500">
-              Tickets Vendidos
+              Bilhetes Vendidos
             </div>
 
             <div className="mt-2 text-3xl font-black">
               {soldCount}
+
               <span className="ml-2 text-base font-normal text-zinc-500">
                 / {totalTickets}
               </span>
@@ -101,7 +189,7 @@ export default function ListingSidebar({
               </div>
 
               <div className="mt-3 text-sm text-zinc-400">
-                Tickets Selecionados
+                Bilhetes Selecionados
               </div>
 
               <div className="mt-1 break-words font-bold">
@@ -139,56 +227,70 @@ export default function ListingSidebar({
               </div>
 
             </div>
-
           </>
         )}
 
-        {listingType === "raffle" && isOwner && (
-          <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+        {listingType === "raffle" &&
+          isOwner && (
+            <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
 
-            <div className="text-sm font-black text-amber-300">
-              Este é o teu sorteio
+              <div className="text-sm font-black text-amber-300">
+                Este é o teu sorteio
+              </div>
+
+              <div className="mt-1 text-xs leading-relaxed text-amber-200/70">
+                Não podes comprar bilhetes do teu próprio sorteio.
+              </div>
+
             </div>
+          )}
 
-            <div className="mt-1 text-xs leading-relaxed text-amber-200/70">
-              Não podes comprar bilhetes do teu próprio sorteio.
-            </div>
-
+        {error && (
+          <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+            {error}
           </div>
         )}
 
         <button
           type="button"
-          onClick={handleBuyTickets}
+          onClick={
+            listingType === "sale"
+              ? handleBuySale
+              : listingType === "raffle"
+                ? handleBuyRaffleTickets
+                : undefined
+          }
           disabled={
-            listingType === "raffle" &&
-            (isOwner || !hasSelection)
+            loading ||
+            (listingType === "raffle" &&
+              (isOwner || !hasSelection))
           }
           className={`mt-8 h-14 w-full rounded-2xl font-black uppercase transition ${
-            listingType === "raffle" &&
-            (isOwner || !hasSelection)
+            loading ||
+            (listingType === "raffle" &&
+              (isOwner || !hasSelection))
               ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
               : "bg-[#ffb800] text-black hover:bg-[#ffc933]"
           }`}
         >
-
           {listingType === "auction" &&
             "Licitar Agora"}
 
           {listingType === "sale" &&
-            "Comprar Agora"}
+            (loading
+              ? "A preparar..."
+              : "Comprar Agora")}
 
           {listingType === "raffle" &&
             (isOwner
               ? "O teu sorteio"
               : hasSelection
-                ? `Comprar ${selectedTickets.length} Ticket${
+                ? `Comprar ${selectedTickets.length} Bilhete${
                     selectedTickets.length === 1
                       ? ""
                       : "s"
                   }`
                 : "Seleciona os teus números")}
-
         </button>
 
         <button
@@ -200,14 +302,19 @@ export default function ListingSidebar({
 
       </div>
 
-      {listingType === "raffle" && !isOwner && (
-        <RaffleCheckoutModal
-          open={showCheckout}
-          onClose={() => setShowCheckout(false)}
-          listingId={listingId}
-          selectedTickets={selectedTickets}
-        />
-      )}
+      {listingType === "raffle" &&
+        !isOwner && (
+          <RaffleCheckoutModal
+            open={showCheckout}
+            onClose={() =>
+              setShowCheckout(false)
+            }
+            listingId={listingId}
+            selectedTickets={
+              selectedTickets
+            }
+          />
+        )}
 
     </div>
   );

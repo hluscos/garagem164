@@ -6,6 +6,8 @@ const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
 );
 
+const SALE_CHECKOUT_EXPIRATION_HOURS = 24;
+
 export async function POST(req: NextRequest) {
   try {
     /*
@@ -446,18 +448,11 @@ export async function POST(req: NextRequest) {
      *
      * A transaction é criada ANTES do Checkout Stripe.
      *
-     * Isto permite:
+     * A validade da reserva é calculada a partir de
+     * transactions.created_at + 24 horas.
      *
-     * comprador A
-     *      ↓
-     * transaction pending_payment
-     *      ↓
-     * comprador B
-     *      ↓
-     * BLOQUEADO pela constraint única
-     *
-     * O webhook será responsável por concluir a transaction
-     * quando o pagamento for confirmado.
+     * Isto evita a necessidade de uma coluna adicional
+     * checkout_expires_at.
      */
 
     if (type === "sale") {
@@ -569,11 +564,12 @@ export async function POST(req: NextRequest) {
        * 5.5 VERIFICAR TRANSACTION ACTIVA
        * -------------------------------------------------------
        *
-       * Se o próprio comprador já tiver uma transaction
-       * pendente com Checkout Stripe, reutilizamos essa sessão.
+       * A validade da reserva é:
        *
-       * Se a reserva interna já tiver expirado, cancelamos
-       * a transaction e permitimos uma nova tentativa.
+       * created_at + 24 horas
+       *
+       * A constraint única da BD impede duas transactions
+       * activas para o mesmo anúncio.
        */
 
       const now = new Date();
@@ -584,7 +580,7 @@ export async function POST(req: NextRequest) {
       } = await supabaseAdmin
         .from("transactions")
         .select(
-          "id, buyer_id, commercial_status, financial_status, stripe_checkout_session, checkout_expires_at",
+          "id, buyer_id, amount, commercial_status, financial_status, stripe_checkout_session, created_at",
         )
         .eq("listing_id", sale.id)
         .is("auction_id", null)
@@ -609,97 +605,198 @@ export async function POST(req: NextRequest) {
       }
 
       if (existingTransaction) {
-        const expiresAt =
-          existingTransaction.checkout_expires_at
-            ? new Date(
-                existingTransaction.checkout_expires_at,
-              )
-            : null;
-
         /*
-         * Transaction ainda válida.
+         * -----------------------------------------------------
+         * 5.5.1 TRANSACTION PENDENTE
+         * -----------------------------------------------------
          */
 
         if (
-          expiresAt &&
-          expiresAt > now
+          existingTransaction.commercial_status ===
+            "pending_payment" &&
+          existingTransaction.financial_status ===
+            "unpaid"
         ) {
+          const transactionCreatedAt =
+            new Date(
+              existingTransaction.created_at,
+            );
+
+          const checkoutExpiresAt =
+            new Date(
+              transactionCreatedAt.getTime() +
+                SALE_CHECKOUT_EXPIRATION_HOURS *
+                  60 *
+                  60 *
+                  1000,
+            );
+
           /*
-           * Se pertence ao próprio comprador e temos uma
-           * Checkout Session, podemos devolvê-la.
+           * A reserva ainda está válida.
            */
 
-          if (
-            existingTransaction.buyer_id ===
-              user.id &&
-            existingTransaction.stripe_checkout_session
-          ) {
-            try {
-              const existingSession =
-                await stripe.checkout.sessions.retrieve(
-                  existingTransaction.stripe_checkout_session,
-                );
+          if (checkoutExpiresAt > now) {
+            /*
+             * Se pertence ao próprio comprador e existe
+             * uma Checkout Session, tentamos reutilizá-la.
+             */
 
-              if (
-                existingSession.status ===
-                "open"
-              ) {
-                return NextResponse.json({
-                  url: existingSession.url,
-                });
+            if (
+              existingTransaction.buyer_id ===
+                user.id &&
+              existingTransaction.stripe_checkout_session
+            ) {
+              try {
+                const existingSession =
+                  await stripe.checkout.sessions.retrieve(
+                    existingTransaction.stripe_checkout_session,
+                  );
+
+                /*
+                 * Checkout ainda aberto.
+                 */
+
+                if (
+                  existingSession.status ===
+                  "open"
+                ) {
+                  return NextResponse.json({
+                    url: existingSession.url,
+                  });
+                }
+
+                /*
+                 * Se o Stripe já marcou a sessão como
+                 * expirada, podemos libertar a transaction.
+                 */
+
+                if (
+                  existingSession.status ===
+                  "expired"
+                ) {
+                  await supabaseAdmin
+                    .from("transactions")
+                    .update({
+                      commercial_status:
+                        "cancelled",
+                      cancelled_at:
+                        new Date().toISOString(),
+                    })
+                    .eq(
+                      "id",
+                      existingTransaction.id,
+                    )
+                    .eq(
+                      "commercial_status",
+                      "pending_payment",
+                    );
+                }
+              } catch (stripeError) {
+                console.error(
+                  "EXISTING SALE CHECKOUT RETRIEVE ERROR:",
+                  stripeError,
+                );
               }
-            } catch (stripeError) {
+            }
+
+            /*
+             * Se a transaction continua activa, não
+             * permitimos que outro checkout seja criado.
+             */
+
+            const {
+              data: currentTransaction,
+            } = await supabaseAdmin
+              .from("transactions")
+              .select(
+                "commercial_status, financial_status",
+              )
+              .eq(
+                "id",
+                existingTransaction.id,
+              )
+              .maybeSingle();
+
+            if (
+              currentTransaction?.commercial_status ===
+                "pending_payment" &&
+              currentTransaction?.financial_status ===
+                "unpaid"
+            ) {
+              return NextResponse.json(
+                {
+                  error:
+                    "Este anúncio está reservado para outro pagamento.",
+                },
+                { status: 409 },
+              );
+            }
+          } else {
+            /*
+             * A reserva interna expirou.
+             * Cancelamos a transaction antiga.
+             */
+
+            const {
+              error: expireError,
+            } = await supabaseAdmin
+              .from("transactions")
+              .update({
+                commercial_status:
+                  "cancelled",
+                cancelled_at:
+                  now.toISOString(),
+              })
+              .eq(
+                "id",
+                existingTransaction.id,
+              )
+              .eq(
+                "commercial_status",
+                "pending_payment",
+              )
+              .eq(
+                "financial_status",
+                "unpaid",
+              );
+
+            if (expireError) {
               console.error(
-                "EXISTING SALE CHECKOUT RETRIEVE ERROR:",
-                stripeError,
+                "EXPIRE SALE TRANSACTION ERROR:",
+                expireError,
+              );
+
+              return NextResponse.json(
+                {
+                  error:
+                    "Não foi possível libertar a reserva anterior.",
+                },
+                { status: 500 },
               );
             }
           }
+        } else {
+          /*
+           * ---------------------------------------------------
+           * 5.5.2 TRANSACTION JÁ EM FASE POSTERIOR
+           * ---------------------------------------------------
+           *
+           * paid
+           * awaiting_shipment
+           * shipped
+           * delivered
+           * completed
+           * disputed
+           *
+           * Não se pode criar uma nova transaction.
+           */
 
           return NextResponse.json(
             {
               error:
-                "Este anúncio está reservado para outro pagamento.",
+                "Este anúncio já não está disponível para compra.",
             },
             { status: 409 },
-          );
-        }
-
-        /*
-         * A reserva interna expirou.
-         * Cancelamos a transaction antiga para permitir
-         * uma nova compra.
-         */
-
-        const {
-          error: expireError,
-        } = await supabaseAdmin
-          .from("transactions")
-          .update({
-            commercial_status: "cancelled",
-            cancelled_at: now.toISOString(),
-          })
-          .eq(
-            "id",
-            existingTransaction.id,
-          )
-          .eq(
-            "commercial_status",
-            "pending_payment",
-          );
-
-        if (expireError) {
-          console.error(
-            "EXPIRE SALE TRANSACTION ERROR:",
-            expireError,
-          );
-
-          return NextResponse.json(
-            {
-              error:
-                "Não foi possível libertar a reserva anterior.",
-            },
-            { status: 500 },
           );
         }
       }
@@ -735,12 +832,6 @@ export async function POST(req: NextRequest) {
        * activa para este listing.
        */
 
-      const checkoutExpiresAt =
-        new Date(
-          now.getTime() +
-            24 * 60 * 60 * 1000,
-        );
-
       const {
         data: transaction,
         error: transactionError,
@@ -758,11 +849,9 @@ export async function POST(req: NextRequest) {
           commercial_status:
             "pending_payment",
           financial_status: "unpaid",
-          checkout_expires_at:
-            checkoutExpiresAt.toISOString(),
         })
         .select(
-          "id, listing_id, buyer_id, seller_id, amount, platform_fee, seller_amount, commercial_status, financial_status, checkout_expires_at",
+          "id, listing_id, buyer_id, seller_id, amount, platform_fee, seller_amount, commercial_status, financial_status, created_at",
         )
         .single();
 
@@ -948,6 +1037,10 @@ export async function POST(req: NextRequest) {
         .eq(
           "commercial_status",
           "pending_payment",
+        )
+        .eq(
+          "financial_status",
+          "unpaid",
         );
 
       if (checkoutUpdateError) {
@@ -978,6 +1071,10 @@ export async function POST(req: NextRequest) {
           .eq(
             "commercial_status",
             "pending_payment",
+          )
+          .eq(
+            "financial_status",
+            "unpaid",
           );
 
         return NextResponse.json(
