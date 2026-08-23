@@ -1715,11 +1715,24 @@ if (transactionQueryError) {
       }
 
       /*
-       * -------------------------------------------------------
-       * DADOS DO SORTEIO
-       * -------------------------------------------------------
-       */
+ * -------------------------------------------------------
+ * CONFIRMAR PAGAMENTO DO SORTEIO
+ * -------------------------------------------------------
+ *
+ * Nunca criamos bilhetes apenas porque o Checkout
+ * foi concluído. O pagamento tem de estar efectivamente pago.
+ */
 
+if (session.payment_status !== "paid") {
+  console.log(
+    "⏳ Checkout do sorteio concluído, mas pagamento ainda não está pago:",
+    session.id,
+  );
+
+  return NextResponse.json({
+    received: true,
+  });
+}
       const raffleId =
         metadata.listingId;
 
