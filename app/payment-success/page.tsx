@@ -1,10 +1,13 @@
-"use client";
+type PaymentSuccessPageProps = {
+  searchParams: Promise<{
+    type?: string;
+  }>;
+};
 
-import { useSearchParams } from "next/navigation";
-
-export default function PaymentSuccessPage() {
-  const searchParams = useSearchParams();
-  const type = searchParams.get("type");
+export default async function PaymentSuccessPage({
+  searchParams,
+}: PaymentSuccessPageProps) {
+  const { type } = await searchParams;
   const isRaffle = type === "raffle";
 
   return (
