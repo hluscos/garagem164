@@ -8,6 +8,8 @@ export default function PaymentCancelPage() {
   const [releasing, setReleasing] = useState(true);
   const [released, setReleased] = useState(false);
   const [error, setError] = useState("");
+  const [isSale, setIsSale] = useState(false);
+  const [returnUrl, setReturnUrl] = useState("/raffles");
 
   useEffect(() => {
     async function releaseReservations() {
@@ -21,6 +23,80 @@ export default function PaymentCancelPage() {
 
         const ticketsParam =
           params.get("tickets");
+
+        const type = params.get("type");
+
+        setIsSale(type === "sale");
+
+        if (type === "sale") {
+          const transactionId =
+            params.get("transactionId");
+
+          if (listingId) {
+            setReturnUrl(
+              `/listing/${listingId}`,
+            );
+          }
+
+          if (!transactionId) {
+            setError(
+              "Não foi possível identificar a reserva a libertar.",
+            );
+
+            setReleasing(false);
+            return;
+          }
+
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session?.access_token) {
+            setError(
+              "A tua sessão expirou. Faz login novamente.",
+            );
+
+            setReleasing(false);
+            return;
+          }
+
+          const response = await fetch(
+            "/api/cancel-sale-checkout",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+
+              body: JSON.stringify({
+                transactionId,
+              }),
+            },
+          );
+
+          const result =
+            await response.json();
+
+          if (!response.ok) {
+            setError(
+              result?.error ||
+                "Não foi possível libertar o anúncio.",
+            );
+
+            setReleasing(false);
+            return;
+          }
+
+          setReleased(
+            Boolean(result.cancelled),
+          );
+
+          setReleasing(false);
+          return;
+        }
 
         if (!listingId || !ticketsParam) {
           setReleasing(false);
@@ -141,7 +217,9 @@ export default function PaymentCancelPage() {
 
           {releasing && (
             <p className="mt-4 text-sm text-zinc-500">
-              A libertar os teus bilhetes...
+              A libertar {isSale
+                ? "a reserva do anúncio"
+                : "os teus bilhetes"}...
             </p>
           )}
 
@@ -149,12 +227,15 @@ export default function PaymentCancelPage() {
             <div className="mt-6 rounded-2xl border border-green-500/20 bg-green-500/5 p-5">
 
               <div className="font-bold text-green-400">
-                Bilhetes libertados
+                {isSale
+                  ? "Reserva libertada"
+                  : "Bilhetes libertados"}
               </div>
 
               <p className="mt-2 text-sm text-zinc-400">
-                Os números que tinhas reservado
-                estão novamente disponíveis.
+                {isSale
+                  ? "O anúncio está novamente disponível."
+                  : "Os números que tinhas reservado estão novamente disponíveis."}
               </p>
 
             </div>
@@ -179,10 +260,12 @@ export default function PaymentCancelPage() {
           </p>
 
           <Link
-            href="/raffles"
+            href={returnUrl}
             className="mt-10 inline-flex h-12 items-center justify-center rounded-xl bg-[#ffb800] px-8 font-black text-black transition hover:bg-[#ffc933]"
           >
-            Voltar aos Sorteios
+            {isSale
+              ? "Voltar ao Anúncio"
+              : "Voltar aos Sorteios"}
           </Link>
 
         </div>
@@ -191,4 +274,4 @@ export default function PaymentCancelPage() {
 
     </main>
   );
-}   
+}

@@ -961,7 +961,12 @@ export async function POST(req: NextRequest) {
 
               cancel_url:
                 `${process.env.NEXT_PUBLIC_SITE_URL}` +
-                `/listing/${encodeURIComponent(
+                `/payment-cancel` +
+                `?type=sale` +
+                `&transactionId=${encodeURIComponent(
+                  transaction.id,
+                )}` +
+                `&listingId=${encodeURIComponent(
                   sale.id,
                 )}`,
             },
