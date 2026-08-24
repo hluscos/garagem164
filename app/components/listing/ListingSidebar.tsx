@@ -245,6 +245,19 @@ export default function ListingSidebar({
             </div>
           )}
 
+        {listingType === "sale" &&
+          isOwner && (
+            <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <div className="text-sm font-black text-amber-300">
+                Este é o teu anúncio
+              </div>
+
+              <div className="mt-1 text-xs leading-relaxed text-amber-200/70">
+                Não podes comprar o teu próprio anúncio.
+              </div>
+            </div>
+          )}
+
         {error && (
           <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
             {error}
@@ -262,11 +275,15 @@ export default function ListingSidebar({
           }
           disabled={
             loading ||
+            (listingType === "sale" &&
+              isOwner) ||
             (listingType === "raffle" &&
               (isOwner || !hasSelection))
           }
           className={`mt-8 h-14 w-full rounded-2xl font-black uppercase transition ${
             loading ||
+            (listingType === "sale" &&
+              isOwner) ||
             (listingType === "raffle" &&
               (isOwner || !hasSelection))
               ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
@@ -277,9 +294,11 @@ export default function ListingSidebar({
             "Licitar Agora"}
 
           {listingType === "sale" &&
-            (loading
-              ? "A preparar..."
-              : "Comprar Agora")}
+            (isOwner
+              ? "O teu anúncio"
+              : loading
+                ? "A preparar..."
+                : "Comprar Agora")}
 
           {listingType === "raffle" &&
             (isOwner
