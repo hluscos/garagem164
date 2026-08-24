@@ -36,6 +36,7 @@ export default function ListingsPage() {
           )
         `)
         .eq("listing_type", "sale")
+        .eq("sale_status", "available")
         .order("created_at", { ascending: false });
 
       if (error) {

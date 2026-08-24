@@ -468,7 +468,7 @@ export async function POST(req: NextRequest) {
       } = await supabaseAdmin
         .from("listings")
         .select(
-          "id, user_id, listing_type, price, brand, model",
+          "id, user_id, listing_type, sale_status, price, brand, model",
         )
         .eq("id", listingId)
         .maybeSingle();
@@ -510,6 +510,16 @@ export async function POST(req: NextRequest) {
               "Este anúncio não é uma venda.",
           },
           { status: 400 },
+        );
+      }
+
+      if (sale.sale_status !== "available") {
+        return NextResponse.json(
+          {
+            error:
+              "Este anúncio já não está disponível para compra.",
+          },
+          { status: 409 },
         );
       }
 

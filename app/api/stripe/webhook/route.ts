@@ -544,6 +544,28 @@ if (transactionQueryError) {
           transaction.financial_status ===
             "held"
         ) {
+          const { error: soldListingError } =
+            await supabaseAdmin
+              .from("listings")
+              .update({ sale_status: "sold" })
+              .eq("id", transaction.listing_id)
+              .eq("listing_type", "sale");
+
+          if (soldListingError) {
+            console.error(
+              "❌ SALE LISTING STATUS UPDATE ERROR:",
+              soldListingError,
+            );
+
+            return NextResponse.json(
+              {
+                error:
+                  "Failed to mark sale listing as sold.",
+              },
+              { status: 500 },
+            );
+          }
+
           console.log(
             "ℹ️ Transaction de venda já processada:",
             transactionId,
@@ -756,6 +778,28 @@ if (transactionQueryError) {
               updatedTransaction.financial_status,
           },
         );
+
+        const { error: soldListingError } =
+          await supabaseAdmin
+            .from("listings")
+            .update({ sale_status: "sold" })
+            .eq("id", transaction.listing_id)
+            .eq("listing_type", "sale");
+
+        if (soldListingError) {
+          console.error(
+            "❌ SALE LISTING STATUS UPDATE ERROR:",
+            soldListingError,
+          );
+
+          return NextResponse.json(
+            {
+              error:
+                "Failed to mark sale listing as sold.",
+            },
+            { status: 500 },
+          );
+        }
 
         /*
          * -----------------------------------------------------

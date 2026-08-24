@@ -61,7 +61,12 @@ export default function ListingPage() {
         setCurrentUserId(user.id);
       }
 
-      if (listingData) {
+      if (
+        listingData?.listing_type === "sale" &&
+        listingData.sale_status === "sold"
+      ) {
+        setListing(null);
+      } else if (listingData) {
         setListing(listingData);
       }
 
