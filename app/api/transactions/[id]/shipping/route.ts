@@ -63,24 +63,36 @@ export async function PATCH(
     );
   }
 
-  if (
-    !['paid', 'awaiting_shipment'].includes(transaction.commercial_status) ||
-    transaction.financial_status !== 'held'
-  ) {
+  const canRegisterShipment =
+    ["paid", "awaiting_shipment"].includes(transaction.commercial_status) &&
+    transaction.financial_status === "held";
+  const canCorrectTracking =
+    transaction.commercial_status === "shipped" &&
+    transaction.financial_status === "held";
+
+  if (!canRegisterShipment && !canCorrectTracking) {
     return NextResponse.json(
       { error: "O envio ainda não pode ser registado nesta venda." },
       { status: 409 },
     );
   }
 
-  const { data: updated, error: updateError } = await supabaseAdmin.rpc(
-    "mark_transaction_shipped",
-    {
-      p_transaction_id: id,
-      p_carrier: carrier,
-      p_tracking_number: trackingCode,
-    },
-  );
+  const { data: updated, error: updateError } = canRegisterShipment
+    ? await supabaseAdmin.rpc("mark_transaction_shipped", {
+        p_transaction_id: id,
+        p_carrier: carrier,
+        p_tracking_number: trackingCode,
+      })
+    : await supabaseAdmin
+        .from("transaction_shipping")
+        .update({
+          carrier,
+          tracking_number: trackingCode,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("transaction_id", id)
+        .select("transaction_id")
+        .maybeSingle();
 
   if (updateError) {
     return NextResponse.json(
