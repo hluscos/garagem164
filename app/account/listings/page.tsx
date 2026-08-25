@@ -3,9 +3,22 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+interface ListingImage {
+  image_url: string;
+  sort_order: number | null;
+}
+
+interface Listing {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  listing_type: string;
+  listing_images: ListingImage[] | null;
+}
+
 export default function MyListingsPage() {
   const [loading, setLoading] = useState(true);
-  const [listings, setListings] = useState<any[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
 
   async function deleteListing(id: string) {
     const confirmed = window.confirm(
@@ -50,11 +63,22 @@ console.log("DELETE OK");
 
       const { data } = await supabase
         .from("listings")
-        .select("*")
+        .select(
+          `
+            id,
+            brand,
+            model,
+            listing_type,
+            listing_images (
+              image_url,
+              sort_order
+            )
+          `,
+        )
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      setListings(data || []);
+      setListings((data || []) as Listing[]);
       setLoading(false);
     }
 
@@ -80,44 +104,68 @@ console.log("DELETE OK");
           Gestão dos anúncios publicados.
         </p>
 
-        <div className="mt-10 space-y-4">
-          {listings.map((listing) => (
-            <div
-              key={listing.id}
-              className="rounded-2xl border border-white/10 bg-zinc-950 p-6"
-            >
-              <div className="text-2xl font-black">
-                {listing.model}
-              </div>
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          {listings.map((listing) => {
+            const image = [...(listing.listing_images || [])].sort(
+              (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+            )[0]?.image_url;
 
-              <div className="mt-2 text-zinc-400">
-                {listing.listing_type}
-              </div>
+            return (
+              <article
+                key={listing.id}
+                className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-zinc-950 p-4 sm:flex-row"
+              >
+                <div className="flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900 sm:h-28 sm:w-28">
+                  {image ? (
+                    <img
+                      src={image}
+                      alt={listing.model || "Anúncio"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl opacity-30">🚗</span>
+                  )}
+                </div>
 
-              <div className="mt-4 flex gap-3">
-  <a
-    href={`/listing/${listing.id}`}
-    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl bg-[#ffb800] hover:bg-[#ffc933] transition-all duration-300 text-black text-sm font-black uppercase"
-  >
-    Ver Anúncio
-  </a>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="text-[10px] font-bold uppercase tracking-[2px] text-[#ffb800]">
+                    {listing.brand || "Garagem164"}
+                  </div>
 
-  <a
-    href={`/account/listings/${listing.id}/edit`}
-    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-300 text-sm font-black uppercase"
-  >
-    Editar
-  </a>
+                  <h2 className="mt-1 truncate text-xl font-black">
+                    {listing.model || "Sem modelo"}
+                  </h2>
 
-  <button
-    onClick={() => deleteListing(listing.id)}
-    className="inline-flex items-center justify-center h-[44px] px-5 rounded-xl border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-black uppercase"
-  >
-    Eliminar
-  </button>
-</div>
-            </div>
-          ))}
+                  <div className="mt-1 text-xs uppercase tracking-[1px] text-zinc-500">
+                    {listing.listing_type}
+                  </div>
+
+                  <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                    <a
+                      href={`/listing/${listing.id}`}
+                      className="inline-flex h-9 items-center justify-center rounded-lg bg-[#ffb800] px-4 text-xs font-black uppercase text-black transition-all duration-300 hover:bg-[#ffc933]"
+                    >
+                      Ver anúncio
+                    </a>
+
+                    <a
+                      href={`/account/listings/${listing.id}/edit`}
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-white/20 px-4 text-xs font-black uppercase transition-all duration-300 hover:border-white/40"
+                    >
+                      Editar
+                    </a>
+
+                    <button
+                      onClick={() => deleteListing(listing.id)}
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-red-500 px-4 text-xs font-black uppercase text-red-500 transition-all duration-300 hover:bg-red-500 hover:text-white"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>
