@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Session } from "@supabase/supabase-js";
 
 import {
   Search,
@@ -17,7 +18,7 @@ import {
 import { supabase } from "@/lib/supabase";
 
 export default function Header() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
