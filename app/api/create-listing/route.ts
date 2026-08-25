@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
       duration_days,
       ticket_price,
       total_tickets,
+      delivery_method,
+      pickup_location,
     } = body;
 
     /*
@@ -81,6 +83,23 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "A marca é obrigatória.",
         },
+        { status: 400 },
+      );
+    }
+
+    if (!['shipping', 'pickup'].includes(delivery_method)) {
+      return NextResponse.json(
+        { success: false, message: "Forma de entrega inválida." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      delivery_method === "pickup" &&
+      (typeof pickup_location !== "string" || !pickup_location.trim())
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Indica a localidade da entrega em mão." },
         { status: 400 },
       );
     }
@@ -279,6 +298,11 @@ export async function POST(req: NextRequest) {
           : null,
 
       user_id: user.id,
+      delivery_method,
+      pickup_location:
+        delivery_method === "pickup"
+          ? pickup_location.trim().slice(0, 120)
+          : null,
 
       price:
         listing_type === "sale"

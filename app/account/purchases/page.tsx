@@ -40,6 +40,8 @@ interface Transaction {
   commercial_status: CommercialStatus;
   financial_status: FinancialStatus;
   created_at: string;
+  delivery_method: "shipping" | "pickup";
+  pickup_location: string | null;
 }
 
 interface Listing {
@@ -67,6 +69,16 @@ interface PurchaseItem {
   image: string;
   commercialStatus?: CommercialStatus;
   financialStatus?: FinancialStatus;
+  deliveryMethod?: "shipping" | "pickup";
+  pickupLocation?: string;
+  trackingCarrier?: string;
+  trackingCode?: string;
+}
+
+interface TransactionShipping {
+  transaction_id: string;
+  carrier: string | null;
+  tracking_number: string | null;
 }
 
 export default function PurchasesPage() {
@@ -174,6 +186,8 @@ export default function PurchasesPage() {
             amount,
             commercial_status,
             financial_status,
+            delivery_method,
+            pickup_location,
             created_at
           `,
         )
@@ -192,6 +206,22 @@ export default function PurchasesPage() {
       const transactions =
         (transactionsData ??
           []) as Transaction[];
+
+      const transactionIds = transactions.map((transaction) => transaction.id);
+      let transactionShipping: TransactionShipping[] = [];
+
+      if (transactionIds.length > 0) {
+        const { data: shippingData, error: shippingError } = await supabase
+          .from("transaction_shipping")
+          .select("transaction_id, carrier, tracking_number")
+          .in("transaction_id", transactionIds);
+
+        if (shippingError) {
+          console.error("Erro ao carregar rastreios:", shippingError);
+        }
+
+        transactionShipping = (shippingData ?? []) as TransactionShipping[];
+      }
 
       /*
        * ---------------------------------------------------------
@@ -335,6 +365,10 @@ export default function PurchasesPage() {
                 transaction.listing_id,
             );
 
+            const shipment = transactionShipping.find(
+              (item) => item.transaction_id === transaction.id,
+            );
+
             const type: PurchaseType =
               transaction.auction_id
                 ? "auction"
@@ -366,6 +400,10 @@ export default function PurchasesPage() {
                 transaction.commercial_status,
               financialStatus:
                 transaction.financial_status,
+              deliveryMethod: transaction.delivery_method,
+              pickupLocation: transaction.pickup_location || "",
+              trackingCarrier: shipment?.carrier || "",
+              trackingCode: shipment?.tracking_number || "",
             };
           },
         );
@@ -463,6 +501,10 @@ export default function PurchasesPage() {
                 financialStatus={
                   purchase.financialStatus
                 }
+                deliveryMethod={purchase.deliveryMethod}
+                pickupLocation={purchase.pickupLocation}
+                trackingCarrier={purchase.trackingCarrier}
+                trackingCode={purchase.trackingCode}
               />
             ))}
 

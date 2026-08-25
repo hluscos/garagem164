@@ -15,6 +15,8 @@ export default function EditListingPage({
   const [model, setModel] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping");
+  const [pickupLocation, setPickupLocation] = useState("");
 
   useEffect(() => {
     async function loadListing() {
@@ -31,6 +33,8 @@ export default function EditListingPage({
         setModel(data.model || "");
         setDescription(data.description || "");
         setPrice(data.price?.toString() || "");
+        setDeliveryMethod(data.delivery_method === "pickup" ? "pickup" : "shipping");
+        setPickupLocation(data.pickup_location || "");
       }
 
       setLoading(false);
@@ -41,6 +45,11 @@ export default function EditListingPage({
 
   async function saveChanges() {
     try {
+      if (deliveryMethod === "pickup" && !pickupLocation.trim()) {
+        alert("Indica a localidade da entrega em mão.");
+        return;
+      }
+
       setSaving(true);
 
       const { error } = await supabase
@@ -49,6 +58,8 @@ export default function EditListingPage({
           model,
           description,
           price: Number(price),
+          delivery_method: deliveryMethod,
+          pickup_location: deliveryMethod === "pickup" ? pickupLocation.trim() : null,
         })
         .eq("id", listingId);
 
@@ -103,6 +114,32 @@ export default function EditListingPage({
               onChange={(e) => setPrice(e.target.value)}
               className="w-full h-14 rounded-2xl bg-black border border-white/10 px-4"
             />
+          </div>
+
+          <div className="mt-6">
+            <label className="block mb-3 text-sm font-bold uppercase text-zinc-400">
+              Forma de entrega
+            </label>
+
+            <select
+              value={deliveryMethod}
+              onChange={(event) => setDeliveryMethod(event.target.value as "shipping" | "pickup")}
+              className="h-14 w-full rounded-2xl border border-white/10 bg-black px-4"
+            >
+              <option value="shipping">Envio com rastreio</option>
+              <option value="pickup">Entrega em mão</option>
+            </select>
+
+            {deliveryMethod === "pickup" && (
+              <input
+                type="text"
+                value={pickupLocation}
+                onChange={(event) => setPickupLocation(event.target.value)}
+                maxLength={120}
+                placeholder="Localidade ou zona de entrega"
+                className="mt-3 h-14 w-full rounded-2xl border border-white/10 bg-black px-4"
+              />
+            )}
           </div>
 
           <div className="mt-6">

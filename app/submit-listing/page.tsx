@@ -16,6 +16,8 @@ export default function SubmitListingPage() {
   const [condition, setCondition] = useState("Novo");
 
   const [description, setDescription] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState("shipping");
+  const [pickupLocation, setPickupLocation] = useState("");
 
   const [price, setPrice] = useState("");
 
@@ -95,6 +97,9 @@ export default function SubmitListingPage() {
             condition,
             listing_type: listingType,
             description,
+            delivery_method: deliveryMethod,
+            pickup_location:
+              deliveryMethod === "pickup" ? pickupLocation : null,
 
             price:
               listingType === "sale"
@@ -583,6 +588,69 @@ export default function SubmitListingPage() {
 
             )}
 
+          </div>
+
+          {/* ENTREGA */}
+
+          <div className="mt-8 rounded-[24px] border border-white/10 bg-black p-6">
+            <label className="block text-sm font-bold uppercase tracking-[1px] text-zinc-300">
+              Forma de entrega
+            </label>
+
+            <p className="mt-2 text-sm text-zinc-500">
+              Define como o comprador irá receber a miniatura.
+            </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("shipping")}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  deliveryMethod === "shipping"
+                    ? "border-[#ffb800] bg-[#ffb800]/10"
+                    : "border-white/10 hover:border-white/20"
+                }`}
+              >
+                <div className="font-black">Envio com rastreio</div>
+                <div className="mt-1 text-sm text-zinc-500">
+                  O código será indicado depois da venda.
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("pickup")}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  deliveryMethod === "pickup"
+                    ? "border-[#ffb800] bg-[#ffb800]/10"
+                    : "border-white/10 hover:border-white/20"
+                }`}
+              >
+                <div className="font-black">Entrega em mão</div>
+                <div className="mt-1 text-sm text-zinc-500">
+                  O encontro é combinado entre vendedor e comprador.
+                </div>
+              </button>
+            </div>
+
+            {deliveryMethod === "pickup" && (
+              <div className="mt-5">
+                <label className="block text-xs font-bold uppercase tracking-[1px] text-zinc-400">
+                  Localidade da entrega
+                </label>
+                <input
+                  type="text"
+                  value={pickupLocation}
+                  onChange={(event) => setPickupLocation(event.target.value)}
+                  placeholder="Ex.: Lisboa, Parque das Nações"
+                  maxLength={120}
+                  className="mt-3 w-full rounded-2xl border border-white/10 bg-zinc-950 p-4 outline-none transition focus:border-[#ffb800]"
+                />
+                <p className="mt-2 text-xs text-zinc-600">
+                  Indica apenas a localidade ou zona, não uma morada privada.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* DESCRIÇÃO */}

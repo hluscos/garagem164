@@ -1008,7 +1008,9 @@ if (transactionQueryError) {
               user_id,
               listing_type,
               duration_days,
-              created_at
+              created_at,
+              delivery_method,
+              pickup_location
             `,
           )
           .eq("id", auctionId)
@@ -1487,6 +1489,12 @@ if (transactionQueryError) {
 
               financial_status:
                 "held",
+
+              delivery_method:
+                auction.delivery_method,
+
+              pickup_location:
+                auction.pickup_location,
 
               stripe_payment_intent:
                 typeof session.payment_intent ===

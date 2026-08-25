@@ -4,6 +4,8 @@ import {
   CalendarDays,
   Gavel,
   PackageCheck,
+  MapPin,
+  Truck,
   Ticket,
 } from "lucide-react";
 import TicketBadge from "./TicketBadge";
@@ -41,6 +43,10 @@ interface PurchaseCardProps {
 
   commercialStatus?: CommercialStatus;
   financialStatus?: FinancialStatus;
+  deliveryMethod?: "shipping" | "pickup";
+  pickupLocation?: string;
+  trackingCarrier?: string;
+  trackingCode?: string;
 }
 
 function getTypeLabel(type: PurchaseType) {
@@ -158,6 +164,10 @@ export default function PurchaseCard({
   ticketNumbers = [],
   commercialStatus,
   financialStatus,
+  deliveryMethod,
+  pickupLocation = "",
+  trackingCarrier = "",
+  trackingCode = "",
 }: PurchaseCardProps) {
   const sortedTickets = [...ticketNumbers].sort(
     (a, b) => a - b,
@@ -345,6 +355,41 @@ export default function PurchaseCard({
 
               </div>
 
+            </div>
+          )}
+
+          {!isRaffle && deliveryMethod === "pickup" && (
+            <div className="mt-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+              <div className="flex items-center gap-3 text-blue-300">
+                <MapPin size={18} />
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[2px] opacity-70">
+                    Entrega em mão
+                  </div>
+                  <div className="mt-1 text-sm font-black">
+                    {pickupLocation || "Localidade a combinar com o vendedor"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isRaffle && deliveryMethod === "shipping" && trackingCode && (
+            <div className="mt-4 rounded-2xl border border-[#ffb800]/20 bg-[#ffb800]/5 p-5">
+              <div className="flex items-start gap-3">
+                <Truck size={18} className="mt-0.5 shrink-0 text-[#ffb800]" />
+                <div className="min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
+                    Rastreio da encomenda
+                  </div>
+                  <div className="mt-2 text-sm font-black text-white">
+                    {trackingCarrier}
+                  </div>
+                  <div className="mt-1 break-all font-mono text-sm text-[#ffb800]">
+                    {trackingCode}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

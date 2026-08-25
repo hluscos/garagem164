@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -8,7 +9,9 @@ import {
   Clock3,
   PackageCheck,
   Truck,
+  MapPin,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type CommercialStatus =
   | "pending_payment"
@@ -40,6 +43,99 @@ interface SaleItem {
   createdAt: string;
   commercialStatus: CommercialStatus;
   financialStatus: FinancialStatus;
+  deliveryMethod: "shipping" | "pickup";
+  pickupLocation: string;
+  trackingCarrier: string;
+  trackingCode: string;
+}
+
+function ShippingForm({
+  sale,
+  onSaved,
+}: {
+  sale: SaleItem;
+  onSaved: (updated: Partial<SaleItem>) => void;
+}) {
+  const [carrier, setCarrier] = useState(sale.trackingCarrier);
+  const [trackingCode, setTrackingCode] = useState(sale.trackingCode);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const canRegister =
+    ['paid', 'awaiting_shipment', 'shipped'].includes(sale.commercialStatus) &&
+    ['held', 'ready_for_payout'].includes(sale.financialStatus);
+
+  if (sale.deliveryMethod === "pickup") {
+    return (
+      <div className="mt-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+        <div className="flex items-center gap-3 text-blue-300">
+          <MapPin size={18} />
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[2px] opacity-70">
+              Entrega em mão
+            </div>
+            <div className="mt-1 text-sm font-black">
+              {sale.pickupLocation || "Localidade a combinar"}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canRegister) return null;
+
+  const saveTracking = async () => {
+    setSaving(true);
+    setMessage("");
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const response = await fetch(`/api/transactions/${sale.id}/shipping`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ carrier, trackingCode }),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMessage(result.error || "Não foi possível guardar o rastreio.");
+      setSaving(false);
+      return;
+    }
+
+    onSaved({
+      commercialStatus: "shipped",
+      trackingCarrier: result.shipping.carrier,
+      trackingCode: result.shipping.trackingCode,
+    });
+    setMessage("Rastreio guardado. O comprador já o pode consultar.");
+    setSaving(false);
+  };
+
+  return (
+    <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-5">
+      <div className="flex items-center gap-2 text-sm font-black">
+        <Truck size={17} className="text-[#ffb800]" />
+        {sale.trackingCode ? "Atualizar rastreio" : "Registar envio"}
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={80} placeholder="Transportadora" className="rounded-xl border border-white/10 bg-zinc-950 p-3 text-sm outline-none focus:border-[#ffb800]" />
+        <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} maxLength={120} placeholder="Código de rastreio" className="rounded-xl border border-white/10 bg-zinc-950 p-3 text-sm outline-none focus:border-[#ffb800]" />
+      </div>
+      {message && <p className="mt-3 text-xs text-zinc-400">{message}</p>}
+      <button type="button" onClick={saveTracking} disabled={saving || !carrier.trim() || !trackingCode.trim()} className="mt-4 h-11 rounded-xl bg-[#ffb800] px-5 text-xs font-black uppercase text-black transition hover:bg-[#ffd34d] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400">
+        {saving ? "A guardar..." : "Confirmar envio"}
+      </button>
+    </div>
+  );
 }
 
 function getStatusLabel(
@@ -159,16 +255,74 @@ function getStatusIcon(
 }
 
 export default function SalesPage() {
-  /*
-   * ---------------------------------------------------------
-   * DADOS TEMPORÁRIOS DE DESENVOLVIMENTO
-   * ---------------------------------------------------------
-   *
-   * Estes dados serão substituídos pela query real a
-   * transactions quando voltarmos a ter o .env.local.
-   */
+  const [sales, setSales] = useState<SaleItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const sales: SaleItem[] = [];
+  useEffect(() => {
+    async function loadSales() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const { data: transactions, error } = await supabase
+        .from("transactions")
+        .select("id, listing_id, amount, seller_amount, platform_fee, created_at, commercial_status, financial_status, delivery_method, pickup_location")
+        .eq("seller_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("SALES LOAD ERROR:", error);
+        setLoading(false);
+        return;
+      }
+
+      const listingIds = [...new Set((transactions ?? []).map((item) => item.listing_id))];
+      const transactionIds = (transactions ?? []).map((item) => item.id);
+      const [{ data: listings }, { data: images }, { data: shipping }] = await Promise.all([
+        listingIds.length
+          ? supabase.from("listings").select("id, brand, model").in("id", listingIds)
+          : Promise.resolve({ data: [] }),
+        listingIds.length
+          ? supabase.from("listing_images").select("listing_id, image_url, sort_order").in("listing_id", listingIds).order("sort_order")
+          : Promise.resolve({ data: [] }),
+        transactionIds.length
+          ? supabase.from("transaction_shipping").select("transaction_id, carrier, tracking_number").in("transaction_id", transactionIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      setSales((transactions ?? []).map((transaction) => {
+        const listing = listings?.find((item) => item.id === transaction.listing_id);
+        const image = images?.find((item) => item.listing_id === transaction.listing_id);
+        const shipment = shipping?.find((item) => item.transaction_id === transaction.id);
+        return {
+          id: transaction.id,
+          listingId: transaction.listing_id,
+          brand: listing?.brand || "Garagem164",
+          model: listing?.model || "Miniatura",
+          image: image?.image_url || "",
+          amount: Number(transaction.amount),
+          sellerAmount: Number(transaction.seller_amount),
+          platformFee: Number(transaction.platform_fee),
+          createdAt: transaction.created_at,
+          commercialStatus: transaction.commercial_status as CommercialStatus,
+          financialStatus: transaction.financial_status as FinancialStatus,
+          deliveryMethod: transaction.delivery_method as "shipping" | "pickup",
+          pickupLocation: transaction.pickup_location || "",
+          trackingCarrier: shipment?.carrier || "",
+          trackingCode: shipment?.tracking_number || "",
+        };
+      }));
+      setLoading(false);
+    }
+
+    void loadSales();
+  }, []);
+
+  if (loading) {
+    return <main className="min-h-screen bg-black px-6 py-10 text-zinc-500">A carregar vendas...</main>;
+  }
 
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white md:px-10">
@@ -424,6 +578,19 @@ export default function SalesPage() {
                         </div>
 
                       </div>
+
+                      <ShippingForm
+                        sale={sale}
+                        onSaved={(updated) => {
+                          setSales((current) =>
+                            current.map((item) =>
+                              item.id === sale.id
+                                ? { ...item, ...updated }
+                                : item,
+                            ),
+                          );
+                        }}
+                      />
 
                       {/* RODAPÉ */}
 

@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       } = await supabaseAdmin
         .from("listings")
         .select(
-          "id, user_id, listing_type, starting_bid, duration_days, created_at, brand, model",
+          "id, user_id, listing_type, starting_bid, duration_days, created_at, brand, model, delivery_method, pickup_location",
         )
         .eq("id", listingId)
         .maybeSingle();
@@ -474,7 +474,7 @@ export async function POST(req: NextRequest) {
       } = await supabaseAdmin
         .from("listings")
         .select(
-          "id, user_id, listing_type, sale_status, price, brand, model",
+          "id, user_id, listing_type, sale_status, price, brand, model, delivery_method, pickup_location",
         )
         .eq("id", listingId)
         .maybeSingle();
@@ -917,6 +917,8 @@ export async function POST(req: NextRequest) {
           commercial_status:
             "pending_payment",
           financial_status: "unpaid",
+          delivery_method: sale.delivery_method,
+          pickup_location: sale.pickup_location,
         })
         .select(
           "id, listing_id, buyer_id, seller_id, amount, platform_fee, seller_amount, commercial_status, financial_status, created_at",

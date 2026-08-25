@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, MapPin, Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
 
@@ -11,6 +11,8 @@ interface Listing {
   total_tickets?: number | null;
   price?: number | null;
   starting_bid?: number | null;
+  delivery_method?: "shipping" | "pickup";
+  pickup_location?: string | null;
 }
 
 type Props = {
@@ -257,6 +259,26 @@ export default function ListingSidebar({
         <div className="mt-2 text-[42px] font-black text-[#ffb800]">
           {displayPrice.toFixed(2)}€
         </div>
+
+        {listingType !== "raffle" && (
+          <div className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-4">
+            {listing.delivery_method === "pickup" ? (
+              <MapPin size={18} className="shrink-0 text-[#ffb800]" />
+            ) : (
+              <Truck size={18} className="shrink-0 text-[#ffb800]" />
+            )}
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-600">
+                Entrega
+              </div>
+              <div className="mt-1 text-sm font-black">
+                {listing.delivery_method === "pickup"
+                  ? `Em mão — ${listing.pickup_location || "localidade a combinar"}`
+                  : "Envio com código de rastreio"}
+              </div>
+            </div>
+          </div>
+        )}
 
         {listingType === "raffle" && (
           <>
