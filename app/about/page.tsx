@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaInstagram } from "react-icons/fa";
 
 const pillars = [
   {
@@ -84,6 +85,37 @@ export default function AboutPage() {
               Contactar
             </Link>
           </div>
+        </div>
+
+        <div className="mt-6 flex flex-col items-start justify-between gap-8 overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950 p-8 sm:p-10 lg:flex-row lg:items-center">
+          <div className="flex items-start gap-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-lg shadow-[#d62976]/10">
+              <FaInstagram size={25} />
+            </div>
+
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[3px] text-[#d62976]">
+                @garagem164_pt
+              </div>
+              <h2 className="mt-3 text-2xl font-black uppercase sm:text-3xl">
+                Acompanha a Garagem164 no Instagram.
+              </h2>
+              <p className="mt-3 max-w-[700px] leading-relaxed text-zinc-400">
+                Descobre novidades, miniaturas, leilões, sorteios e os
+                bastidores da nossa garagem.
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="https://www.instagram.com/garagem164_pt/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#feda75] via-[#d62976] to-[#4f5bd5] px-7 text-[12px] font-black uppercase tracking-[1px] text-white transition hover:brightness-110"
+          >
+            <FaInstagram size={16} />
+            Visitar Instagram
+          </a>
         </div>
       </section>
     </main>
