@@ -108,9 +108,9 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram da Garagem164"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
             >
-              <FaInstagram size={15} />
+              <FaInstagram size={12} />
             </a>
 
           </div>
