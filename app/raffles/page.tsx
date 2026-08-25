@@ -225,7 +225,9 @@ if (tickets) {
         ) : filteredRaffles.length === 0 ? (
           <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">
             <div className="text-2xl font-black">
-              Não existem sorteios neste filtro.
+              {activeFilter === "ending"
+                ? "Não existem sorteios a terminar."
+                : "Não existem sorteios neste filtro."}
             </div>
             <p className="mt-3 text-zinc-500">
               Seleciona outra opção para veres os sorteios disponíveis.
