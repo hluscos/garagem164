@@ -417,6 +417,7 @@ export default function ListingSidebar({
           <Heart
             size={19}
             fill={isFavorite ? "currentColor" : "none"}
+            className={isFavorite ? "text-red-500" : ""}
           />
 
           {favoriteLoading
