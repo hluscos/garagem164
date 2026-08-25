@@ -9,11 +9,7 @@ import {
   Search,
 } from "lucide-react";
 
-import {
-  FaInstagram,
-  FaFacebookF,
-  FaYoutube,
-} from "react-icons/fa";
+import { FaInstagram } from "react-icons/fa";
 
 import { supabase } from "@/lib/supabase";
 import GlobalSearch from "./GlobalSearch";
@@ -111,27 +107,11 @@ export default function Header() {
               href="https://www.instagram.com/garagem164_pt/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-white transition-all duration-300 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black"
+              aria-label="Instagram da Garagem164"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-sm transition-all duration-300 hover:scale-105 hover:brightness-110"
             >
-              <FaInstagram size={13} />
+              <FaInstagram size={15} />
             </a>
-
-            <button
-              type="button"
-              aria-label="Facebook"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-white transition-all duration-300 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black"
-            >
-              <FaFacebookF size={12} />
-            </button>
-
-            <button
-              type="button"
-              aria-label="YouTube"
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-white transition-all duration-300 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black"
-            >
-              <FaYoutube size={13} />
-            </button>
 
           </div>
 
