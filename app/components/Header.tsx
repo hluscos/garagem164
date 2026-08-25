@@ -16,9 +16,11 @@ import {
 } from "react-icons/fa";
 
 import { supabase } from "@/lib/supabase";
+import GlobalSearch from "./GlobalSearch";
 
 export default function Header() {
   const [session, setSession] = useState<Session | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -204,6 +206,7 @@ export default function Header() {
             <button
               type="button"
               aria-label="Pesquisar"
+              onClick={() => setSearchOpen(true)}
               className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
             >
               <Search size={20} />
@@ -257,6 +260,11 @@ export default function Header() {
         </div>
 
       </header>
+
+      <GlobalSearch
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </>
   );
 }
