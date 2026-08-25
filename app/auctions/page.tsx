@@ -22,6 +22,21 @@ type AuctionWithBid = Auction & {
   currentBid: number;
 };
 
+const featuredAuctionBrands = [
+  "Hot Wheels",
+  "Mini GT",
+  "Inno64",
+  "Tarmac Works",
+  "Matchbox",
+  "Greenlight",
+  "Johnny Lightning",
+  "Kaido House",
+  "Pop Race",
+  "M2 Machines",
+  "Auto World",
+  "RLC",
+];
+
 function getEndTime(
   createdAt: string,
   durationDays: number,
@@ -103,7 +118,7 @@ function AuctionCountdown({
   }, [endTime]);
 
   const finished =
-    endTime <= Date.now();
+    countdown === "00:00:00";
 
   return (
     <div
@@ -129,6 +144,9 @@ export default function AuctionsPage() {
 
   const [error, setError] =
     useState("");
+
+  const [activeBrand, setActiveBrand] =
+    useState("Todos");
 
   useEffect(() => {
     async function loadAuctions() {
@@ -330,6 +348,27 @@ export default function AuctionsPage() {
     void loadAuctions();
   }, []);
 
+  const brands = [
+    "Todos",
+    ...Array.from(
+      new Set(
+        [
+          ...featuredAuctionBrands,
+          ...auctions
+            .map((auction) => auction.brand?.trim())
+            .filter((brand): brand is string => Boolean(brand)),
+        ],
+      ),
+    ),
+  ];
+
+  const filteredAuctions =
+    activeBrand === "Todos"
+      ? auctions
+      : auctions.filter(
+          (auction) => auction.brand?.trim() === activeBrand,
+        );
+
   return (
     <main className="min-h-screen bg-black text-white overflow-hidden">
 
@@ -371,21 +410,19 @@ export default function AuctionsPage() {
 
         <div className="max-w-[1480px] mx-auto px-12 h-[90px] flex items-center gap-4 overflow-x-auto">
 
-          {[
-            "Todos",
-            "Hot Wheels",
-            "MiniGT",
-            "Inno64",
-            "Kaido House",
-            "Pop Race",
-            "RLC",
-          ].map((brand) => (
+          {brands.map((brand) => {
+
+            const selected = brand === activeBrand;
+
+            return (
 
             <button
               key={brand}
               type="button"
+              aria-pressed={selected}
+              onClick={() => setActiveBrand(brand)}
               className={`h-[46px] px-6 rounded-2xl border transition-all duration-300 text-[13px] uppercase tracking-[1px] font-bold whitespace-nowrap ${
-                brand === "Todos"
+                selected
                   ? "border-[#ffb800] bg-[#ffb800] text-black"
                   : "border-white/10 bg-black hover:border-[#ffb800] hover:text-[#ffb800]"
               }`}
@@ -393,7 +430,8 @@ export default function AuctionsPage() {
               {brand}
             </button>
 
-          ))}
+            );
+          })}
 
         </div>
 
@@ -410,8 +448,8 @@ export default function AuctionsPage() {
           </div>
 
           <div className="h-[42px] px-5 rounded-full border border-white/10 bg-zinc-950 flex items-center justify-center text-[12px] font-black uppercase tracking-[1px]">
-            {auctions.length}{" "}
-            {auctions.length === 1
+            {filteredAuctions.length}{" "}
+            {filteredAuctions.length === 1
               ? "Leilão"
               : "Leilões"}
           </div>
@@ -442,11 +480,13 @@ export default function AuctionsPage() {
 
         {!loading &&
           !error &&
-          auctions.length === 0 && (
+          filteredAuctions.length === 0 && (
             <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">
 
               <div className="text-2xl font-black">
-                Não existem leilões ativos.
+                {activeBrand === "Todos"
+                  ? "Não existem leilões ativos."
+                  : `Não existem leilões ativos de ${activeBrand}.`}
               </div>
 
               <p className="mt-3 text-zinc-500">
@@ -459,11 +499,11 @@ export default function AuctionsPage() {
 
         {!loading &&
           !error &&
-          auctions.length > 0 && (
+          filteredAuctions.length > 0 && (
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-              {auctions.map(
+              {filteredAuctions.map(
                 (auction) => {
 
                   const firstImage =

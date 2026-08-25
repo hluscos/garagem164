@@ -3,10 +3,53 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function rafflePage() {
+type Raffle = {
+  id: string;
+  brand: string | null;
+  model: string;
+  ticket_price: number;
+  total_tickets: number;
+  created_at: string;
+  listing_images?: {
+    image_url: string;
+    sort_order: number | null;
+  }[];
+};
 
-  const [raffles, setRaffles] = useState<any[]>([]);
+type RaffleFilter = "active" | "ending" | "new";
+
+const raffleFilters: {
+  value: RaffleFilter;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "active",
+    label: "Ativos",
+    description: "Sorteios com bilhetes disponíveis",
+  },
+  {
+    value: "ending",
+    label: "A Terminar",
+    description: "Sorteios com 25% ou menos dos bilhetes disponíveis",
+  },
+  {
+    value: "new",
+    label: "Novos Sorteios",
+    description: "Sorteios publicados nos últimos 7 dias",
+  },
+];
+
+const newRaffleWindow = 7 * 24 * 60 * 60 * 1000;
+const endingRaffleAvailabilityRatio = 0.25;
+
+export default function RafflesPage() {
+
+  const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [soldCounts, setSoldCounts] = useState<Record<string, number>>({});
+  const [activeFilter, setActiveFilter] = useState<RaffleFilter>("active");
+  const [filterReferenceTime, setFilterReferenceTime] = useState(0);
+  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
   async function loadRaffles() {
@@ -31,6 +74,7 @@ console.log("ERROR:", error);
 
     if (data) {
       setRaffles(data);
+      setFilterReferenceTime(Date.now());
       const { data: tickets } = await supabase
   .from("raffle_tickets")
   .select("raffle_id");
@@ -46,10 +90,47 @@ if (tickets) {
   setSoldCounts(counts);
 }
     }
+
+    setLoading(false);
   }
 
   loadRaffles();
 }, []);
+
+  const rafflesWithAvailability = raffles.map((raffle) => {
+    const sold = soldCounts[raffle.id] || 0;
+    const totalTickets = Number(raffle.total_tickets || 0);
+
+    return {
+      ...raffle,
+      available: Math.max(0, totalTickets - sold),
+      totalTickets,
+    };
+  });
+
+  const filteredRaffles = rafflesWithAvailability.filter((raffle) => {
+    if (raffle.available <= 0) {
+      return false;
+    }
+
+    if (activeFilter === "ending") {
+      return (
+        raffle.totalTickets > 0 &&
+        raffle.available / raffle.totalTickets <=
+          endingRaffleAvailabilityRatio
+      );
+    }
+
+    if (activeFilter === "new") {
+      return (
+        filterReferenceTime > 0 &&
+        new Date(raffle.created_at).getTime() >=
+        filterReferenceTime - newRaffleWindow
+      );
+    }
+
+    return true;
+  });
 
   return (
 
@@ -106,23 +187,26 @@ if (tickets) {
 
         <div className="max-w-[1480px] mx-auto px-12 py-8 flex flex-wrap gap-4">
 
-          <div className="h-[42px] px-5 rounded-full bg-[#ffb800] text-black flex items-center justify-center text-[12px] font-black uppercase tracking-[1px]">
+          {raffleFilters.map((filter) => {
+            const selected = activeFilter === filter.value;
 
-            Ativos
-
-          </div>
-
-          <div className="h-[42px] px-5 rounded-full border border-white/10 bg-zinc-950 flex items-center justify-center text-[12px] font-black uppercase tracking-[1px]">
-
-            A Terminar
-
-          </div>
-
-          <div className="h-[42px] px-5 rounded-full border border-white/10 bg-zinc-950 flex items-center justify-center text-[12px] font-black uppercase tracking-[1px]">
-
-            Novos Sorteios
-
-          </div>
+            return (
+              <button
+                key={filter.value}
+                type="button"
+                aria-pressed={selected}
+                title={filter.description}
+                onClick={() => setActiveFilter(filter.value)}
+                className={`flex h-[42px] items-center justify-center rounded-full border px-5 text-[12px] font-black uppercase tracking-[1px] transition-all duration-300 ${
+                  selected
+                    ? "border-[#ffb800] bg-[#ffb800] text-black"
+                    : "border-white/10 bg-zinc-950 text-white hover:border-[#ffb800] hover:text-[#ffb800]"
+                }`}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
 
         </div>
 
@@ -132,12 +216,27 @@ if (tickets) {
 
       <section className="max-w-[1480px] mx-auto px-12 py-14">
 
-        <div className="grid grid-cols-4 gap-6">
+        {loading ? (
+          <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">
+            <div className="text-lg font-black">
+              A carregar sorteios...
+            </div>
+          </div>
+        ) : filteredRaffles.length === 0 ? (
+          <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">
+            <div className="text-2xl font-black">
+              Não existem sorteios neste filtro.
+            </div>
+            <p className="mt-3 text-zinc-500">
+              Seleciona outra opção para veres os sorteios disponíveis.
+            </p>
+          </div>
+        ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-  {raffles.map((item) => {
+  {filteredRaffles.map((item) => {
 
-  const sold = soldCounts[item.id] || 0;
-  const available = item.total_tickets - sold;
+  const available = item.available;
 
   return (
 
@@ -225,6 +324,7 @@ if (tickets) {
       })}
 
       </div>
+        )}
 
     </section>
 

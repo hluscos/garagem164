@@ -23,6 +23,7 @@ type Listing = {
 export default function ListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeBrand, setActiveBrand] = useState("Todos");
 
   useEffect(() => {
     async function loadListings() {
@@ -53,6 +54,24 @@ export default function ListingsPage() {
     void loadListings();
   }, []);
 
+  const brands = [
+    "Todos",
+    ...Array.from(
+      new Set(
+        listings
+          .map((listing) => listing.brand.trim())
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b, "pt")),
+  ];
+
+  const filteredListings =
+    activeBrand === "Todos"
+      ? listings
+      : listings.filter(
+          (listing) => listing.brand.trim() === activeBrand,
+        );
+
   return (
     <main className="min-h-screen bg-black text-white">
 
@@ -77,6 +96,45 @@ export default function ListingsPage() {
 
         </div>
 
+      </section>
+
+      {/* SUPPLIER FILTER */}
+
+      <section className="border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1480px] flex-col gap-4 px-6 py-6 lg:flex-row lg:items-center lg:px-12">
+          <div className="shrink-0 text-[11px] font-black uppercase tracking-[2px] text-zinc-500">
+            Filtrar por fornecedor
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
+            {brands.map((brand) => {
+              const selected = brand === activeBrand;
+
+              return (
+                <button
+                  key={brand}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setActiveBrand(brand)}
+                  className={`h-[44px] whitespace-nowrap rounded-2xl border px-5 text-[12px] font-black uppercase tracking-[1px] transition-all duration-300 ${
+                    selected
+                      ? "border-[#ffb800] bg-[#ffb800] text-black"
+                      : "border-white/10 bg-black text-white hover:border-[#ffb800] hover:text-[#ffb800]"
+                  }`}
+                >
+                  {brand}
+                </button>
+              );
+            })}
+          </div>
+
+          {!loading && listings.length > 0 && (
+            <div className="shrink-0 text-[11px] font-bold uppercase tracking-[1px] text-zinc-600 lg:ml-auto">
+              {filteredListings.length}{" "}
+              {filteredListings.length === 1 ? "anúncio" : "anúncios"}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* LISTINGS */}
@@ -115,11 +173,22 @@ export default function ListingsPage() {
 
           </div>
 
+        ) : filteredListings.length === 0 ? (
+
+          <div className="rounded-[28px] border border-white/5 bg-zinc-950 px-8 py-16 text-center">
+            <h2 className="text-2xl font-black uppercase">
+              Não existem anúncios de {activeBrand}
+            </h2>
+            <p className="mt-3 text-zinc-500">
+              Seleciona outro fornecedor para veres os anúncios disponíveis.
+            </p>
+          </div>
+
         ) : (
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-            {listings.map((listing) => {
+            {filteredListings.map((listing) => {
 
               const images = [...(listing.listing_images || [])].sort(
                 (a, b) =>
