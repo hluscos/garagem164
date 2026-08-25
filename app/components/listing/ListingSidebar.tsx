@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
 
+interface Listing {
+  listing_type: "sale" | "auction" | "raffle";
+  ticket_price?: number | null;
+  total_tickets?: number | null;
+  price?: number | null;
+  starting_bid?: number | null;
+}
+
 type Props = {
-  listing: any;
+  listing: Listing;
   listingId: string;
   selectedTickets: number[];
   soldCount: number;
@@ -47,6 +56,89 @@ export default function ListingSidebar({
 
   const [error, setError] =
     useState("");
+
+  const [isFavorite, setIsFavorite] =
+    useState(false);
+
+  const [favoriteLoading, setFavoriteLoading] =
+    useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadFavorite() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        return;
+      }
+
+      const { data, error: favoriteError } = await supabase
+        .from("favorites")
+        .select("listing_id")
+        .eq("user_id", session.user.id)
+        .eq("listing_id", listingId)
+        .maybeSingle();
+
+      if (favoriteError) {
+        console.error("FAVORITE LOAD ERROR:", favoriteError);
+        return;
+      }
+
+      if (isActive) {
+        setIsFavorite(Boolean(data));
+      }
+    }
+
+    void loadFavorite();
+
+    return () => {
+      isActive = false;
+    };
+  }, [listingId]);
+
+  const handleToggleFavorite = async () => {
+    if (favoriteLoading) {
+      return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setFavoriteLoading(true);
+    setError("");
+
+    const favoriteQuery = isFavorite
+      ? supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", session.user.id)
+          .eq("listing_id", listingId)
+      : supabase.from("favorites").insert({
+          user_id: session.user.id,
+          listing_id: listingId,
+        });
+
+    const { error: favoriteError } = await favoriteQuery;
+
+    if (favoriteError) {
+      console.error("FAVORITE UPDATE ERROR:", favoriteError);
+      setError("Não foi possível atualizar os favoritos.");
+      setFavoriteLoading(false);
+      return;
+    }
+
+    setIsFavorite((current) => !current);
+    setFavoriteLoading(false);
+  };
 
   /*
    * ---------------------------------------------------------
@@ -314,9 +406,24 @@ export default function ListingSidebar({
 
         <button
           type="button"
-          className="mt-3 h-14 w-full rounded-2xl border border-white/10 font-black uppercase transition hover:border-[#ffb800]"
+          onClick={handleToggleFavorite}
+          disabled={favoriteLoading}
+          className={`mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border font-black uppercase transition disabled:cursor-wait disabled:opacity-60 ${
+            isFavorite
+              ? "border-[#ffb800] bg-[#ffb800]/10 text-[#ffb800]"
+              : "border-white/10 hover:border-[#ffb800]"
+          }`}
         >
-          Favoritos
+          <Heart
+            size={19}
+            fill={isFavorite ? "currentColor" : "none"}
+          />
+
+          {favoriteLoading
+            ? "A atualizar..."
+            : isFavorite
+              ? "Nos favoritos"
+              : "Adicionar aos favoritos"}
         </button>
 
       </div>
