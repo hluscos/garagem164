@@ -65,9 +65,10 @@ export default function CookiesPage() {
             </h2>
 
             <p className="mt-4 text-zinc-400 leading-relaxed">
-              A Garagem164 poderá utilizar cookies essenciais ao funcionamento
-              da plataforma, cookies de desempenho e cookies de análise,
-              quando aplicável.
+              A Garagem164 utiliza cookies essenciais ao funcionamento e à
+              autenticação. Com autorização do utilizador, utiliza também
+              cookies de análise do Google Analytics 4 para compreender a
+              utilização da plataforma e melhorar a experiência.
             </p>
 
           </div>
@@ -79,9 +80,10 @@ export default function CookiesPage() {
             </h2>
 
             <p className="mt-4 text-zinc-400 leading-relaxed">
-              Os utilizadores podem configurar os seus navegadores para bloquear,
-              limitar ou eliminar cookies. No entanto, algumas funcionalidades
-              da plataforma poderão deixar de funcionar corretamente.
+              A escolha pode ser alterada a qualquer momento através de
+              “Gerir cookies”, no rodapé. Também é possível bloquear ou eliminar
+              cookies nas definições do navegador, embora algumas funcionalidades
+              essenciais possam deixar de funcionar corretamente.
             </p>
 
           </div>
@@ -89,13 +91,16 @@ export default function CookiesPage() {
           <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-8">
 
             <h2 className="text-2xl font-black">
-              Cookies de Terceiros
+              Google Analytics 4
             </h2>
 
             <p className="mt-4 text-zinc-400 leading-relaxed">
-              Alguns serviços externos utilizados pela plataforma poderão
-              recorrer a cookies próprios para fornecer funcionalidades
-              adicionais ou recolher estatísticas de utilização.
+              Quando autorizado, o Google Analytics recolhe dados estatísticos
+              sobre visitas, páginas consultadas, origem do tráfego, dispositivo
+              e interações. Utiliza os cookies <strong>_ga</strong> e{" "}
+              <strong>_ga_&lt;ID&gt;</strong>, com duração predefinida de até dois
+              anos. Estes cookies não são carregados quando os cookies opcionais
+              são recusados.
             </p>
 
           </div>

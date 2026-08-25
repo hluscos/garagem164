@@ -8,6 +8,22 @@ const consentKey = "garagem164-cookie-consent";
 
 type ConsentChoice = "accepted" | "rejected";
 
+function removeAnalyticsCookies() {
+  const hostname = window.location.hostname;
+  const domainParts = hostname.split(".");
+  const rootDomain =
+    domainParts.length > 1 ? `.${domainParts.slice(-2).join(".")}` : hostname;
+
+  document.cookie.split(";").forEach((cookie) => {
+    const name = cookie.split("=")[0]?.trim();
+
+    if (!name?.startsWith("_ga")) return;
+
+    document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+    document.cookie = `${name}=; Max-Age=0; path=/; domain=${rootDomain}; SameSite=Lax`;
+  });
+}
+
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
@@ -29,8 +45,19 @@ export default function CookieConsent() {
   }, []);
 
   const saveChoice = (choice: ConsentChoice) => {
+    const previousChoice = window.localStorage.getItem(consentKey);
     window.localStorage.setItem(consentKey, choice);
+
+    if (choice === "rejected") {
+      removeAnalyticsCookies();
+    }
+
+    window.dispatchEvent(new Event("cookie-consent-changed"));
     setVisible(false);
+
+    if (choice === "rejected" && previousChoice === "accepted") {
+      window.location.reload();
+    }
   };
 
   if (!visible) return null;
