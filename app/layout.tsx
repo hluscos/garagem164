@@ -1,5 +1,6 @@
 import "./globals.css";
 import Header from "./components/Header";
+import CookieConsent from "./components/CookieConsent";
 
 export const metadata = {
   title: "GARAGEM164",
@@ -16,6 +17,7 @@ export default function RootLayout({
       <body>
         <Header />
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

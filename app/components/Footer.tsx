@@ -1,3 +1,6 @@
+import Link from "next/link";
+import CookiePreferencesButton from "./CookiePreferencesButton";
+
 export default function Footer() {
   return (
     <footer className="border-t border-white/5 bg-zinc-950 text-white">
@@ -31,9 +34,9 @@ export default function Footer() {
 
             <div className="mt-5 flex flex-col gap-3 text-zinc-400">
 
-              <a href="/auctions" className="hover:text-white transition">
+              <Link href="/auctions" className="hover:text-white transition">
                 Leilões
-              </a>
+              </Link>
 
               <a href="/listings" className="hover:text-white transition">
                 Anúncios
@@ -43,9 +46,9 @@ export default function Footer() {
                 Vender
               </a>
 
-              <a href="/raffles" className="hover:text-white transition">
+              <Link href="/raffles" className="hover:text-white transition">
                 Sorteios
-              </a>
+              </Link>
 
             </div>
 
@@ -98,6 +101,7 @@ export default function Footer() {
               <a href="/cookies" className="hover:text-white transition">
                 Política de Cookies
               </a>
+              <CookiePreferencesButton />
              <a href="/raffles-rules" className="hover:text-white transition">
   Regras dos Sorteios
 </a>
