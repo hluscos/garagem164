@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -55,6 +57,23 @@ const menu = [
 
 export default function AccountSidebar() {
   const pathname = usePathname();
+  const [avatarUrl, setAvatarUrl] = useState("");
+
+  useEffect(() => {
+    async function loadAvatar() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const savedAvatar = user?.user_metadata?.avatar_url;
+
+      if (typeof savedAvatar === "string") {
+        setAvatarUrl(savedAvatar);
+      }
+    }
+
+    void loadAvatar();
+  }, []);
 
   return (
     <aside className="w-[300px] rounded-[32px] border border-white/5 bg-zinc-950 p-6">
@@ -65,12 +84,20 @@ export default function AccountSidebar() {
 
         <div className="flex justify-center">
 
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#ffb800]/30 bg-[#ffb800]/15">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-[#ffb800]/30 bg-[#ffb800]/15">
 
-            <UserCircle2
-              size={56}
-              className="text-[#ffb800]"
-            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Foto de perfil"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <UserCircle2
+                size={56}
+                className="text-[#ffb800]"
+              />
+            )}
 
           </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Save, UserRound } from "lucide-react";
+import { Camera, KeyRound, Save, Trash2, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Message = {
@@ -15,6 +15,9 @@ export default function AccountSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState<Message>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
@@ -38,6 +41,11 @@ export default function AccountSettingsPage() {
       setDisplayName(
         typeof user.user_metadata?.display_name === "string"
           ? user.user_metadata.display_name
+          : "",
+      );
+      setAvatarUrl(
+        typeof user.user_metadata?.avatar_url === "string"
+          ? user.user_metadata.avatar_url
           : "",
       );
       setLoading(false);
@@ -74,6 +82,141 @@ export default function AccountSettingsPage() {
     }
 
     setProfileSaving(false);
+  }
+
+  async function uploadAvatar(file: File) {
+    if (avatarSaving) {
+      return;
+    }
+
+    setAvatarMessage(null);
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarMessage({
+        type: "error",
+        text: "Escolhe uma imagem JPEG, PNG ou WebP.",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarMessage({
+        type: "error",
+        text: "A imagem não pode ultrapassar 2 MB.",
+      });
+      return;
+    }
+
+    setAvatarSaving(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      router.replace("/login");
+      return;
+    }
+
+    const avatarPath = `${user.id}/avatar`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(avatarPath, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("AVATAR UPLOAD ERROR:", uploadError);
+      setAvatarMessage({
+        type: "error",
+        text: "Não foi possível carregar a foto de perfil.",
+      });
+      setAvatarSaving(false);
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(avatarPath);
+
+    const versionedUrl = `${publicUrl}?v=${Date.now()}`;
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: { avatar_url: versionedUrl },
+    });
+
+    if (updateError) {
+      console.error("AVATAR PROFILE UPDATE ERROR:", updateError);
+      setAvatarMessage({
+        type: "error",
+        text: "A foto foi carregada, mas não foi possível associá-la à conta.",
+      });
+    } else {
+      setAvatarUrl(versionedUrl);
+      setAvatarMessage({
+        type: "success",
+        text: "Foto de perfil atualizada.",
+      });
+    }
+
+    setAvatarSaving(false);
+  }
+
+  async function removeAvatar() {
+    if (avatarSaving) {
+      return;
+    }
+
+    setAvatarSaving(true);
+    setAvatarMessage(null);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      router.replace("/login");
+      return;
+    }
+
+    const { error: removeError } = await supabase.storage
+      .from("avatars")
+      .remove([`${user.id}/avatar`]);
+
+    if (removeError) {
+      console.error("AVATAR DELETE ERROR:", removeError);
+      setAvatarMessage({
+        type: "error",
+        text: "Não foi possível remover a foto de perfil.",
+      });
+      setAvatarSaving(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: { avatar_url: null },
+    });
+
+    if (updateError) {
+      console.error("AVATAR PROFILE DELETE ERROR:", updateError);
+      setAvatarMessage({
+        type: "error",
+        text: "Não foi possível atualizar os dados da conta.",
+      });
+    } else {
+      setAvatarUrl("");
+      setAvatarMessage({
+        type: "success",
+        text: "Foto de perfil removida.",
+      });
+    }
+
+    setAvatarSaving(false);
   }
 
   async function changePassword() {
@@ -164,6 +307,67 @@ export default function AccountSettingsPage() {
               </p>
             </div>
           </div>
+
+          <div className="mt-7 flex flex-col gap-5 rounded-2xl border border-white/5 bg-black p-5 sm:flex-row sm:items-center">
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#ffb800]/30 bg-[#ffb800]/10">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Foto de perfil"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <UserRound size={46} className="text-[#ffb800]" />
+              )}
+            </div>
+
+            <div className="flex-1">
+              <div className="font-black">Foto de perfil</div>
+              <p className="mt-1 text-sm text-zinc-500">
+                JPEG, PNG ou WebP, até 2 MB.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#ffb800] px-4 text-xs font-black uppercase text-black transition hover:bg-[#ffd34d]">
+                  <Camera size={16} />
+                  {avatarSaving ? "A atualizar..." : "Escolher foto"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={avatarSaving}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        void uploadAvatar(file);
+                      }
+                      event.target.value = "";
+                    }}
+                    className="sr-only"
+                  />
+                </label>
+
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    disabled={avatarSaving}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-500/50 px-4 text-xs font-black uppercase text-red-400 transition hover:bg-red-500 hover:text-white disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <Trash2 size={15} />
+                    Remover
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {avatarMessage && (
+            <div
+              className={`mt-5 rounded-xl border p-4 text-sm ${messageClass(avatarMessage.type)}`}
+            >
+              {avatarMessage.text}
+            </div>
+          )}
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             <label>
