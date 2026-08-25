@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     }
 
     const {
-      data: account,
+      data: existingAccount,
       error: accountQueryError,
     } = await supabaseAdmin
       .from("stripe_connect_accounts")
@@ -77,8 +77,55 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (!existingAccount) {
+      return NextResponse.json({
+        account: null,
+        livemode: stripeLivemode,
+      });
+    }
+
+    const stripeAccount =
+      await stripe.accounts.retrieve(
+        existingAccount.stripe_account_id,
+      );
+
+    const syncedAccount = {
+      stripe_account_id:
+        existingAccount.stripe_account_id,
+      details_submitted:
+        stripeAccount.details_submitted ?? false,
+      charges_enabled:
+        stripeAccount.charges_enabled ?? false,
+      payouts_enabled:
+        stripeAccount.payouts_enabled ?? false,
+      livemode: stripeLivemode,
+    };
+
+    const { error: updateError } =
+      await supabaseAdmin
+        .from("stripe_connect_accounts")
+        .update({
+          details_submitted:
+            syncedAccount.details_submitted,
+          charges_enabled:
+            syncedAccount.charges_enabled,
+          payouts_enabled:
+            syncedAccount.payouts_enabled,
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq("user_id", user.id)
+        .eq("livemode", stripeLivemode);
+
+    if (updateError) {
+      console.error(
+        "⚠️ Erro ao sincronizar estado Connect:",
+        updateError,
+      );
+    }
+
     return NextResponse.json({
-      account: account ?? null,
+      account: syncedAccount,
       livemode: stripeLivemode,
     });
   } catch (error) {
