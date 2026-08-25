@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { calculatePlatformFee } from "@/lib/platformCommission";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
@@ -874,13 +875,12 @@ export async function POST(req: NextRequest) {
        * 5.6 CALCULAR VALORES DA TRANSACTION
        * -------------------------------------------------------
        *
-       * Comissão da plataforma: 3%.
+       * Comissão da plataforma: 0% durante o primeiro mês de
+       * lançamento; 3% depois do período promocional.
        */
 
       const platformFee =
-        Math.round(
-          salePrice * 0.03 * 100,
-        ) / 100;
+        calculatePlatformFee(salePrice);
 
       const sellerAmount =
         Math.round(

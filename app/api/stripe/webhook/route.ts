@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { calculatePlatformFee } from "@/lib/platformCommission";
 
 console.log(
   "WEBHOOK SERVICE ROLE:",
@@ -1442,9 +1443,7 @@ if (transactionQueryError) {
             winningAmount;
 
           const platformFee =
-            Math.round(
-              amount * 0.03 * 100,
-            ) / 100;
+            calculatePlatformFee(amount);
 
           const sellerAmount =
             Math.round(

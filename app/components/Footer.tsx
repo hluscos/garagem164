@@ -116,7 +116,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
             <p className="text-zinc-500 text-sm">
-              0% de comissão durante os primeiros 6 meses após o lançamento.
+              0% de comissão durante o primeiro mês após o lançamento.
             </p>
 
             <p className="text-zinc-600 text-sm">

@@ -25,7 +25,7 @@ export default function FAQPage() {
     {
       question: "Existe alguma comissão?",
       answer:
-        "Durante os primeiros 6 meses após o lançamento da plataforma não será cobrada qualquer comissão.",
+        "Durante o primeiro mês após o lançamento da plataforma não será cobrada qualquer comissão. Após esse período, será aplicada uma comissão de 3%.",
     },
     {
       question: "Posso editar um anúncio depois de publicado?",
