@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 
 import {
   Search,
-  ShoppingCart,
 } from "lucide-react";
 
 import {
@@ -207,18 +206,6 @@ export default function Header() {
               className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
             >
               <Search size={20} />
-            </button>
-
-            <button
-              type="button"
-              aria-label="Carrinho"
-              className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
-            >
-              <ShoppingCart size={19} />
-
-              <div className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ffb800] text-[10px] font-black text-black">
-                2
-              </div>
             </button>
 
             {session ? (
