@@ -107,13 +107,15 @@ export default function Header() {
 
           <div className="ml-8 flex items-center gap-3">
 
-            <button
-              type="button"
+            <a
+              href="https://www.instagram.com/garagem164_pt/"
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Instagram"
               className="flex h-8 w-8 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-white transition-all duration-300 hover:border-[#ffb800] hover:bg-[#ffb800] hover:text-black"
             >
               <FaInstagram size={13} />
-            </button>
+            </a>
 
             <button
               type="button"
