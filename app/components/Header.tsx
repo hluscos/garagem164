@@ -192,10 +192,6 @@ export default function Header() {
             </Link>
 
             <span className="cursor-default text-white">
-              Comunidade
-            </span>
-
-            <span className="cursor-default text-white">
               Sobre Nós
             </span>
 
