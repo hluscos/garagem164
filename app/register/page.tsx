@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getSocialAuthErrorMessage } from "@/lib/authErrorMessage";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebookF } from "react-icons/fa";
 import { Mail } from "lucide-react";
@@ -54,11 +55,11 @@ export default function RegisterPage() {
       });
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getSocialAuthErrorMessage(provider, error.message));
         setSocialLoading(null);
       }
     } catch {
-      setMessage("Não foi possível iniciar o registo.");
+      setMessage(getSocialAuthErrorMessage(provider));
       setSocialLoading(null);
     }
   }

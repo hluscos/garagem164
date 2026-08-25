@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getSocialAuthErrorMessage } from "@/lib/authErrorMessage";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebookF } from "react-icons/fa";
 import { Mail } from "lucide-react";
@@ -15,6 +16,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("error") === "oauth") {
+      const timeoutId = window.setTimeout(() => {
+        setMessage(
+          "Não foi possível concluir o início de sessão. Tenta novamente.",
+        );
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, []);
 
   async function handleLogin() {
     try {
@@ -52,11 +67,11 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setMessage(error.message);
+        setMessage(getSocialAuthErrorMessage(provider, error.message));
         setSocialLoading(null);
       }
     } catch {
-      setMessage("Não foi possível iniciar o início de sessão.");
+      setMessage(getSocialAuthErrorMessage(provider));
       setSocialLoading(null);
     }
   }
