@@ -191,9 +191,12 @@ export default function Header() {
               Anúncios
             </Link>
 
-            <span className="cursor-default text-white">
+            <Link
+              href="/about"
+              className={navLinkClass("/about")}
+            >
               Sobre Nós
-            </span>
+            </Link>
 
           </nav>
 
