@@ -39,9 +39,10 @@ export default function PrivacyPage() {
             <p className="mt-4 text-zinc-400 leading-relaxed">
               A Garagem164 poderá recolher informações fornecidas pelos
               utilizadores durante o registo, publicação de anúncios,
-              participação em leilões, sorteios e contactos efetuados através da
-              plataforma. Mediante consentimento, o Google Analytics 4 recolhe
-              também dados estatísticos de navegação e utilização.
+              participação em leilões, sorteios, subscrição da newsletter e
+              contactos efetuados através da plataforma. Mediante consentimento,
+              o Google Analytics 4 recolhe também dados estatísticos de navegação
+              e utilização.
             </p>
 
           </div>
@@ -56,7 +57,9 @@ export default function PrivacyPage() {
               Os dados recolhidos são utilizados para permitir o funcionamento
               da plataforma, melhorar os serviços prestados, gerir contas de
               utilizador, responder a pedidos de suporte e analisar, de forma
-              agregada, o desempenho e a utilização do website.
+              agregada, o desempenho e a utilização do website. O email da
+              newsletter é utilizado para enviar novidades e comunicações da
+              Garagem164 apenas após consentimento do titular.
             </p>
 
           </div>
@@ -96,7 +99,9 @@ export default function PrivacyPage() {
 
             <p className="mt-4 text-zinc-400 leading-relaxed">
               Os utilizadores podem solicitar o acesso, correção ou eliminação
-              dos seus dados pessoais, nos termos da legislação aplicável.
+              dos seus dados pessoais, nos termos da legislação aplicável. A
+              subscrição da newsletter pode ser cancelada a qualquer momento
+              através da ligação incluída em cada comunicação.
             </p>
 
           </div>

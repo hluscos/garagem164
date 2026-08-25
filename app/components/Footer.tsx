@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CookiePreferencesButton from "./CookiePreferencesButton";
+import NewsletterForm from "./NewsletterForm";
 
 export default function Footer() {
   return (
@@ -7,7 +8,7 @@ export default function Footer() {
 
       <div className="max-w-[1480px] mx-auto px-12 py-16">
 
-        <div className="grid grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
 
           {/* BRAND */}
 
@@ -108,6 +109,8 @@ export default function Footer() {
             </div>
 
           </div>
+
+          <NewsletterForm />
 
         </div>
 
