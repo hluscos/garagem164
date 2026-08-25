@@ -15,11 +15,35 @@ import ListingSeller from "@/app/components/listing/ListingSeller";
 import ListingBidHistory from "@/app/components/listing/ListingBidHistory";
 import RelatedListings from "@/app/components/listing/RelatedListings";
 
+type Listing = {
+  id: string;
+  user_id: string;
+  brand: string | null;
+  model: string | null;
+  category: string | null;
+  condition: string | null;
+  description: string | null;
+  listing_type: "sale" | "auction" | "raffle";
+  sale_status: string | null;
+  price: number | null;
+  starting_bid: number | null;
+  ticket_price: number | null;
+  total_tickets: number | null;
+  delivery_method: "shipping" | "pickup";
+  pickup_location: string | null;
+  duration_days: number | null;
+  created_at: string;
+  listing_images?: {
+    image_url: string;
+    sort_order: number | null;
+  }[];
+};
+
 export default function ListingPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [listing, setListing] = useState<any>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
@@ -169,7 +193,7 @@ export default function ListingPage() {
           <div className="space-y-8">
 
             <ListingDescription
-              description={listing.description}
+              description={listing.description || ""}
             />
 
             {/* RAFFLE TICKETS */}
@@ -205,7 +229,7 @@ export default function ListingPage() {
           {/* SELLER */}
 
           <div>
-            <ListingSeller />
+            <ListingSeller sellerId={listing.user_id} />
           </div>
 
         </div>
