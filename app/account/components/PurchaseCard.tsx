@@ -173,7 +173,7 @@ export default function PurchaseCard({
     (a, b) => a - b,
   );
 
-  const visibleTickets = sortedTickets.slice(0, 8);
+  const visibleTickets = sortedTickets.slice(0, 4);
 
   const remainingTickets =
     sortedTickets.length - visibleTickets.length;
@@ -193,15 +193,15 @@ export default function PurchaseCard({
   const isRaffle = type === "raffle";
 
   return (
-    <article className="group overflow-hidden rounded-[28px] border border-white/5 bg-zinc-950 transition-all duration-300 hover:border-[#ffb800]/20">
+    <article className="group overflow-hidden rounded-2xl border border-white/5 bg-zinc-950 transition-all duration-300 hover:border-[#ffb800]/20">
 
-      <div className="flex flex-col md:flex-row">
+      <div className="flex h-full flex-col sm:flex-row">
 
         {/* IMAGEM */}
 
-        <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-6 md:w-[190px]">
+        <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-4 sm:w-[128px]">
 
-          <div className="relative flex h-[158px] w-[158px] items-center justify-center overflow-hidden rounded-2xl bg-zinc-800/70 ring-1 ring-white/5">
+          <div className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-zinc-800/70 ring-1 ring-white/5">
 
             {image?.trim() ? (
               <img
@@ -211,11 +211,11 @@ export default function PurchaseCard({
               />
             ) : (
               <div className="text-center">
-                <div className="text-4xl opacity-30">
+                <div className="text-3xl opacity-30">
                   🚗
                 </div>
 
-                <div className="mt-2 text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[2px] text-zinc-600">
                   Garagem164
                 </div>
               </div>
@@ -227,33 +227,33 @@ export default function PurchaseCard({
 
         {/* CONTEÚDO */}
 
-        <div className="flex min-w-0 flex-1 flex-col p-7 md:p-8">
+        <div className="flex min-w-0 flex-1 flex-col p-5">
 
           {/* CABEÇALHO */}
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
             <div>
 
               <div className="flex flex-wrap items-center gap-2">
 
-                <span className="text-[11px] font-bold uppercase tracking-[4px] text-zinc-500">
+                <span className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
                   {brand}
                 </span>
 
-                <span className="rounded-full border border-[#ffb800]/20 bg-[#ffb800]/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[1.5px] text-[#ffb800]">
+                <span className="rounded-full border border-[#ffb800]/20 bg-[#ffb800]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[1px] text-[#ffb800]">
                   {typeLabel}
                 </span>
 
                 <span
-                  className={`rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[1.5px] ${statusClass}`}
+                  className={`rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-[1px] ${statusClass}`}
                 >
                   {statusLabel}
                 </span>
 
               </div>
 
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">
+              <h2 className="mt-1 text-xl font-black tracking-tight text-white md:text-2xl">
                 {model}
               </h2>
 
@@ -261,11 +261,11 @@ export default function PurchaseCard({
 
             <div className="text-left sm:text-right">
 
-              <div className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+              <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
                 Total pago
               </div>
 
-              <div className="mt-1 text-2xl font-black text-[#ffb800]">
+              <div className="mt-0.5 text-xl font-black text-[#ffb800]">
                 €{totalPaid.toFixed(2)}
               </div>
 
@@ -275,7 +275,7 @@ export default function PurchaseCard({
 
           {/* DIVISOR */}
 
-          <div className="my-6 h-px bg-white/5" />
+          <div className="my-4 h-px bg-white/5" />
 
           {/* INFORMAÇÃO ESPECÍFICA */}
 
@@ -287,11 +287,11 @@ export default function PurchaseCard({
                 <div className="flex items-center gap-2">
 
                   <Ticket
-                    size={15}
+                    size={14}
                     className="text-[#ffb800]"
                   />
 
-                  <span className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-500">
+                  <span className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-500">
                     Bilhetes comprados
                   </span>
 
@@ -306,7 +306,7 @@ export default function PurchaseCard({
 
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5">
 
                 {visibleTickets.map((ticket) => (
                   <TicketBadge
@@ -316,7 +316,7 @@ export default function PurchaseCard({
                 ))}
 
                 {remainingTickets > 0 && (
-                  <div className="flex h-10 items-center justify-center rounded-xl border border-[#ffb800]/30 bg-[#ffb800]/5 px-4 text-sm font-black text-[#ffb800]">
+                  <div className="flex h-8 items-center justify-center rounded-lg border border-[#ffb800]/30 bg-[#ffb800]/5 px-3 text-xs font-black text-[#ffb800]">
                     +{remainingTickets}
                   </div>
                 )}
@@ -325,29 +325,29 @@ export default function PurchaseCard({
 
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
 
               <div className="flex items-center gap-3">
 
                 {type === "auction" ? (
                   <Gavel
-                    size={18}
+                    size={16}
                     className="text-[#ffb800]"
                   />
                 ) : (
                   <PackageCheck
-                    size={18}
+                    size={16}
                     className="text-[#ffb800]"
                   />
                 )}
 
                 <div>
 
-                  <div className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                  <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
                     Estado da encomenda
                   </div>
 
-                  <div className="mt-1 text-sm font-black text-zinc-200">
+                  <div className="mt-0.5 text-xs font-black text-zinc-200">
                     {statusLabel}
                   </div>
 
@@ -359,14 +359,14 @@ export default function PurchaseCard({
           )}
 
           {!isRaffle && deliveryMethod === "pickup" && (
-            <div className="mt-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+            <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3">
               <div className="flex items-center gap-3 text-blue-300">
-                <MapPin size={18} />
+                <MapPin size={16} />
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[2px] opacity-70">
+                  <div className="text-[9px] font-bold uppercase tracking-[2px] opacity-70">
                     Entrega em mão
                   </div>
-                  <div className="mt-1 text-sm font-black">
+                  <div className="mt-0.5 text-xs font-black">
                     {pickupLocation || "Localidade a combinar com o vendedor"}
                   </div>
                 </div>
@@ -375,17 +375,17 @@ export default function PurchaseCard({
           )}
 
           {!isRaffle && deliveryMethod === "shipping" && trackingCode && (
-            <div className="mt-4 rounded-2xl border border-[#ffb800]/20 bg-[#ffb800]/5 p-5">
+            <div className="mt-3 rounded-xl border border-[#ffb800]/20 bg-[#ffb800]/5 p-3">
               <div className="flex items-start gap-3">
-                <Truck size={18} className="mt-0.5 shrink-0 text-[#ffb800]" />
+                <Truck size={16} className="mt-0.5 shrink-0 text-[#ffb800]" />
                 <div className="min-w-0">
-                  <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
+                  <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-500">
                     Rastreio da encomenda
                   </div>
-                  <div className="mt-2 text-sm font-black text-white">
+                  <div className="mt-1 text-xs font-black text-white">
                     {trackingCarrier}
                   </div>
-                  <div className="mt-1 break-all font-mono text-sm text-[#ffb800]">
+                  <div className="mt-1 break-all font-mono text-xs text-[#ffb800]">
                     {trackingCode}
                   </div>
                 </div>
@@ -395,19 +395,19 @@ export default function PurchaseCard({
 
           {/* RODAPÉ */}
 
-          <div className="mt-7 flex flex-col gap-5 border-t border-white/5 pt-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-end sm:justify-between">
 
             <div className="flex items-center gap-2 text-zinc-500">
 
-              <CalendarDays size={15} />
+              <CalendarDays size={14} />
 
               <div>
 
-                <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
+                <div className="text-[8px] font-bold uppercase tracking-[2px] text-zinc-600">
                   Data da compra
                 </div>
 
-                <div className="mt-1 text-sm font-bold text-zinc-300">
+                <div className="mt-0.5 text-xs font-bold text-zinc-300">
                   {new Date(
                     purchaseDate,
                   ).toLocaleDateString("pt-PT")}
@@ -419,12 +419,12 @@ export default function PurchaseCard({
 
             <Link
               href={`/listing/${listingId}`}
-              className="group/button inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-[#ffb800] px-6 text-sm font-black text-black transition-all duration-300 hover:bg-[#ffd34d] hover:shadow-[0_8px_30px_rgba(255,184,0,0.18)]"
+              className="group/button inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-[#ffb800] px-4 text-xs font-black text-black transition-all duration-300 hover:bg-[#ffd34d] hover:shadow-[0_8px_30px_rgba(255,184,0,0.18)]"
             >
               Ver anúncio
 
               <ArrowRight
-                size={17}
+                size={15}
                 className="transition-transform duration-300 group-hover/button:translate-x-1"
               />
             </Link>

@@ -177,7 +177,7 @@ export default function FavoritesPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
             {favorites.map((favorite) => {
               const image = [...(favorite.listing_images || [])].sort(
                 (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
@@ -186,9 +186,9 @@ export default function FavoritesPage() {
               return (
                 <article
                   key={favorite.id}
-                  className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-zinc-950 p-4 sm:flex-row"
+                  className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-zinc-950 p-4 sm:flex-row"
                 >
-                  <div className="flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900 sm:h-28 sm:w-28">
+                  <div className="flex h-28 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900 sm:h-24 sm:w-24">
                     {image ? (
                       <img
                         src={image}

@@ -60,6 +60,7 @@ function ShippingForm({
   const [trackingCode, setTrackingCode] = useState(sale.trackingCode);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
 
   const canRegister =
     ['paid', 'awaiting_shipment', 'shipped'].includes(sale.commercialStatus) &&
@@ -67,14 +68,14 @@ function ShippingForm({
 
   if (sale.deliveryMethod === "pickup") {
     return (
-      <div className="mt-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+      <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3">
         <div className="flex items-center gap-3 text-blue-300">
-          <MapPin size={18} />
+          <MapPin size={16} />
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[2px] opacity-70">
+            <div className="text-[9px] font-bold uppercase tracking-[2px] opacity-70">
               Entrega em mão
             </div>
-            <div className="mt-1 text-sm font-black">
+            <div className="mt-0.5 text-xs font-black">
               {sale.pickupLocation || "Localidade a combinar"}
             </div>
           </div>
@@ -121,19 +122,39 @@ function ShippingForm({
   };
 
   return (
-    <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-5">
-      <div className="flex items-center gap-2 text-sm font-black">
-        <Truck size={17} className="text-[#ffb800]" />
-        {sale.trackingCode ? "Atualizar rastreio" : "Registar envio"}
-      </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <input value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={80} placeholder="Transportadora" className="rounded-xl border border-white/10 bg-zinc-950 p-3 text-sm outline-none focus:border-[#ffb800]" />
-        <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} maxLength={120} placeholder="Código de rastreio" className="rounded-xl border border-white/10 bg-zinc-950 p-3 text-sm outline-none focus:border-[#ffb800]" />
-      </div>
-      {message && <p className="mt-3 text-xs text-zinc-400">{message}</p>}
-      <button type="button" onClick={saveTracking} disabled={saving || !carrier.trim() || !trackingCode.trim()} className="mt-4 h-11 rounded-xl bg-[#ffb800] px-5 text-xs font-black uppercase text-black transition hover:bg-[#ffd34d] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400">
-        {saving ? "A guardar..." : "Confirmar envio"}
+    <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between gap-3 text-left text-xs font-black"
+      >
+        <span className="flex items-center gap-2">
+          <Truck size={15} className="text-[#ffb800]" />
+          {sale.trackingCode ? "Atualizar rastreio" : "Registar envio"}
+        </span>
+        <span className="text-[10px] uppercase text-zinc-500">
+          {open ? "Fechar" : "Abrir"}
+        </span>
       </button>
+
+      {sale.trackingCode && !open && (
+        <p className="mt-2 truncate font-mono text-[11px] text-[#ffb800]">
+          {sale.trackingCarrier}: {sale.trackingCode}
+        </p>
+      )}
+
+      {open && (
+        <>
+          <div className="mt-3 grid gap-2">
+            <input value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={80} placeholder="Transportadora" className="rounded-lg border border-white/10 bg-zinc-950 p-2.5 text-xs outline-none focus:border-[#ffb800]" />
+            <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} maxLength={120} placeholder="Código de rastreio" className="rounded-lg border border-white/10 bg-zinc-950 p-2.5 text-xs outline-none focus:border-[#ffb800]" />
+          </div>
+          {message && <p className="mt-2 text-xs text-zinc-400">{message}</p>}
+          <button type="button" onClick={saveTracking} disabled={saving || !carrier.trim() || !trackingCode.trim()} className="mt-3 h-9 rounded-lg bg-[#ffb800] px-4 text-[11px] font-black uppercase text-black transition hover:bg-[#ffd34d] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400">
+            {saving ? "A guardar..." : "Confirmar envio"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -436,7 +457,7 @@ export default function SalesPage() {
 
           </div>
         ) : (
-          <div className="mt-10 space-y-6">
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
 
             {sales.map((sale) => {
               const StatusIcon =
@@ -460,16 +481,16 @@ export default function SalesPage() {
               return (
                 <article
                   key={sale.id}
-                  className="overflow-hidden rounded-[28px] border border-white/5 bg-zinc-950"
+                  className="h-full overflow-hidden rounded-2xl border border-white/5 bg-zinc-950"
                 >
 
-                  <div className="flex flex-col md:flex-row">
+                  <div className="flex h-full flex-col sm:flex-row">
 
                     {/* IMAGEM */}
 
-                    <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-6 md:w-[190px]">
+                    <div className="flex w-full shrink-0 items-center justify-center bg-zinc-900/70 p-4 sm:w-[128px]">
 
-                      <div className="flex h-[158px] w-[158px] items-center justify-center overflow-hidden rounded-2xl bg-zinc-800/70 ring-1 ring-white/5">
+                      <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl bg-zinc-800/70 ring-1 ring-white/5">
 
                         {sale.image?.trim() ? (
                           <img
@@ -478,7 +499,7 @@ export default function SalesPage() {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="text-4xl opacity-30">
+                          <div className="text-3xl opacity-30">
                             🚗
                           </div>
                         )}
@@ -489,17 +510,17 @@ export default function SalesPage() {
 
                     {/* CONTEÚDO */}
 
-                    <div className="flex min-w-0 flex-1 flex-col p-7 md:p-8">
+                    <div className="flex min-w-0 flex-1 flex-col p-5">
 
-                      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
                         <div>
 
-                          <div className="text-[11px] font-bold uppercase tracking-[4px] text-zinc-500">
+                          <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
                             {sale.brand}
                           </div>
 
-                          <h2 className="mt-2 text-3xl font-black tracking-tight">
+                          <h2 className="mt-1 text-xl font-black tracking-tight md:text-2xl">
                             {sale.model}
                           </h2>
 
@@ -507,11 +528,11 @@ export default function SalesPage() {
 
                         <div className="text-left sm:text-right">
 
-                          <div className="text-[10px] font-bold uppercase tracking-[3px] text-zinc-600">
+                          <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
                             Valor da venda
                           </div>
 
-                          <div className="mt-1 text-2xl font-black text-[#ffb800]">
+                          <div className="mt-0.5 text-xl font-black text-[#ffb800]">
                             €{sale.amount.toFixed(2)}
                           </div>
 
@@ -519,23 +540,23 @@ export default function SalesPage() {
 
                       </div>
 
-                      <div className="my-6 h-px bg-white/5" />
+                      <div className="my-4 h-px bg-white/5" />
 
                       {/* ESTADO */}
 
                       <div
-                        className={`flex items-center gap-3 rounded-2xl border p-4 ${statusClass}`}
+                        className={`flex items-center gap-2 rounded-xl border p-3 ${statusClass}`}
                       >
 
-                        <StatusIcon size={20} />
+                        <StatusIcon size={16} />
 
                         <div>
 
-                          <div className="text-[10px] font-bold uppercase tracking-[3px] opacity-60">
+                          <div className="text-[9px] font-bold uppercase tracking-[2px] opacity-60">
                             Estado
                           </div>
 
-                          <div className="mt-1 text-sm font-black">
+                          <div className="mt-0.5 text-xs font-black">
                             {statusLabel}
                           </div>
 
@@ -545,7 +566,7 @@ export default function SalesPage() {
 
                       {/* VALORES */}
 
-                      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                      <div className="mt-3 grid grid-cols-3 gap-3">
 
                         <div>
                           <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
@@ -594,19 +615,19 @@ export default function SalesPage() {
 
                       {/* RODAPÉ */}
 
-                      <div className="mt-7 flex flex-col gap-5 border-t border-white/5 pt-6 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="mt-4 flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-end sm:justify-between">
 
                         <div className="flex items-center gap-2 text-zinc-500">
 
-                          <CalendarDays size={15} />
+                          <CalendarDays size={14} />
 
                           <div>
 
-                            <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
+                            <div className="text-[8px] font-bold uppercase tracking-[2px] text-zinc-600">
                               Data da venda
                             </div>
 
-                            <div className="mt-1 text-sm font-bold text-zinc-300">
+                            <div className="mt-0.5 text-xs font-bold text-zinc-300">
                               {new Date(
                                 sale.createdAt,
                               ).toLocaleDateString(
@@ -620,12 +641,12 @@ export default function SalesPage() {
 
                         <Link
                           href={`/listing/${sale.listingId}`}
-                          className="group/button inline-flex h-11 items-center justify-center gap-3 rounded-xl bg-[#ffb800] px-6 text-sm font-black text-black transition-all duration-300 hover:bg-[#ffd34d]"
+                          className="group/button inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-[#ffb800] px-4 text-xs font-black text-black transition-all duration-300 hover:bg-[#ffd34d]"
                         >
                           Ver anúncio
 
                           <ArrowRight
-                            size={17}
+                            size={15}
                             className="transition-transform duration-300 group-hover/button:translate-x-1"
                           />
                         </Link>

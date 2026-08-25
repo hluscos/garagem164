@@ -474,7 +474,7 @@ export default function PurchasesPage() {
 
           </div>
         ) : (
-          <div className="mt-10 space-y-6">
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
 
             {purchases.map((purchase) => (
               <PurchaseCard
