@@ -60,21 +60,25 @@ export default function AccountPage() {
        * ---------------------------------------------------------
        */
 
-      const { data: connectData } = await supabase
-        .from("stripe_connect_accounts")
-        .select(
-          `
-            stripe_account_id,
-            details_submitted,
-            charges_enabled,
-            payouts_enabled
-          `,
-        )
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+      const connectResponse = await fetch(
+        "/api/stripe/connect/create-account",
+        {
+          headers: {
+            Authorization:
+              `Bearer ${session.access_token}`,
+          },
+        },
+      );
 
-      if (connectData) {
-        setConnectAccount(connectData);
+      if (connectResponse.ok) {
+        const connectData =
+          await connectResponse.json();
+
+        if (connectData.account) {
+          setConnectAccount(
+            connectData.account,
+          );
+        }
       }
 
       setLoading(false);

@@ -6,6 +6,97 @@ const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
 );
 
+const stripeLivemode =
+  process.env.STRIPE_SECRET_KEY?.startsWith(
+    "sk_live_",
+  ) ?? false;
+
+export async function GET(req: NextRequest) {
+  try {
+    const authorization =
+      req.headers.get("authorization");
+
+    if (!authorization?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        {
+          error: "Não autenticado.",
+        },
+        { status: 401 },
+      );
+    }
+
+    const accessToken =
+      authorization.replace("Bearer ", "");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(
+      accessToken,
+    );
+
+    if (userError || !user) {
+      return NextResponse.json(
+        {
+          error: "Sessão inválida.",
+        },
+        { status: 401 },
+      );
+    }
+
+    const {
+      data: account,
+      error: accountQueryError,
+    } = await supabaseAdmin
+      .from("stripe_connect_accounts")
+      .select(
+        `
+          stripe_account_id,
+          details_submitted,
+          charges_enabled,
+          payouts_enabled,
+          livemode
+        `,
+      )
+      .eq("user_id", user.id)
+      .eq("livemode", stripeLivemode)
+      .maybeSingle();
+
+    if (accountQueryError) {
+      console.error(
+        "❌ Erro ao consultar estado Connect:",
+        accountQueryError,
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível verificar a conta Stripe.",
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      account: account ?? null,
+      livemode: stripeLivemode,
+    });
+  } catch (error) {
+    console.error(
+      "❌ Stripe Connect status error:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Erro ao verificar pagamentos Stripe.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     /*
@@ -68,10 +159,12 @@ export async function POST(req: NextRequest) {
           stripe_account_id,
           details_submitted,
           charges_enabled,
-          payouts_enabled
+          payouts_enabled,
+          livemode
         `,
       )
       .eq("user_id", user.id)
+      .eq("livemode", stripeLivemode)
       .maybeSingle();
 
     if (accountQueryError) {
@@ -121,6 +214,9 @@ export async function POST(req: NextRequest) {
         .from("stripe_connect_accounts")
         .insert({
           user_id: user.id,
+
+          livemode:
+            stripeLivemode,
 
           stripe_account_id:
             stripeAccountId,
@@ -216,6 +312,10 @@ export async function POST(req: NextRequest) {
       .eq(
         "user_id",
         user.id,
+      )
+      .eq(
+        "livemode",
+        stripeLivemode,
       );
 
     if (updateError) {

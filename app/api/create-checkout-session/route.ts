@@ -6,6 +6,11 @@ const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
 );
 
+const stripeLivemode =
+  process.env.STRIPE_SECRET_KEY?.startsWith(
+    "sk_live_",
+  ) ?? false;
+
 const SALE_CHECKOUT_EXPIRATION_HOURS = 24;
 
 export async function POST(req: NextRequest) {
@@ -536,6 +541,59 @@ export async function POST(req: NextRequest) {
               "Não podes comprar o teu próprio anúncio.",
           },
           { status: 403 },
+        );
+      }
+
+      /*
+       * -------------------------------------------------------
+       * 5.3.1 VALIDAR CONTA CONNECT DO VENDEDOR
+       * -------------------------------------------------------
+       *
+       * Nunca cobramos o comprador se o vendedor ainda não
+       * estiver habilitado para receber no ambiente Stripe
+       * atual (teste ou produção).
+       */
+
+      const {
+        data: sellerConnectAccount,
+        error: sellerConnectError,
+      } = await supabaseAdmin
+        .from("stripe_connect_accounts")
+        .select(
+          `
+            details_submitted,
+            payouts_enabled
+          `,
+        )
+        .eq("user_id", sale.user_id)
+        .eq("livemode", stripeLivemode)
+        .maybeSingle();
+
+      if (sellerConnectError) {
+        console.error(
+          "SALE SELLER CONNECT QUERY ERROR:",
+          sellerConnectError,
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Não foi possível verificar os pagamentos do vendedor.",
+          },
+          { status: 500 },
+        );
+      }
+
+      if (
+        !sellerConnectAccount?.details_submitted ||
+        !sellerConnectAccount.payouts_enabled
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "O vendedor ainda não está habilitado para receber pagamentos.",
+          },
+          { status: 409 },
         );
       }
 

@@ -6,6 +6,11 @@ const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
 );
 
+const stripeLivemode =
+  process.env.STRIPE_SECRET_KEY?.startsWith(
+    "sk_live_",
+  ) ?? false;
+
 export async function POST(req: NextRequest) {
   try {
     /*
@@ -246,6 +251,10 @@ export async function POST(req: NextRequest) {
       .eq(
         "user_id",
         transaction.seller_id,
+      )
+      .eq(
+        "livemode",
+        stripeLivemode,
       )
       .maybeSingle();
 
