@@ -30,11 +30,7 @@ const featuredAuctionBrands = [
   "Matchbox",
   "Greenlight",
   "Johnny Lightning",
-  "Kaido House",
   "Pop Race",
-  "M2 Machines",
-  "Auto World",
-  "RLC",
 ];
 
 const brandLogoByName: Record<string, string> = {
@@ -428,7 +424,7 @@ export default function AuctionsPage() {
       <section className="border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl">
 
         <div
-          className="hide-scrollbar mx-auto flex h-[82px] max-w-[1480px] items-center gap-2.5 overflow-x-auto px-12"
+          className="hide-scrollbar mx-auto flex h-[88px] max-w-[1480px] items-center justify-center gap-4 overflow-x-auto px-12"
           aria-label="Filtrar leilões por marca"
         >
 
@@ -445,7 +441,7 @@ export default function AuctionsPage() {
                   aria-pressed={selected}
                   onClick={() => setActiveBrand(brand)}
                   title={brand}
-                  className={`flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-2xl border px-2 transition-all duration-300 ${
+                  className={`flex h-[58px] w-[120px] shrink-0 items-center justify-center rounded-2xl border px-3 transition-all duration-300 ${
                     selected
                       ? "border-[#ffb800] bg-[#ffb800] text-black"
                       : "border-white/10 bg-black text-white hover:border-[#ffb800]"
@@ -455,7 +451,7 @@ export default function AuctionsPage() {
                     <img
                       src={logo}
                       alt={brand}
-                      className={`max-h-8 max-w-[76px] object-contain transition ${selected ? "brightness-0" : ""}`}
+                      className={`max-h-10 max-w-[100px] object-contain transition ${selected ? "brightness-0" : ""}`}
                     />
                   ) : (
                     <span className="text-center text-[10px] font-black uppercase leading-tight tracking-[0.5px]">
