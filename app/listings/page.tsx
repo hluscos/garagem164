@@ -106,7 +106,7 @@ export default function ListingsPage() {
             Filtrar por fornecedor
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
+          <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 lg:pb-0">
             {brands.map((brand) => {
               const selected = brand === activeBrand;
 

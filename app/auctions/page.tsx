@@ -408,7 +408,7 @@ export default function AuctionsPage() {
 
       <section className="border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl">
 
-        <div className="max-w-[1480px] mx-auto px-12 h-[90px] flex items-center gap-4 overflow-x-auto">
+        <div className="hide-scrollbar max-w-[1480px] mx-auto px-12 h-[90px] flex items-center gap-4 overflow-x-auto">
 
           {brands.map((brand) => {
 
