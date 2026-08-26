@@ -2,6 +2,7 @@ import type { Provider } from "@supabase/supabase-js";
 
 const providerNames: Partial<Record<Provider, string>> = {
   facebook: "Facebook",
+  github: "GitHub",
   google: "Google",
 };
 

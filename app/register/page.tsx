@@ -4,7 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getSocialAuthErrorMessage } from "@/lib/authErrorMessage";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebookF } from "react-icons/fa";
+import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { Mail } from "lucide-react";
 
 export default function RegisterPage() {
@@ -41,7 +41,7 @@ export default function RegisterPage() {
   }
 
   async function handleSocialRegister(
-    provider: "google" | "facebook",
+    provider: "google" | "facebook" | "github",
   ) {
     try {
       setSocialLoading(provider);
@@ -115,6 +115,21 @@ export default function RegisterPage() {
                     <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
                   ) : (
                     <FcGoogle className="text-[32px]" />
+                  )}
+                </button>
+
+                {/* GitHub */}
+                <button
+                  type="button"
+                  onClick={() => handleSocialRegister("github")}
+                  disabled={socialLoading !== null}
+                  aria-label="Registar com GitHub"
+                  className="group flex h-[76px] w-[76px] items-center justify-center rounded-[22px] border border-white/10 bg-zinc-950 transition-all duration-300 hover:-translate-y-1 hover:border-[#ffb800]/50 hover:bg-zinc-900 hover:shadow-[0_10px_35px_rgba(255,184,0,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {socialLoading === "github" ? (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-white" />
+                  ) : (
+                    <FaGithub className="text-[31px] text-white" />
                   )}
                 </button>
 
