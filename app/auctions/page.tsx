@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { WheelEvent } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { supabase } from "@/lib/supabase";
@@ -37,6 +36,17 @@ const featuredAuctionBrands = [
   "Auto World",
   "RLC",
 ];
+
+const brandLogoByName: Record<string, string> = {
+  "Hot Wheels": "/images/brands/hotwheels.png",
+  "Mini GT": "/images/brands/minigt.png",
+  Inno64: "/images/brands/inno64.png",
+  "Tarmac Works": "/images/brands/tarmac.png",
+  Matchbox: "/images/brands/matchbox.png",
+  Greenlight: "/images/brands/greenlight.png",
+  "Johnny Lightning": "/images/brands/johnnylightning.png",
+  "Pop Race": "/images/brands/poprace.png",
+};
 
 function getEndTime(
   createdAt: string,
@@ -137,20 +147,6 @@ function AuctionCountdown({
 }
 
 export default function AuctionsPage() {
-  const brandScrollerRef = useRef<HTMLDivElement>(null);
-
-  function handleBrandWheel(event: WheelEvent<HTMLDivElement>) {
-    const scroller = brandScrollerRef.current;
-
-    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) {
-      return;
-    }
-
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      event.preventDefault();
-      scroller.scrollLeft += event.deltaY;
-    }
-  }
   const [auctions, setAuctions] =
     useState<AuctionWithBid[]>([]);
 
@@ -431,18 +427,15 @@ export default function AuctionsPage() {
 
       <section className="border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl">
 
-        <div className="relative mx-auto max-w-[1480px]">
-
-          <div
-            ref={brandScrollerRef}
-            onWheel={handleBrandWheel}
-            className="hide-scrollbar flex h-[90px] items-center gap-4 overflow-x-auto px-12"
-            aria-label="Filtrar leilões por marca"
-          >
+        <div
+          className="hide-scrollbar mx-auto flex h-[82px] max-w-[1480px] items-center gap-2.5 overflow-x-auto px-12"
+          aria-label="Filtrar leilões por marca"
+        >
 
             {brands.map((brand) => {
 
               const selected = brand === activeBrand;
+              const logo = brandLogoByName[brand];
 
               return (
 
@@ -451,22 +444,29 @@ export default function AuctionsPage() {
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setActiveBrand(brand)}
-                  className={`h-[46px] px-6 rounded-2xl border transition-all duration-300 text-[13px] uppercase tracking-[1px] font-bold whitespace-nowrap ${
+                  title={brand}
+                  className={`flex h-[52px] w-[94px] shrink-0 items-center justify-center rounded-2xl border px-2 transition-all duration-300 ${
                     selected
                       ? "border-[#ffb800] bg-[#ffb800] text-black"
-                      : "border-white/10 bg-black hover:border-[#ffb800] hover:text-[#ffb800]"
+                      : "border-white/10 bg-black text-white hover:border-[#ffb800]"
                   }`}
                 >
-                  {brand}
+                  {logo ? (
+                    <img
+                      src={logo}
+                      alt={brand}
+                      className={`max-h-8 max-w-[76px] object-contain transition ${selected ? "brightness-0" : ""}`}
+                    />
+                  ) : (
+                    <span className="text-center text-[10px] font-black uppercase leading-tight tracking-[0.5px]">
+                      {brand}
+                    </span>
+                  )}
                 </button>
 
               );
             })}
 
-          </div>
-
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-zinc-950 to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-zinc-950 to-transparent" />
         </div>
 
       </section>
