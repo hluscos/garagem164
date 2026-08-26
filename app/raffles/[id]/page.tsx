@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ShareButtons from "@/app/components/listing/ShareButtons";
 
 type ListingImage = {
   image_url: string | null;
@@ -495,6 +496,11 @@ export default function RaffleDetailPage() {
                 </div>
 
               </div>
+
+              <ShareButtons
+                title={`${raffle.brand} ${raffle.model}`}
+                className="mt-6"
+              />
 
               {/* OWNER NOTICE */}
 

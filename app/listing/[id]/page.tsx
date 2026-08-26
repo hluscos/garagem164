@@ -14,6 +14,7 @@ import ListingDetails from "@/app/components/listing/ListingDetails";
 import ListingSeller from "@/app/components/listing/ListingSeller";
 import ListingBidHistory from "@/app/components/listing/ListingBidHistory";
 import RelatedListings from "@/app/components/listing/RelatedListings";
+import ShareButtons from "@/app/components/listing/ShareButtons";
 
 type Listing = {
   id: string;
@@ -138,23 +139,29 @@ export default function ListingPage() {
 
       <section className="mx-auto max-w-[1600px] px-6 pt-8 lg:px-12">
 
-        <Link
-          href={
-            isRaffle
-              ? "/raffles"
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            href={
+              isRaffle
+                ? "/raffles"
+                : listing.listing_type === "auction"
+                  ? "/auctions"
+                  : "/"
+            }
+            className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 transition hover:text-[#ffb800]"
+          >
+            ←{" "}
+            {isRaffle
+              ? "Voltar aos Sorteios"
               : listing.listing_type === "auction"
-                ? "/auctions"
-                : "/"
-          }
-          className="inline-flex items-center gap-2 text-sm font-bold text-zinc-400 transition hover:text-[#ffb800]"
-        >
-          ←{" "}
-          {isRaffle
-            ? "Voltar aos Sorteios"
-            : listing.listing_type === "auction"
-              ? "Voltar aos Leilões"
-              : "Voltar"}
-        </Link>
+                ? "Voltar aos Leilões"
+                : "Voltar"}
+          </Link>
+
+          <ShareButtons
+            title={`${listing.brand || "Garagem164"} ${listing.model || "Miniatura"}`}
+          />
+        </div>
 
       </section>
 

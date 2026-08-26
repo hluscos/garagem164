@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
+import ShareButtons from "@/app/components/listing/ShareButtons";
 
 type Listing = {
   id: string;
@@ -846,6 +847,11 @@ export default function AuctionDetailPage() {
                 {listing.description}
               </p>
             )}
+
+            <ShareButtons
+              title={`${listing.brand || "Garagem164"} ${listing.model || "Miniatura"}`}
+              className="mt-6"
+            />
 
             {/* STATS */}
 
