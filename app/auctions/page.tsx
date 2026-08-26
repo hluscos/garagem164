@@ -389,9 +389,17 @@ export default function AuctionsPage() {
 
       {/* HERO */}
 
-      <section className="relative h-[420px] border-b border-white/5 overflow-hidden">
+      <section className="relative h-[340px] border-b border-white/5 overflow-hidden">
 
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-black to-black" />
+        <div className="absolute inset-0">
+          <img
+            src="/images/hero/backgrounds/auction-bg.webp"
+            alt=""
+            className="h-full w-full object-cover opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/25 to-black/75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+        </div>
 
         <div className="absolute inset-0 flex items-center justify-center">
 
@@ -405,11 +413,11 @@ export default function AuctionsPage() {
             Garagem164
           </div>
 
-          <h1 className="mt-5 text-[72px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-4 text-[68px] leading-none font-black italic uppercase tracking-[-4px]">
             Leilões
           </h1>
 
-          <p className="mt-6 max-w-[650px] text-lg text-zinc-400">
+          <p className="mt-5 max-w-[650px] text-lg text-zinc-300">
             Encontra peças especiais, acompanha
             os lances e conquista a próxima peça
             da tua coleção.

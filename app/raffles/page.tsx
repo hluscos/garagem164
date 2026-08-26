@@ -138,7 +138,7 @@ if (tickets) {
 
       {/* HERO */}
 
-      <section className="relative h-[420px] border-b border-white/5 overflow-hidden">
+      <section className="relative h-[340px] border-b border-white/5 overflow-hidden">
 
         {/* BACKGROUND */}
 
@@ -164,13 +164,13 @@ if (tickets) {
 
           </div>
 
-          <h1 className="mt-5 text-[82px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-4 text-[68px] leading-none font-black italic uppercase tracking-[-4px]">
 
             Sorteios
 
           </h1>
 
-          <p className="mt-6 text-zinc-400 text-[18px] max-w-[620px] leading-relaxed">
+          <p className="mt-5 text-zinc-300 text-[18px] max-w-[620px] leading-relaxed">
 
             Participa para ganhar miniaturas raras,
             edições limitadas e peças exclusivas para a tua coleção.

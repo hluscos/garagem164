@@ -77,19 +77,29 @@ export default function ListingsPage() {
 
       {/* HERO */}
 
-      <section className="border-b border-white/5">
+      <section className="relative h-[340px] overflow-hidden border-b border-white/5">
 
-        <div className="mx-auto max-w-[1480px] px-6 py-16 lg:px-12 lg:py-20">
+        <div className="absolute inset-0">
+          <img
+            src="/images/hero/backgrounds/listings-bg.webp"
+            alt=""
+            className="h-full w-full object-cover opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/25 to-black/75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+        </div>
+
+        <div className="relative z-10 mx-auto flex h-full max-w-[1480px] flex-col justify-center px-6 lg:px-12">
 
           <div className="text-[12px] font-black uppercase tracking-[3px] text-[#ffb800]">
             Garagem164
           </div>
 
-          <h1 className="mt-5 text-[64px] font-black italic uppercase leading-none tracking-[-4px] sm:text-[76px] lg:text-[82px]">
+          <h1 className="mt-4 text-[58px] font-black italic uppercase leading-none tracking-[-4px] sm:text-[64px] lg:text-[68px]">
             Anúncios
           </h1>
 
-          <p className="mt-6 max-w-[700px] text-[17px] leading-relaxed text-zinc-400 lg:text-[18px]">
+          <p className="mt-5 max-w-[700px] text-[17px] leading-relaxed text-zinc-300 lg:text-[18px]">
             Compra miniaturas 1:64 directamente a coleccionadores
             da comunidade Garagem164.
           </p>
