@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { Heart, MapPin, Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
+import ShareButtons from "./ShareButtons";
 
 interface Listing {
+  brand?: string | null;
+  model?: string | null;
   listing_type: "sale" | "auction" | "raffle";
   ticket_price?: number | null;
   total_tickets?: number | null;
@@ -448,6 +451,11 @@ export default function ListingSidebar({
               ? "Nos favoritos"
               : "Adicionar aos favoritos"}
         </button>
+
+        <ShareButtons
+          title={`${listing.brand || "Garagem164"} ${listing.model || "Miniatura"}`}
+          className="mt-3 justify-end"
+        />
 
       </div>
 

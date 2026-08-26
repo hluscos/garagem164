@@ -95,8 +95,8 @@ console.log("DELETE OK");
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <section className="max-w-[1480px] mx-auto px-12 py-16">
-        <h1 className="text-[64px] font-black italic uppercase tracking-[-3px]">
+      <section className="mx-auto max-w-[1480px] px-6 py-12 lg:px-12 lg:py-16">
+        <h1 className="text-[44px] font-black italic uppercase tracking-[-2px] sm:text-[56px] lg:text-[64px] lg:tracking-[-3px]">
           Meus Anúncios
         </h1>
 

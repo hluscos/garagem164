@@ -399,13 +399,13 @@ export default function AuctionsPage() {
 
         </div>
 
-        <div className="relative z-10 max-w-[1480px] mx-auto px-12 h-full flex flex-col justify-center">
+        <div className="relative z-10 mx-auto flex h-full max-w-[1480px] flex-col justify-center px-6 lg:px-12">
 
           <div className="text-[#ffb800] text-[12px] font-black uppercase tracking-[4px]">
             Garagem164
           </div>
 
-          <h1 className="mt-4 text-[68px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-4 text-[52px] font-black italic uppercase leading-none tracking-[-3px] sm:text-[60px] lg:text-[68px] lg:tracking-[-4px]">
             Leilões
           </h1>
 
@@ -424,7 +424,7 @@ export default function AuctionsPage() {
       <section className="border-b border-white/5 bg-zinc-950/50 backdrop-blur-xl">
 
         <div
-          className="hide-scrollbar mx-auto flex h-[88px] max-w-[1480px] items-center justify-center gap-4 overflow-x-auto px-12"
+          className="hide-scrollbar mx-auto flex h-[88px] max-w-[1480px] items-center justify-center gap-4 overflow-x-auto px-6 lg:px-12"
           aria-label="Filtrar leilões por marca"
         >
 
@@ -469,7 +469,7 @@ export default function AuctionsPage() {
 
       {/* STATUS */}
 
-      <section className="max-w-[1480px] mx-auto px-12 pt-12">
+      <section className="mx-auto max-w-[1480px] px-6 pt-10 lg:px-12 lg:pt-12">
 
         <div className="flex items-center gap-4 flex-wrap">
 
@@ -490,7 +490,7 @@ export default function AuctionsPage() {
 
       {/* GRID */}
 
-      <section className="max-w-[1480px] mx-auto px-12 py-14">
+      <section className="mx-auto max-w-[1480px] px-6 py-10 lg:px-12 lg:py-14">
 
         {loading && (
           <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">

@@ -36,32 +36,28 @@ export default function ShareButtons({
   }
 
   const buttonClass =
-    "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-zinc-950 px-4 text-[11px] font-black uppercase tracking-[0.8px] text-zinc-300 transition hover:-translate-y-0.5 hover:border-[#ffb800]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-50";
+    "inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-950 text-zinc-300 transition hover:-translate-y-0.5 hover:border-[#ffb800]/50 hover:text-white";
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <span className="mr-1 text-[10px] font-black uppercase tracking-[2px] text-zinc-600">
-        Partilhar
-      </span>
-
+    <div className={`flex items-center gap-2 ${className}`}>
       <button
         type="button"
         onClick={() => openShare("facebook")}
         aria-label="Partilhar no Facebook"
+        title="Partilhar no Facebook"
         className={buttonClass}
       >
         <FaFacebookF className="text-[16px] text-[#1877F2]" />
-        <span className="hidden sm:inline">Facebook</span>
       </button>
 
       <button
         type="button"
         onClick={() => openShare("whatsapp")}
         aria-label="Partilhar no WhatsApp"
+        title="Partilhar no WhatsApp"
         className={buttonClass}
       >
         <FaWhatsapp className="text-[18px] text-[#25D366]" />
-        <span className="hidden sm:inline">WhatsApp</span>
       </button>
 
       <button
@@ -69,13 +65,13 @@ export default function ShareButtons({
         onClick={copyLink}
         className={buttonClass}
         aria-label="Copiar link do anúncio"
+        title={copied ? "Link copiado" : "Copiar link"}
       >
         {copied ? (
           <Check size={17} className="text-[#ffb800]" />
         ) : (
           <Link2 size={17} />
         )}
-        <span>{copied ? "Copiado" : "Copiar link"}</span>
       </button>
     </div>
   );

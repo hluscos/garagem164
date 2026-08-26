@@ -14,7 +14,6 @@ import ListingDetails from "@/app/components/listing/ListingDetails";
 import ListingSeller from "@/app/components/listing/ListingSeller";
 import ListingBidHistory from "@/app/components/listing/ListingBidHistory";
 import RelatedListings from "@/app/components/listing/RelatedListings";
-import ShareButtons from "@/app/components/listing/ShareButtons";
 
 type Listing = {
   id: string;
@@ -139,7 +138,7 @@ export default function ListingPage() {
 
       <section className="mx-auto max-w-[1600px] px-6 pt-8 lg:px-12">
 
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
           <Link
             href={
               isRaffle
@@ -157,10 +156,6 @@ export default function ListingPage() {
                 ? "Voltar aos Leilões"
                 : "Voltar"}
           </Link>
-
-          <ShareButtons
-            title={`${listing.brand || "Garagem164"} ${listing.model || "Miniatura"}`}
-          />
         </div>
 
       </section>

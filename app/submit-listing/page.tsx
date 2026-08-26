@@ -268,13 +268,13 @@ export default function SubmitListingPage() {
 
       <section className="border-b border-white/5">
 
-        <div className="max-w-[1200px] mx-auto px-12 py-20">
+        <div className="mx-auto max-w-[1200px] px-6 py-14 lg:px-12 lg:py-20">
 
           <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
             Garagem164
           </div>
 
-          <h1 className="mt-5 text-[72px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-5 text-[48px] font-black italic uppercase leading-[0.92] tracking-[-3px] min-[380px]:text-[52px] sm:text-[64px] lg:text-[72px] lg:leading-none lg:tracking-[-4px]">
             Vender Miniatura
           </h1>
 
@@ -289,9 +289,9 @@ export default function SubmitListingPage() {
 
       {/* FORM */}
 
-      <section className="max-w-[1200px] mx-auto px-12 py-16">
+      <section className="mx-auto max-w-[1200px] px-6 py-10 lg:px-12 lg:py-16">
 
-        <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
+        <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-6 sm:p-8 lg:rounded-[32px] lg:p-10">
 
           <div className="grid md:grid-cols-2 gap-8">
 

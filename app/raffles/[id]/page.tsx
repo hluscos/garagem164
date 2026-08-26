@@ -198,7 +198,7 @@ export default function RaffleDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white">
-        <div className="mx-auto max-w-[1480px] px-12 py-20 text-zinc-400">
+        <div className="mx-auto max-w-[1480px] px-6 py-16 text-zinc-400 lg:px-12 lg:py-20">
           A carregar...
         </div>
       </main>
@@ -208,7 +208,7 @@ export default function RaffleDetailPage() {
   if (!raffle) {
     return (
       <main className="min-h-screen bg-black text-white">
-        <div className="mx-auto max-w-[1480px] px-12 py-20">
+        <div className="mx-auto max-w-[1480px] px-6 py-16 lg:px-12 lg:py-20">
           <div className="text-2xl font-black">
             Sorteio não encontrado
           </div>
@@ -432,7 +432,7 @@ export default function RaffleDetailPage() {
 
         {/* HERO */}
 
-        <section className="mx-auto max-w-[1480px] px-12 py-10">
+        <section className="mx-auto max-w-[1480px] px-6 py-8 lg:px-12 lg:py-10">
 
           {/* BACK */}
 
@@ -444,7 +444,7 @@ export default function RaffleDetailPage() {
             ← Voltar aos Sorteios
           </button>
 
-          <div className="grid grid-cols-2 items-center gap-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
 
             {/* IMAGE */}
 
@@ -464,7 +464,7 @@ export default function RaffleDetailPage() {
                   "/images/hero/cars/clio-williams.png"
                 }
                 alt={raffle.model}
-                className="relative z-10 mx-auto w-[75%] py-16"
+                className="relative z-10 mx-auto w-[88%] py-10 sm:w-[75%] sm:py-16"
               />
 
             </div>
@@ -477,7 +477,7 @@ export default function RaffleDetailPage() {
                 Sorteio Ativo
               </div>
 
-              <h1 className="mt-6 text-[64px] font-black italic uppercase leading-none tracking-[-3px]">
+              <h1 className="mt-6 break-words text-[44px] font-black italic uppercase leading-none tracking-[-2px] sm:text-[56px] lg:text-[64px] lg:tracking-[-3px]">
                 {raffle.model}
               </h1>
 
@@ -520,39 +520,39 @@ export default function RaffleDetailPage() {
 
               {/* STATS */}
 
-              <div className="mt-10 grid grid-cols-3 gap-4">
+              <div className="mt-8 grid grid-cols-3 gap-2 sm:mt-10 sm:gap-4">
 
-                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
+                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-3 sm:p-5">
 
                   <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                     Ticket
                   </div>
 
-                  <div className="mt-2 text-3xl font-black text-[#ffb800]">
+                  <div className="mt-2 text-2xl font-black text-[#ffb800] sm:text-3xl">
                     €{raffle.ticket_price}
                   </div>
 
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
+                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-3 sm:p-5">
 
                   <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                     Vendidos
                   </div>
 
-                  <div className="mt-2 text-3xl font-black">
+                  <div className="mt-2 text-2xl font-black sm:text-3xl">
                     {soldCount}
                   </div>
 
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
+                <div className="rounded-2xl border border-white/10 bg-zinc-950 p-3 sm:p-5">
 
                   <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                     Limite
                   </div>
 
-                  <div className="mt-2 text-3xl font-black">
+                  <div className="mt-2 text-2xl font-black sm:text-3xl">
                     {raffle.total_tickets}
                   </div>
 
@@ -595,7 +595,7 @@ export default function RaffleDetailPage() {
                 type="button"
                 onClick={handleOpenPurchaseModal}
                 disabled={isOwner || soldCount >= raffle.total_tickets}
-                className={`mt-10 h-[60px] rounded-2xl px-10 font-black uppercase tracking-[1px] transition-all duration-300 ${
+                className={`mt-10 h-[60px] w-full rounded-2xl px-6 font-black uppercase tracking-[1px] transition-all duration-300 sm:w-auto sm:px-10 ${
                   isOwner || soldCount >= raffle.total_tickets
                     ? "cursor-not-allowed bg-zinc-700 text-zinc-500"
                     : "bg-[#ffb800] text-black shadow-[0_0_50px_rgba(255,184,0,0.2)] hover:bg-[#ffc933]"
@@ -622,7 +622,7 @@ export default function RaffleDetailPage() {
 
               {/* DESCRIÇÃO */}
 
-              <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950 p-8">
+              <div className="mt-8 rounded-2xl border border-white/10 bg-zinc-950 p-6 sm:p-8">
 
                 <div className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">
                   Descrição
@@ -642,15 +642,15 @@ export default function RaffleDetailPage() {
 
         {/* DETAILS */}
 
-        <section className="mx-auto max-w-[1480px] px-12 pb-20">
+        <section className="mx-auto max-w-[1480px] px-6 pb-16 lg:px-12 lg:pb-20">
 
-          <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
+          <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-6 sm:p-8 lg:rounded-[32px] lg:p-10">
 
             <h2 className="text-3xl font-black uppercase">
               Como Funciona
             </h2>
 
-            <div className="mt-8 grid grid-cols-3 gap-8">
+            <div className="mt-8 grid grid-cols-1 gap-7 md:grid-cols-3 md:gap-8">
 
               <div>
 

@@ -725,7 +725,7 @@ export default function AuctionDetailPage() {
     return (
       <main className="min-h-screen bg-black text-white">
 
-        <section className="max-w-[1480px] mx-auto px-12 py-20">
+        <section className="mx-auto max-w-[1480px] px-6 py-16 lg:px-12 lg:py-20">
 
           <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-12 text-center">
 
@@ -751,7 +751,7 @@ export default function AuctionDetailPage() {
     return (
       <main className="min-h-screen bg-black text-white">
 
-        <section className="max-w-[1480px] mx-auto px-12 py-20">
+        <section className="mx-auto max-w-[1480px] px-6 py-16 lg:px-12 lg:py-20">
 
           <div className="rounded-[32px] border border-red-500/20 bg-red-500/5 p-12 text-center">
 
@@ -779,7 +779,7 @@ export default function AuctionDetailPage() {
 
       {/* HERO / DETAIL */}
 
-      <section className="max-w-[1480px] mx-auto px-12 py-16">
+      <section className="mx-auto max-w-[1480px] px-6 py-10 lg:px-12 lg:py-16">
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
@@ -835,7 +835,7 @@ export default function AuctionDetailPage() {
 
             </div>
 
-            <h1 className="mt-3 text-[56px] lg:text-[64px] leading-none font-black italic uppercase tracking-[-3px]">
+            <h1 className="mt-3 break-words text-[44px] font-black italic uppercase leading-none tracking-[-2px] sm:text-[56px] lg:text-[64px] lg:tracking-[-3px]">
 
               {listing.model ||
                 "Miniatura"}
@@ -1129,7 +1129,7 @@ export default function AuctionDetailPage() {
 
       {/* BID HISTORY */}
 
-      <section className="max-w-[1480px] mx-auto px-12 pb-20">
+      <section className="mx-auto max-w-[1480px] px-6 pb-16 lg:px-12 lg:pb-20">
 
         <div className="rounded-[32px] border border-white/5 bg-zinc-950 p-10">
 

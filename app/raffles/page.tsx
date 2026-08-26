@@ -156,7 +156,7 @@ if (tickets) {
 
 </div>
 
-        <div className="relative z-10 max-w-[1480px] mx-auto px-12 h-full flex flex-col justify-center">
+        <div className="relative z-10 mx-auto flex h-full max-w-[1480px] flex-col justify-center px-6 lg:px-12">
 
           <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
 
@@ -164,13 +164,13 @@ if (tickets) {
 
           </div>
 
-          <h1 className="mt-4 text-[68px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-4 text-[52px] font-black italic uppercase leading-none tracking-[-3px] sm:text-[60px] lg:text-[68px] lg:tracking-[-4px]">
 
             Sorteios
 
           </h1>
 
-          <p className="mt-5 text-zinc-300 text-[18px] max-w-[620px] leading-relaxed">
+          <p className="mt-5 max-w-[620px] text-[16px] leading-relaxed text-zinc-300 sm:text-[18px]">
 
             Participa para ganhar miniaturas raras,
             edições limitadas e peças exclusivas para a tua coleção.
@@ -185,7 +185,7 @@ if (tickets) {
 
       <section className="border-b border-white/5">
 
-        <div className="max-w-[1480px] mx-auto px-12 py-8 flex flex-wrap gap-4">
+        <div className="mx-auto flex max-w-[1480px] flex-wrap gap-3 px-6 py-7 lg:px-12 lg:py-8">
 
           {raffleFilters.map((filter) => {
             const selected = activeFilter === filter.value;
@@ -214,7 +214,7 @@ if (tickets) {
 
       {/* GRID */}
 
-      <section className="max-w-[1480px] mx-auto px-12 py-14">
+      <section className="mx-auto max-w-[1480px] px-6 py-10 lg:px-12 lg:py-14">
 
         {loading ? (
           <div className="rounded-[28px] border border-white/5 bg-zinc-950 p-12 text-center">

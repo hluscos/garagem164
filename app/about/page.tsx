@@ -28,7 +28,7 @@ export default function AboutPage() {
             Garagem164
           </div>
 
-          <h1 className="mt-5 max-w-[900px] text-[58px] font-black italic uppercase leading-[0.92] tracking-[-4px] sm:text-[72px] lg:text-[88px]">
+          <h1 className="mt-5 max-w-[900px] text-[44px] font-black italic uppercase leading-[0.94] tracking-[-3px] min-[380px]:text-[48px] sm:text-[72px] sm:tracking-[-4px] lg:text-[88px]">
             A paixão pelas miniaturas, num só lugar.
           </h1>
 

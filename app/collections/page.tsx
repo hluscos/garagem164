@@ -49,13 +49,13 @@ export default function CollectionsPage() {
 
       <section className="border-b border-white/5">
 
-        <div className="max-w-[1480px] mx-auto px-12 py-20">
+        <div className="mx-auto max-w-[1480px] px-6 py-14 lg:px-12 lg:py-20">
 
           <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
             Garagem164
           </div>
 
-          <h1 className="mt-5 text-[82px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-5 text-[48px] font-black italic uppercase leading-none tracking-[-3px] sm:text-[64px] lg:text-[82px] lg:tracking-[-4px]">
             Anúncios
           </h1>
 
@@ -70,7 +70,7 @@ export default function CollectionsPage() {
 
       {/* BRANDS */}
 
-      <section className="max-w-[1480px] mx-auto px-12 py-16">
+      <section className="mx-auto max-w-[1480px] px-6 py-12 lg:px-12 lg:py-16">
 
         <div className="grid grid-cols-4 gap-6">
 

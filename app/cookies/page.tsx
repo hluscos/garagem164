@@ -6,13 +6,13 @@ export default function CookiesPage() {
 
       <section className="border-b border-white/5">
 
-        <div className="max-w-[1200px] mx-auto px-12 py-20">
+        <div className="mx-auto max-w-[1200px] px-6 py-14 lg:px-12 lg:py-20">
 
           <div className="text-[#ffb800] uppercase tracking-[3px] text-[12px] font-black">
             Legal
           </div>
 
-          <h1 className="mt-5 text-[72px] leading-none font-black italic uppercase tracking-[-4px]">
+          <h1 className="mt-5 text-[46px] font-black italic uppercase leading-none tracking-[-3px] sm:text-[60px] lg:text-[72px] lg:tracking-[-4px]">
             Política de Cookies
           </h1>
 
@@ -26,7 +26,7 @@ export default function CookiesPage() {
 
       {/* CONTENT */}
 
-      <section className="max-w-[1200px] mx-auto px-12 py-20">
+      <section className="mx-auto max-w-[1200px] px-6 py-14 lg:px-12 lg:py-20">
 
         <div className="space-y-6">
 
