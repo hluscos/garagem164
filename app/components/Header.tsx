@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 
 import {
+  Menu,
   Search,
+  X,
 } from "lucide-react";
 
 import { FaInstagram } from "react-icons/fa";
@@ -17,6 +19,7 @@ import GlobalSearch from "./GlobalSearch";
 export default function Header() {
   const [session, setSession] = useState<Session | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -120,19 +123,19 @@ export default function Header() {
 
       {/* MAIN HEADER */}
 
-      <header className="sticky top-0 z-50 h-[100px] border-b border-white/5 bg-black">
+      <header className="sticky top-0 z-50 h-[80px] border-b border-white/5 bg-black lg:h-[100px]">
 
-        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-12">
+        <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-12">
 
           <Link
             href="/"
             aria-label="Garagem164 — Homepage"
-            className="mr-14 flex h-full shrink-0 items-center select-none"
+            className="flex h-full shrink-0 items-center select-none xl:mr-14"
           >
             <img
               src="/logo.png"
               alt="Garagem164"
-              className="h-[115px] w-auto object-contain"
+              className="h-[88px] w-auto object-contain lg:h-[115px]"
             />
           </Link>
 
@@ -182,19 +185,22 @@ export default function Header() {
 
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
 
             <button
               type="button"
               aria-label="Pesquisar"
-              onClick={() => setSearchOpen(true)}
-              className="flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800]"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setSearchOpen(true);
+              }}
+              className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-white/10 text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:h-[52px] lg:w-[52px] lg:rounded-2xl"
             >
               <Search size={20} />
             </button>
 
             {session ? (
-              <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-3 xl:flex">
 
                 <Link
                   href="/account"
@@ -217,7 +223,7 @@ export default function Header() {
 
               </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-3 xl:flex">
 
                 <Link
                   href="/login"
@@ -236,9 +242,99 @@ export default function Header() {
               </div>
             )}
 
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="flex h-[46px] w-[46px] items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800] xl:hidden"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+
           </div>
 
         </div>
+
+        {mobileMenuOpen && (
+          <div
+            id="mobile-navigation"
+            className="absolute left-0 right-0 top-full border-b border-white/10 bg-black/98 shadow-[0_24px_60px_rgba(0,0,0,0.65)] backdrop-blur-xl xl:hidden"
+          >
+            <nav className="mx-auto flex max-w-[720px] flex-col px-5 py-5 text-sm font-black uppercase tracking-[0.8px] sm:px-8">
+              {[
+                ["/", "Início"],
+                ["/auctions", "Leilões"],
+                ["/raffles", "Sorteios"],
+                ["/listings", "Anúncios"],
+                ["/about", "Sobre Nós"],
+              ].map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex min-h-12 items-center border-b border-white/5 transition ${
+                    isActive(href)
+                      ? "text-[#ffb800]"
+                      : "text-white hover:text-[#ffb800]"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+
+              <Link
+                href={session ? "/submit-listing" : "/login"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-4 flex h-12 items-center justify-center rounded-xl bg-[#ffb800] text-black transition hover:bg-[#ffc933]"
+              >
+                Vender
+              </Link>
+
+              {session ? (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Link
+                    href="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-12 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800]"
+                  >
+                    Minha Conta
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      setSession(null);
+                      setMobileMenuOpen(false);
+                      window.location.href = "/";
+                    }}
+                    className="flex h-12 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800]"
+                  >
+                    Sair
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-12 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800]"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-12 items-center justify-center rounded-xl border border-[#ffb800]/50 text-[#ffb800] transition hover:border-[#ffb800]"
+                  >
+                    Registar
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
 
       </header>
 
