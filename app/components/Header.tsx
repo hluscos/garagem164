@@ -130,12 +130,12 @@ export default function Header() {
           <Link
             href="/"
             aria-label="Garagem164 — Homepage"
-            className="flex h-full shrink-0 items-center select-none xl:mr-14"
+            className="relative h-[58px] w-[170px] shrink-0 select-none overflow-hidden lg:flex lg:h-full lg:w-auto lg:items-center lg:overflow-visible xl:mr-14"
           >
             <img
               src="/logo.png"
               alt="Garagem164"
-              className="h-[88px] w-auto object-contain lg:h-[115px]"
+              className="absolute -left-[36px] -top-[31px] h-auto w-[210px] max-w-none object-contain lg:static lg:h-[115px] lg:w-auto lg:max-w-full"
             />
           </Link>
 

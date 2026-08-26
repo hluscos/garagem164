@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Hero() {
   const cars = [
@@ -21,12 +22,12 @@ export default function Hero() {
   }, [cars.length]);
 
   return (
-    <section className="relative h-[760px] overflow-hidden bg-black">
+    <section className="relative h-[900px] overflow-hidden bg-black sm:h-[940px] lg:h-[760px]">
 
       {/* BACKGROUND */}
 
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-70 scale-105"
+        className="absolute inset-0 scale-105 bg-cover bg-[position:62%_center] opacity-55 sm:bg-center lg:opacity-70"
         style={{
           backgroundImage:
             "url('/images/hero/backgrounds/garage-bg.webp')",
@@ -35,7 +36,7 @@ export default function Hero() {
 
       {/* OVERLAYS */}
 
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black lg:bg-gradient-to-r lg:from-black lg:via-black/70 lg:to-black/15" />
 
       <div className="absolute right-[5%] top-[5%] w-[1200px] h-[1200px] rounded-full bg-[#ff9500]/10 blur-[180px]" />
 
@@ -43,13 +44,13 @@ export default function Hero() {
 
       {/* CONTENT */}
 
-      <div className="relative z-10 max-w-[1720px] mx-auto px-16 h-full flex items-center">
+      <div className="relative z-10 mx-auto flex h-full max-w-[1720px] items-start px-6 py-12 sm:px-10 sm:py-16 lg:items-center lg:px-16 lg:py-0">
 
         {/* LEFT SIDE */}
 
-        <div className="w-[42%]">
+        <div className="relative z-10 w-full lg:w-[42%]">
 
-          <h1 className="text-[104px] leading-[0.82] font-black italic uppercase tracking-[-9px] text-white">
+          <h1 className="text-[52px] font-black italic uppercase leading-[0.86] tracking-[-4px] text-white min-[380px]:text-[58px] sm:text-[76px] sm:tracking-[-6px] lg:text-[104px] lg:tracking-[-9px]">
             A TUA
             <br />
             <span className="text-[#ffb000]">
@@ -57,7 +58,7 @@ export default function Hero() {
             </span>
           </h1>
 
-          <h2 className="mt-2 text-[104px] leading-[0.82] font-black italic uppercase tracking-[-9px] text-white">
+          <h2 className="mt-2 text-[52px] font-black italic uppercase leading-[0.86] tracking-[-4px] text-white min-[380px]:text-[58px] sm:text-[76px] sm:tracking-[-6px] lg:text-[104px] lg:tracking-[-9px]">
             A TUA
             <br />
             <span className="text-[#ffb000]">
@@ -65,7 +66,7 @@ export default function Hero() {
             </span>
           </h2>
 
-          <p className="mt-8 max-w-[650px] text-[21px] leading-[1.8] text-zinc-300">
+          <p className="mt-7 max-w-[540px] text-[16px] leading-[1.65] text-zinc-300 sm:text-[18px] lg:mt-8 lg:max-w-[650px] lg:text-[21px] lg:leading-[1.8]">
             O marketplace premium de miniaturas 1:64.
             Leilões exclusivos, sorteios raros e peças
             para verdadeiros colecionadores.
@@ -73,27 +74,27 @@ export default function Hero() {
 
           {/* BUTTONS */}
 
-          <div className="mt-12 flex items-center gap-5">
+          <div className="mt-8 grid max-w-[420px] grid-cols-1 gap-3 min-[390px]:grid-cols-2 sm:gap-4 lg:mt-12 lg:flex lg:max-w-none lg:items-center lg:gap-5">
 
-            <a
+            <Link
               href="/auctions"
-              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl bg-[#ffb000] hover:bg-[#ffc933] transition-all duration-300 text-black font-black uppercase tracking-[0.5px] text-[15px]"
+              className="inline-flex h-[54px] items-center justify-center rounded-2xl bg-[#ffb000] px-5 text-[13px] font-black uppercase tracking-[0.5px] text-black transition-all duration-300 hover:bg-[#ffc933] sm:px-7 lg:h-[58px] lg:px-10 lg:text-[15px]"
             >
               Ver Leilões ⚡
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/listings"
-              className="inline-flex items-center justify-center h-[58px] px-10 rounded-2xl border border-white/10 hover:border-[#ffb000] hover:bg-white/[0.04] transition-all duration-300 text-white font-bold uppercase tracking-[0.5px] text-[15px]"
+              className="inline-flex h-[54px] items-center justify-center rounded-2xl border border-white/10 px-5 text-[13px] font-bold uppercase tracking-[0.5px] text-white transition-all duration-300 hover:border-[#ffb000] hover:bg-white/[0.04] sm:px-7 lg:h-[58px] lg:px-10 lg:text-[15px]"
             >
               Ver Anúncios
-            </a>
+            </Link>
 
           </div>
 
           {/* TAGS */}
 
-          <div className="mt-16 flex flex-wrap gap-3">
+          <div className="mt-8 flex max-w-[440px] flex-wrap gap-2 lg:mt-16 lg:max-w-none lg:gap-3">
 
             <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
               0% Comissão de Lançamento
@@ -113,7 +114,7 @@ export default function Hero() {
 
         {/* RIGHT SIDE */}
 
-        <div className="absolute right-[20px] bottom-[20px] w-[900px] h-[560px] z-20">
+        <div className="absolute -bottom-2 -right-[28%] z-[5] h-[300px] w-[130%] sm:-right-[15%] sm:h-[360px] sm:w-[110%] lg:bottom-[20px] lg:right-[20px] lg:z-20 lg:h-[560px] lg:w-[900px]">
 
           <AnimatePresence mode="wait">
 
