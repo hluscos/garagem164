@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PurchaseCard from "../components/PurchaseCard";
+import PurchaseCompletionActions from "../components/PurchaseCompletionActions";
 
 type PurchaseType = "raffle" | "sale" | "auction";
 
@@ -505,6 +506,32 @@ export default function PurchasesPage() {
                 pickupLocation={purchase.pickupLocation}
                 trackingCarrier={purchase.trackingCarrier}
                 trackingCode={purchase.trackingCode}
+                action={
+                  purchase.type !== "raffle" &&
+                  purchase.commercialStatus &&
+                  purchase.financialStatus &&
+                  purchase.deliveryMethod ? (
+                    <PurchaseCompletionActions
+                      transactionId={purchase.id}
+                      deliveryMethod={purchase.deliveryMethod}
+                      commercialStatus={purchase.commercialStatus}
+                      financialStatus={purchase.financialStatus}
+                      onCompleted={() => {
+                        setPurchases((current) =>
+                          current.map((item) =>
+                            item.id === purchase.id
+                              ? {
+                                  ...item,
+                                  commercialStatus: "delivered",
+                                  financialStatus: "ready_for_payout",
+                                }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
+                  ) : null
+                }
               />
             ))}
 

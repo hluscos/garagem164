@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import type { ListingDeliveryMethod } from "@/lib/delivery";
 
 export default function SubmitListingPage() {
   const router = useRouter();
@@ -16,7 +17,8 @@ export default function SubmitListingPage() {
   const [condition, setCondition] = useState("Novo");
 
   const [description, setDescription] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState("shipping");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<ListingDeliveryMethod>("shipping");
   const [pickupLocation, setPickupLocation] = useState("");
 
   const [price, setPrice] = useState("");
@@ -99,7 +101,9 @@ export default function SubmitListingPage() {
             description,
             delivery_method: deliveryMethod,
             pickup_location:
-              deliveryMethod === "pickup" ? pickupLocation : null,
+              deliveryMethod === "pickup" || deliveryMethod === "both"
+                ? pickupLocation
+                : null,
 
             price:
               listingType === "sale"
@@ -601,7 +605,7 @@ export default function SubmitListingPage() {
               Define como o comprador irá receber a miniatura.
             </p>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <button
                 type="button"
                 onClick={() => setDeliveryMethod("shipping")}
@@ -631,9 +635,24 @@ export default function SubmitListingPage() {
                   O encontro é combinado entre vendedor e comprador.
                 </div>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod("both")}
+                className={`rounded-2xl border p-5 text-left transition ${
+                  deliveryMethod === "both"
+                    ? "border-[#ffb800] bg-[#ffb800]/10"
+                    : "border-white/10 hover:border-white/20"
+                }`}
+              >
+                <div className="font-black">Envio e entrega em mão</div>
+                <div className="mt-1 text-sm text-zinc-500">
+                  O comprador escolhe a opção no pagamento.
+                </div>
+              </button>
             </div>
 
-            {deliveryMethod === "pickup" && (
+            {(deliveryMethod === "pickup" || deliveryMethod === "both") && (
               <div className="mt-5">
                 <label className="block text-xs font-bold uppercase tracking-[1px] text-zinc-400">
                   Localidade da entrega

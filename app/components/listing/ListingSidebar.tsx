@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Heart, MapPin, Truck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, Mail, MapPin, Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import type { TransactionDeliveryMethod } from "@/lib/delivery";
 import RaffleCheckoutModal from "./RaffleCheckoutModal";
 import ShareButtons from "./ShareButtons";
 
 interface Listing {
+  user_id?: string | null;
   brand?: string | null;
   model?: string | null;
   listing_type: "sale" | "auction" | "raffle";
@@ -14,7 +17,7 @@ interface Listing {
   total_tickets?: number | null;
   price?: number | null;
   starting_bid?: number | null;
-  delivery_method?: "shipping" | "pickup";
+  delivery_method?: "shipping" | "pickup" | "both";
   pickup_location?: string | null;
 }
 
@@ -33,7 +36,18 @@ export default function ListingSidebar({
   soldCount,
   isOwner = false,
 }: Props) {
+  const router = useRouter();
   const listingType = listing.listing_type;
+
+  const availableDeliveryMethod =
+    listing.delivery_method ?? "shipping";
+
+  const [selectedDeliveryMethod, setSelectedDeliveryMethod] =
+    useState<TransactionDeliveryMethod>(
+      availableDeliveryMethod === "pickup"
+        ? "pickup"
+        : "shipping",
+    );
 
   const ticketPrice = Number(
     listing.ticket_price || 0,
@@ -67,6 +81,7 @@ export default function ListingSidebar({
 
   const [favoriteLoading, setFavoriteLoading] =
     useState(false);
+  const [conversationLoading, setConversationLoading] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -200,6 +215,7 @@ export default function ListingSidebar({
           body: JSON.stringify({
             type: "sale",
             listingId,
+            deliveryMethod: selectedDeliveryMethod,
           }),
         },
       );
@@ -227,6 +243,43 @@ export default function ListingSidebar({
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartConversation = async () => {
+    if (isOwner || conversationLoading) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setConversationLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ listingId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.conversationId) {
+        setError(data.error || "Não foi possível iniciar a conversa.");
+        return;
+      }
+
+      router.push(`/messages?conversation=${data.conversationId}`);
+    } catch {
+      setError("Não foi possível iniciar a conversa.");
+    } finally {
+      setConversationLoading(false);
     }
   };
 
@@ -264,22 +317,58 @@ export default function ListingSidebar({
         </div>
 
         {listingType !== "raffle" && (
-          <div className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-4">
-            {listing.delivery_method === "pickup" ? (
-              <MapPin size={18} className="shrink-0 text-[#ffb800]" />
-            ) : (
-              <Truck size={18} className="shrink-0 text-[#ffb800]" />
-            )}
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-600">
-                Entrega
-              </div>
-              <div className="mt-1 text-sm font-black">
-                {listing.delivery_method === "pickup"
-                  ? `Em mão — ${listing.pickup_location || "localidade a combinar"}`
-                  : "Envio com código de rastreio"}
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/40 p-4">
+            <div className="flex items-center gap-3">
+              {availableDeliveryMethod === "pickup" ? (
+                <MapPin size={18} className="shrink-0 text-[#ffb800]" />
+              ) : (
+                <Truck size={18} className="shrink-0 text-[#ffb800]" />
+              )}
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-[2px] text-zinc-600">
+                  Entrega
+                </div>
+                <div className="mt-1 text-sm font-black">
+                  {availableDeliveryMethod === "pickup"
+                    ? `Em mão — ${listing.pickup_location || "localidade a combinar"}`
+                    : availableDeliveryMethod === "both"
+                      ? "Envio ou entrega em mão"
+                      : "Envio com código de rastreio"}
+                </div>
               </div>
             </div>
+
+            {listingType === "sale" && availableDeliveryMethod === "both" && (
+              <fieldset className="mt-4 grid gap-2 sm:grid-cols-2">
+                <legend className="mb-2 text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
+                  Escolhe como queres receber
+                </legend>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDeliveryMethod("shipping")}
+                  aria-pressed={selectedDeliveryMethod === "shipping"}
+                  className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                    selectedDeliveryMethod === "shipping"
+                      ? "border-[#ffb800] bg-[#ffb800]/10 text-white"
+                      : "border-white/10 text-zinc-400 hover:border-white/20"
+                  }`}
+                >
+                  Envio com rastreio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDeliveryMethod("pickup")}
+                  aria-pressed={selectedDeliveryMethod === "pickup"}
+                  className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                    selectedDeliveryMethod === "pickup"
+                      ? "border-[#ffb800] bg-[#ffb800]/10 text-white"
+                      : "border-white/10 text-zinc-400 hover:border-white/20"
+                  }`}
+                >
+                  Entrega em mão
+                </button>
+              </fieldset>
+            )}
           </div>
         )}
 
@@ -428,6 +517,18 @@ export default function ListingSidebar({
                   }`
                 : "Seleciona os teus números")}
         </button>
+
+        {!isOwner && (
+          <button
+            type="button"
+            onClick={handleStartConversation}
+            disabled={conversationLoading}
+            className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 font-black uppercase transition hover:border-[#ffb800] hover:text-[#ffb800] disabled:cursor-wait disabled:opacity-60"
+          >
+            <Mail size={18} />
+            {conversationLoading ? "A abrir conversa..." : "Falar com o vendedor"}
+          </button>
+        )}
 
         <button
           type="button"

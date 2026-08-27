@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -47,6 +48,7 @@ interface PurchaseCardProps {
   pickupLocation?: string;
   trackingCarrier?: string;
   trackingCode?: string;
+  action?: ReactNode;
 }
 
 function getTypeLabel(type: PurchaseType) {
@@ -168,6 +170,7 @@ export default function PurchaseCard({
   pickupLocation = "",
   trackingCarrier = "",
   trackingCode = "",
+  action,
 }: PurchaseCardProps) {
   const sortedTickets = [...ticketNumbers].sort(
     (a, b) => a - b,
@@ -392,6 +395,8 @@ export default function PurchaseCard({
               </div>
             </div>
           )}
+
+          {action}
 
           {/* RODAPÉ */}
 

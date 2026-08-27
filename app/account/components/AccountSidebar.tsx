@@ -11,6 +11,7 @@ import {
   Ticket,
   Package,
   Heart,
+  Mail,
   Settings,
   UserCircle2,
   BadgeCheck,
@@ -37,6 +38,11 @@ const menu = [
     href: "/account/raffles",
     label: "Sorteios",
     icon: Ticket,
+  },
+  {
+    href: "/messages",
+    label: "Mensagens",
+    icon: Mail,
   },
   {
     href: "/account/listings",

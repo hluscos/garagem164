@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { queueTransactionalEmailOnce } from "@/lib/transactionalEmail";
 
 export async function PATCH(
   request: NextRequest,
@@ -41,7 +42,7 @@ export async function PATCH(
 
   const { data: transaction, error: transactionError } = await supabaseAdmin
     .from("transactions")
-    .select("id, seller_id, delivery_method, commercial_status, financial_status")
+    .select("id, buyer_id, seller_id, delivery_method, commercial_status, financial_status")
     .eq("id", id)
     .maybeSingle();
 
@@ -100,6 +101,43 @@ export async function PATCH(
       { status: 500 },
     );
   }
+
+  if (canRegisterShipment) {
+    const autoConfirmAt = new Date(
+      Date.now() + 14 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const { error: autoConfirmError } = await supabaseAdmin
+      .from("transactions")
+      .update({ auto_confirm_at: autoConfirmAt })
+      .eq("id", id)
+      .eq("commercial_status", "shipped")
+      .eq("financial_status", "held")
+      .is("auto_confirm_at", null);
+
+    if (autoConfirmError) {
+      return NextResponse.json(
+        { error: "O envio foi registado, mas não foi possível agendar a conclusão automática." },
+        { status: 500 },
+      );
+    }
+  }
+
+  await queueTransactionalEmailOnce({
+    eventKey: `shipping-registered:${id}:${carrier}:${trackingCode}`,
+    eventType: "shipping_registered",
+    recipientUserId: transaction.buyer_id,
+    subject: "A tua encomenda foi enviada — Garagem164",
+    entityType: "transaction",
+    entityId: id,
+    heading: "A tua encomenda foi enviada",
+    paragraphs: [
+      `A transportadora indicada pelo vendedor é ${carrier}.`,
+      `O teu código de rastreio é ${trackingCode}.`,
+      "Podes confirmar a receção na área das tuas compras quando receberes a encomenda.",
+    ],
+    action: { label: "Ver compra", path: "/account/purchases" },
+  });
 
   return NextResponse.json({
     success: true,

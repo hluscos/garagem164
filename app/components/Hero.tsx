@@ -97,7 +97,7 @@ export default function Hero() {
           <div className="mt-8 flex max-w-[440px] flex-wrap gap-2 lg:mt-16 lg:max-w-none lg:gap-3">
 
             <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">
-              0% Comissão de Lançamento
+              Anúncios Gratuitos
             </div>
 
             <div className="h-[40px] px-4 rounded-full border border-[#ffb000]/20 bg-[#ffb000]/10 text-[#ffb000] flex items-center justify-center text-[11px] font-black uppercase tracking-[1px]">

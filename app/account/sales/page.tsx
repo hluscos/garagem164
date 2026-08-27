@@ -9,9 +9,10 @@ import {
   Clock3,
   PackageCheck,
   Truck,
-  MapPin,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PickupConfirmationForm from "../components/PickupConfirmationForm";
+import PayoutButton from "../components/PayoutButton";
 
 type CommercialStatus =
   | "pending_payment"
@@ -40,6 +41,7 @@ interface SaleItem {
   amount: number;
   sellerAmount: number;
   platformFee: number;
+  paymentProcessingFee: number | null;
   createdAt: string;
   commercialStatus: CommercialStatus;
   financialStatus: FinancialStatus;
@@ -56,6 +58,7 @@ function ShippingForm({
   sale: SaleItem;
   onSaved: (updated: Partial<SaleItem>) => void;
 }) {
+  const carrierOptions = ["CTT", "CTT Expresso", "DPD", "DHL", "GLS", "InPost", "Outra"];
   const [carrier, setCarrier] = useState(sale.trackingCarrier);
   const [trackingCode, setTrackingCode] = useState(sale.trackingCode);
   const [saving, setSaving] = useState(false);
@@ -67,20 +70,22 @@ function ShippingForm({
     ['held', 'ready_for_payout'].includes(sale.financialStatus);
 
   if (sale.deliveryMethod === "pickup") {
+    const canConfirmPickup =
+      ["paid", "awaiting_shipment"].includes(sale.commercialStatus) &&
+      sale.financialStatus === "held";
+
     return (
-      <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3">
-        <div className="flex items-center gap-3 text-blue-300">
-          <MapPin size={16} />
-          <div>
-            <div className="text-[9px] font-bold uppercase tracking-[2px] opacity-70">
-              Entrega em mão
-            </div>
-            <div className="mt-0.5 text-xs font-black">
-              {sale.pickupLocation || "Localidade a combinar"}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PickupConfirmationForm
+        transactionId={sale.id}
+        pickupLocation={sale.pickupLocation}
+        canConfirm={canConfirmPickup}
+        onConfirmed={() =>
+          onSaved({
+            commercialStatus: "delivered",
+            financialStatus: "ready_for_payout",
+          })
+        }
+      />
     );
   }
 
@@ -146,7 +151,11 @@ function ShippingForm({
       {open && (
         <>
           <div className="mt-3 grid gap-2">
-            <input value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={80} placeholder="Transportadora" className="rounded-lg border border-white/10 bg-zinc-950 p-2.5 text-xs outline-none focus:border-[#ffb800]" />
+            <select value={carrier} onChange={(e) => setCarrier(e.target.value)} className="rounded-lg border border-white/10 bg-zinc-950 p-2.5 text-xs outline-none focus:border-[#ffb800]">
+              <option value="">Escolhe a transportadora</option>
+              {carrier && !carrierOptions.includes(carrier) && <option value={carrier}>{carrier}</option>}
+              {carrierOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
             <input value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} maxLength={120} placeholder="Código de rastreio" className="rounded-lg border border-white/10 bg-zinc-950 p-2.5 text-xs outline-none focus:border-[#ffb800]" />
           </div>
           {message && <p className="mt-2 text-xs text-zinc-400">{message}</p>}
@@ -289,7 +298,7 @@ export default function SalesPage() {
 
       const { data: transactions, error } = await supabase
         .from("transactions")
-        .select("id, listing_id, amount, seller_amount, platform_fee, created_at, commercial_status, financial_status, delivery_method, pickup_location")
+        .select("id, listing_id, amount, seller_amount, platform_fee, payment_processing_fee, created_at, commercial_status, financial_status, delivery_method, pickup_location")
         .eq("seller_id", session.user.id)
         .order("created_at", { ascending: false });
 
@@ -326,6 +335,9 @@ export default function SalesPage() {
           amount: Number(transaction.amount),
           sellerAmount: Number(transaction.seller_amount),
           platformFee: Number(transaction.platform_fee),
+          paymentProcessingFee: transaction.payment_processing_fee === null
+            ? null
+            : Number(transaction.payment_processing_fee),
           createdAt: transaction.created_at,
           commercialStatus: transaction.commercial_status as CommercialStatus,
           financialStatus: transaction.financial_status as FinancialStatus,
@@ -566,7 +578,7 @@ export default function SalesPage() {
 
                       {/* VALORES */}
 
-                      <div className="mt-3 grid grid-cols-3 gap-3">
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
 
                         <div>
                           <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
@@ -580,11 +592,23 @@ export default function SalesPage() {
 
                         <div>
                           <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
-                            Comissão
+                            Garagem164
                           </div>
 
                           <div className="mt-1 text-sm font-black text-zinc-300">
                             €{sale.platformFee.toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[2px] text-zinc-600">
+                            Processamento
+                          </div>
+
+                          <div className="mt-1 text-sm font-black text-zinc-300">
+                            {sale.paymentProcessingFee === null
+                              ? "A calcular"
+                              : `€${sale.paymentProcessingFee.toFixed(2)}`}
                           </div>
                         </div>
 
@@ -607,6 +631,27 @@ export default function SalesPage() {
                             current.map((item) =>
                               item.id === sale.id
                                 ? { ...item, ...updated }
+                                : item,
+                            ),
+                          );
+                        }}
+                      />
+
+                      <PayoutButton
+                        transactionId={sale.id}
+                        canPayout={
+                          sale.commercialStatus === "delivered" &&
+                          sale.financialStatus === "ready_for_payout"
+                        }
+                        onPaidOut={() => {
+                          setSales((current) =>
+                            current.map((item) =>
+                              item.id === sale.id
+                                ? {
+                                    ...item,
+                                    commercialStatus: "completed",
+                                    financialStatus: "transferred",
+                                  }
                                 : item,
                             ),
                           );

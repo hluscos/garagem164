@@ -29,7 +29,7 @@ type Listing = {
   starting_bid: number | null;
   ticket_price: number | null;
   total_tickets: number | null;
-  delivery_method: "shipping" | "pickup";
+  delivery_method: "shipping" | "pickup" | "both";
   pickup_location: string | null;
   duration_days: number | null;
   created_at: string;

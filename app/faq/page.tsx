@@ -20,12 +20,22 @@ export default function FAQPage() {
     {
       question: "Quanto custa anunciar na Garagem164?",
       answer:
-        "Durante o período de lançamento, anunciar é totalmente gratuito.",
+        "Publicar um anúncio é gratuito. Os custos só se aplicam quando uma venda ou leilão é efetivamente pago.",
     },
     {
-      question: "Existe alguma comissão?",
+      question: "O comprador paga alguma taxa extra?",
       answer:
-        "Durante o primeiro mês após o lançamento da plataforma não será cobrada qualquer comissão. Após esse período, será aplicada uma comissão de 3%.",
+        "Não. O comprador vê e paga apenas o preço do artigo ou dos bilhetes e, quando aplicável, os portes de envio apresentados antes de pagar. Não é adicionada uma taxa de serviço ou de processamento no checkout.",
+    },
+    {
+      question: "Quais são os custos para vender?",
+      answer:
+        "Publicar um anúncio é gratuito. Numa venda ou leilão pago, a Garagem164 retém uma comissão de 3% e o custo de processamento do pagamento. O detalhe é apresentado ao vendedor na área de vendas assim que o pagamento é confirmado.",
+    },
+    {
+      question: "Porque pode variar o custo de processamento?",
+      answer:
+        "O custo depende do método de pagamento escolhido e do tipo de cartão ou carteira utilizada. A Garagem164 calcula-o a partir do pagamento efetivamente concluído e não o acrescenta como taxa ao comprador.",
     },
     {
       question: "Posso editar um anúncio depois de publicado?",

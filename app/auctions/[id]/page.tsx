@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 import ShareButtons from "@/app/components/listing/ShareButtons";
+import type { TransactionDeliveryMethod } from "@/lib/delivery";
 
 type Listing = {
   id: string;
@@ -18,6 +19,8 @@ type Listing = {
   description: string | null;
   created_at: string;
   user_id: string | null;
+  delivery_method: "shipping" | "pickup" | "both";
+  pickup_location: string | null;
 };
 
 type ListingImage = {
@@ -143,6 +146,9 @@ export default function AuctionDetailPage() {
 
   const [checkoutMessage, setCheckoutMessage] =
     useState("");
+
+  const [selectedDeliveryMethod, setSelectedDeliveryMethod] =
+    useState<TransactionDeliveryMethod>("shipping");
 
   const [paymentChecking, setPaymentChecking] =
     useState(true);
@@ -378,7 +384,9 @@ export default function AuctionDetailPage() {
               duration_days,
               description,
               created_at,
-              user_id
+              user_id,
+              delivery_method,
+              pickup_location
             `,
           )
           .eq("id", auctionId)
@@ -418,6 +426,11 @@ export default function AuctionDetailPage() {
 
         setListing(
           listingData as Listing,
+        );
+        setSelectedDeliveryMethod(
+          listingData.delivery_method === "pickup"
+            ? "pickup"
+            : "shipping",
         );
 
         const {
@@ -680,6 +693,7 @@ export default function AuctionDetailPage() {
           body: JSON.stringify({
             type: "auction",
             listingId: auctionId,
+            deliveryMethod: selectedDeliveryMethod,
           }),
         },
       );
@@ -1019,6 +1033,40 @@ export default function AuctionDetailPage() {
 
               winningBid && isWinner ? (
 
+                <>
+
+                {listing.delivery_method === "both" && !paymentCompleted && (
+                  <fieldset className="mt-8 grid gap-2 sm:grid-cols-2">
+                    <legend className="mb-2 text-[10px] font-bold uppercase tracking-[2px] text-zinc-500">
+                      Escolhe como queres receber
+                    </legend>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeliveryMethod("shipping")}
+                      aria-pressed={selectedDeliveryMethod === "shipping"}
+                      className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                        selectedDeliveryMethod === "shipping"
+                          ? "border-[#ffb800] bg-[#ffb800]/10 text-white"
+                          : "border-white/10 text-zinc-400 hover:border-white/20"
+                      }`}
+                    >
+                      Envio com rastreio
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeliveryMethod("pickup")}
+                      aria-pressed={selectedDeliveryMethod === "pickup"}
+                      className={`rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                        selectedDeliveryMethod === "pickup"
+                          ? "border-[#ffb800] bg-[#ffb800]/10 text-white"
+                          : "border-white/10 text-zinc-400 hover:border-white/20"
+                      }`}
+                    >
+                      Entrega em mão
+                    </button>
+                  </fieldset>
+                )}
+
                 paymentChecking ? (
 
                   <button
@@ -1061,6 +1109,8 @@ export default function AuctionDetailPage() {
                   </button>
 
                 )
+
+                </>
 
               ) : (
 

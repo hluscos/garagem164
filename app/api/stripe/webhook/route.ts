@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { calculatePlatformFee } from "@/lib/platformCommission";
+import {
+  calculatePlatformFee,
+  calculateRafflePlatformFee,
+  calculateSellerNetAmount,
+} from "@/lib/platformCommission";
+import {
+  isTransactionDeliveryMethod,
+  supportsDeliveryMethod,
+} from "@/lib/delivery";
+import { ensureTransactionPickupCode } from "@/lib/transactionPickupCodes";
+import { queueTransactionalEmailOnce } from "@/lib/transactionalEmail";
 
 console.log(
   "WEBHOOK SERVICE ROLE:",
@@ -13,6 +23,37 @@ console.log(
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
 );
+
+async function getStripePaymentFee(paymentIntentId: string | null) {
+  if (!paymentIntentId) {
+    return { stripeFee: null, balanceTransactionId: null };
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge.balance_transaction"],
+    });
+    const charge = paymentIntent.latest_charge;
+
+    if (!charge || typeof charge === "string") {
+      return { stripeFee: null, balanceTransactionId: null };
+    }
+
+    const balanceTransaction = charge.balance_transaction;
+
+    if (!balanceTransaction || typeof balanceTransaction === "string") {
+      return { stripeFee: null, balanceTransactionId: null };
+    }
+
+    return {
+      stripeFee: Math.round(balanceTransaction.fee) / 100,
+      balanceTransactionId: balanceTransaction.id,
+    };
+  } catch (error) {
+    console.error("STRIPE PAYMENT FEE LOOKUP ERROR:", error);
+    return { stripeFee: null, balanceTransactionId: null };
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -206,12 +247,14 @@ export async function POST(req: NextRequest) {
       seller_id,
       amount,
       platform_fee,
+      payment_processing_fee,
       seller_amount,
       currency,
       commercial_status,
       financial_status,
       stripe_payment_intent,
-      stripe_checkout_session
+      stripe_checkout_session,
+      delivery_method
     `,
   )
   .eq(
@@ -319,7 +362,7 @@ if (transactionQueryError) {
         } = await supabaseAdmin
           .from("listings")
           .select(
-            "id, user_id, listing_type, price",
+            "id, user_id, listing_type, price, brand, model",
           )
           .eq(
             "id",
@@ -632,6 +675,30 @@ if (transactionQueryError) {
             : null;
 
         const {
+          stripeFee: paymentProcessingFee,
+        } = await getStripePaymentFee(paymentIntent);
+
+        if (paymentProcessingFee === null) {
+          console.error(
+            "❌ Não foi possível obter a taxa Stripe exacta da venda:",
+            session.id,
+          );
+
+          return NextResponse.json(
+            {
+              error: "Failed to determine sale payment fee.",
+            },
+            { status: 500 },
+          );
+        }
+
+        const sellerAmount = calculateSellerNetAmount(
+          Number(transaction.amount),
+          Number(transaction.platform_fee),
+          paymentProcessingFee,
+        );
+
+        const {
           data: updatedTransaction,
           error: transactionUpdateError,
         } = await supabaseAdmin
@@ -645,6 +712,12 @@ if (transactionQueryError) {
 
             stripe_payment_intent:
               paymentIntent,
+
+            payment_processing_fee:
+              paymentProcessingFee,
+
+            seller_amount:
+              sellerAmount,
 
             stripe_checkout_session:
               session.id,
@@ -669,6 +742,7 @@ if (transactionQueryError) {
               id,
               amount,
               platform_fee,
+              payment_processing_fee,
               seller_amount,
               currency,
               commercial_status,
@@ -771,6 +845,8 @@ if (transactionQueryError) {
               updatedTransaction.amount,
             platformFee:
               updatedTransaction.platform_fee,
+            paymentProcessingFee:
+              updatedTransaction.payment_processing_fee,
             sellerAmount:
               updatedTransaction.seller_amount,
             commercialStatus:
@@ -779,6 +855,20 @@ if (transactionQueryError) {
               updatedTransaction.financial_status,
           },
         );
+
+        if (transaction.delivery_method === "pickup") {
+          try {
+            await ensureTransactionPickupCode(
+              transactionId,
+              transaction.buyer_id,
+            );
+          } catch {
+            return NextResponse.json(
+              { error: "Failed to prepare pickup confirmation." },
+              { status: 500 },
+            );
+          }
+        }
 
         const { error: soldListingError } =
           await supabaseAdmin
@@ -866,6 +956,9 @@ if (transactionQueryError) {
                 platform_fee:
                   updatedTransaction.platform_fee,
 
+                payment_processing_fee:
+                  updatedTransaction.payment_processing_fee,
+
                 seller_amount:
                   updatedTransaction.seller_amount,
 
@@ -914,6 +1007,40 @@ if (transactionQueryError) {
           );
         }
 
+        const saleName = `${listing.brand || ""} ${listing.model || "anúncio"}`.trim();
+        await queueTransactionalEmailOnce({
+          eventKey: `purchase-confirmed:${transactionId}:buyer`,
+          eventType: "purchase_confirmed",
+          recipientUserId: transaction.buyer_id,
+          subject: "Compra confirmada — Garagem164",
+          entityType: "transaction",
+          entityId: transactionId,
+          heading: "Compra confirmada",
+          paragraphs: [
+            `O pagamento de ${saleName} foi confirmado.`,
+            transaction.delivery_method === "pickup"
+              ? "O teu código de confirmação para a entrega em mão está disponível nas tuas compras."
+              : "O vendedor será avisado para preparar o envio com rastreio.",
+          ],
+          action: { label: "Ver compra", path: "/account/purchases" },
+        });
+        await queueTransactionalEmailOnce({
+          eventKey: `sale-confirmed:${transactionId}:seller`,
+          eventType: "sale_confirmed",
+          recipientUserId: transaction.seller_id,
+          subject: "Tens uma nova venda — Garagem164",
+          entityType: "transaction",
+          entityId: transactionId,
+          heading: "Nova venda confirmada",
+          paragraphs: [
+            `O pagamento de ${saleName} foi confirmado e está retido em segurança.`,
+            transaction.delivery_method === "pickup"
+              ? "Combina a entrega em mão e confirma-a com o código apresentado pelo comprador."
+              : "Regista a transportadora e o código de rastreio para o comprador poder acompanhar o envio.",
+          ],
+          action: { label: "Ver venda", path: "/account/sales" },
+        });
+
         break;
       }
 
@@ -934,6 +1061,9 @@ if (transactionQueryError) {
         const bidId =
           metadata.bidId;
 
+        const deliveryMethod =
+          metadata.deliveryMethod;
+
         /*
          * -----------------------------------------------------
          * VALIDAR METADATA
@@ -947,6 +1077,9 @@ if (transactionQueryError) {
           !auctionId ||
           !userId ||
           !bidId ||
+          !isTransactionDeliveryMethod(
+            deliveryMethod,
+          ) ||
           !Number.isFinite(
             metadataAmount,
           ) ||
@@ -958,6 +1091,7 @@ if (transactionQueryError) {
               auctionId,
               userId,
               bidId,
+              deliveryMethod,
               metadataAmount,
             },
           );
@@ -1010,7 +1144,9 @@ if (transactionQueryError) {
               duration_days,
               created_at,
               delivery_method,
-              pickup_location
+              pickup_location,
+              brand,
+              model
             `,
           )
           .eq("id", auctionId)
@@ -1065,6 +1201,29 @@ if (transactionQueryError) {
             {
               error:
                 "Listing is not an auction.",
+            },
+            { status: 400 },
+          );
+        }
+
+        if (
+          !supportsDeliveryMethod(
+            auction.delivery_method,
+            deliveryMethod,
+          )
+        ) {
+          console.error(
+            "❌ Método de entrega inválido para leilão:",
+            {
+              auctionId,
+              available: auction.delivery_method,
+              selected: deliveryMethod,
+            },
+          );
+
+          return NextResponse.json(
+            {
+              error: "Invalid auction delivery method.",
             },
             { status: 400 },
           );
@@ -1400,6 +1559,7 @@ if (transactionQueryError) {
               id,
               amount,
               platform_fee,
+              payment_processing_fee,
               seller_amount,
               currency,
               commercial_status,
@@ -1432,6 +1592,29 @@ if (transactionQueryError) {
         let transactionId =
           existingTransaction?.id;
 
+        const paymentIntent =
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : null;
+
+        const {
+          stripeFee: paymentProcessingFee,
+        } = await getStripePaymentFee(paymentIntent);
+
+        if (paymentProcessingFee === null) {
+          console.error(
+            "❌ Não foi possível obter a taxa Stripe exacta do leilão:",
+            session.id,
+          );
+
+          return NextResponse.json(
+            {
+              error: "Failed to determine auction payment fee.",
+            },
+            { status: 500 },
+          );
+        }
+
         /*
          * -----------------------------------------------------
          * CRIAR TRANSACTION
@@ -1447,12 +1630,11 @@ if (transactionQueryError) {
           const platformFee =
             calculatePlatformFee(amount);
 
-          const sellerAmount =
-            Math.round(
-              (amount -
-                platformFee) *
-                100,
-            ) / 100;
+          const sellerAmount = calculateSellerNetAmount(
+            amount,
+            platformFee,
+            paymentProcessingFee,
+          );
 
           const {
             data: newTransaction,
@@ -1478,6 +1660,9 @@ if (transactionQueryError) {
               platform_fee:
                 platformFee,
 
+              payment_processing_fee:
+                paymentProcessingFee,
+
               seller_amount:
                 sellerAmount,
 
@@ -1491,16 +1676,15 @@ if (transactionQueryError) {
                 "held",
 
               delivery_method:
-                auction.delivery_method,
+                deliveryMethod,
 
               pickup_location:
-                auction.pickup_location,
+                deliveryMethod === "pickup"
+                  ? auction.pickup_location
+                  : null,
 
               stripe_payment_intent:
-                typeof session.payment_intent ===
-                "string"
-                  ? session.payment_intent
-                  : null,
+                paymentIntent,
 
               stripe_checkout_session:
                 session.id,
@@ -1540,6 +1724,7 @@ if (transactionQueryError) {
               auctionId,
               amount,
               platformFee,
+              paymentProcessingFee,
               sellerAmount,
             },
           );
@@ -1548,6 +1733,23 @@ if (transactionQueryError) {
             "ℹ️ Transaction já existe:",
             transactionId,
           );
+        }
+
+        if (
+          transactionId &&
+          deliveryMethod === "pickup"
+        ) {
+          try {
+            await ensureTransactionPickupCode(
+              transactionId,
+              userId,
+            );
+          } catch {
+            return NextResponse.json(
+              { error: "Failed to prepare pickup confirmation." },
+              { status: 500 },
+            );
+          }
         }
 
         /*
@@ -1712,6 +1914,36 @@ if (transactionQueryError) {
             );
           }
         }
+
+        const auctionName = `${auction.brand || ""} ${auction.model || "leilão"}`.trim();
+        await queueTransactionalEmailOnce({
+          eventKey: `auction-payment-confirmed:${auctionId}:buyer`,
+          eventType: "auction_payment_confirmed",
+          recipientUserId: userId,
+          subject: "O teu leilão foi confirmado — Garagem164",
+          entityType: "auction",
+          entityId: auctionId,
+          heading: "Pagamento do leilão confirmado",
+          paragraphs: [
+            `O pagamento de ${auctionName} foi confirmado.`,
+            "Acompanha os próximos passos na área das tuas compras.",
+          ],
+          action: { label: "Ver compra", path: "/account/purchases" },
+        });
+        await queueTransactionalEmailOnce({
+          eventKey: `auction-sale-confirmed:${auctionId}:seller`,
+          eventType: "auction_sale_confirmed",
+          recipientUserId: auction.user_id,
+          subject: "O pagamento do leilão foi confirmado — Garagem164",
+          entityType: "auction",
+          entityId: auctionId,
+          heading: "Leilão pago",
+          paragraphs: [
+            `O vencedor pagou ${auctionName}.`,
+            "Prepara a entrega e acompanha a venda na tua área de vendedor.",
+          ],
+          action: { label: "Ver venda", path: "/account/sales" },
+        });
 
         break;
       }
@@ -1977,6 +2209,79 @@ if (session.payment_status !== "paid") {
       console.log(
         `🎟️ ${tickets.length} bilhetes gravados.`,
       );
+
+      const { data: raffleForEmail } = await supabaseAdmin
+        .from("listings")
+        .select("user_id, brand, model")
+        .eq("id", raffleId)
+        .maybeSingle();
+
+      if (raffleForEmail) {
+        const grossAmount = Math.round((session.amount_total ?? 0)) / 100;
+        const platformFee = calculateRafflePlatformFee(grossAmount);
+        const paymentIntentId = typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null;
+        const { stripeFee, balanceTransactionId } = await getStripePaymentFee(paymentIntentId);
+        const sellerNetAmount = stripeFee === null
+          ? null
+          : Math.round((grossAmount - platformFee - stripeFee) * 100) / 100;
+
+        const { error: financialsError } = await supabaseAdmin
+          .from("raffle_payment_financials")
+          .upsert(
+            {
+              stripe_session_id: session.id,
+              raffle_id: raffleId,
+              seller_id: raffleForEmail.user_id,
+              buyer_id: raffleUserId,
+              stripe_payment_intent: paymentIntentId,
+              stripe_balance_transaction: balanceTransactionId,
+              gross_amount: grossAmount,
+              platform_fee: platformFee,
+              stripe_fee: stripeFee,
+              seller_net_amount: sellerNetAmount,
+              currency: "eur",
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "stripe_session_id" },
+          );
+
+        if (financialsError) {
+          console.error("RAFFLE FINANCIAL LEDGER ERROR:", financialsError);
+        }
+      }
+
+      const raffleName = `${raffleForEmail?.brand || ""} ${raffleForEmail?.model || "sorteio"}`.trim();
+
+      await queueTransactionalEmailOnce({
+        eventKey: `raffle-tickets-confirmed:${session.id}:buyer`,
+        eventType: "raffle_tickets_confirmed",
+        recipientUserId: raffleUserId,
+        subject: "Bilhetes confirmados — Garagem164",
+        entityType: "raffle",
+        entityId: raffleId,
+        heading: "Bilhetes confirmados",
+        paragraphs: [
+          `O pagamento de ${quantity} bilhete${quantity === 1 ? "" : "s"} para ${raffleName} foi confirmado.`,
+          `Os teus números: ${selectedTickets.map((ticket) => String(ticket).padStart(2, "0")).join(", ")}.`,
+        ],
+        action: { label: "Ver sorteios", path: "/account/raffles" },
+      });
+
+      if (raffleForEmail?.user_id && raffleForEmail.user_id !== raffleUserId) {
+        await queueTransactionalEmailOnce({
+          eventKey: `raffle-tickets-sold:${session.id}:seller`,
+          eventType: "raffle_tickets_sold",
+          recipientUserId: raffleForEmail.user_id,
+          subject: "Foram vendidos bilhetes do teu sorteio — Garagem164",
+          entityType: "raffle",
+          entityId: raffleId,
+          heading: "Bilhetes vendidos",
+          paragraphs: [`Foram confirmados ${quantity} bilhete${quantity === 1 ? "" : "s"} para ${raffleName}.`],
+          action: { label: "Ver sorteios", path: "/account/raffles" },
+        });
+      }
 
       /*
        * -------------------------------------------------------

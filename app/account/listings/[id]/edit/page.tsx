@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import type { ListingDeliveryMethod } from "@/lib/delivery";
 
 export default function EditListingPage({
   params,
@@ -15,7 +16,8 @@ export default function EditListingPage({
   const [model, setModel] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping");
+  const [deliveryMethod, setDeliveryMethod] =
+    useState<ListingDeliveryMethod>("shipping");
   const [pickupLocation, setPickupLocation] = useState("");
 
   useEffect(() => {
@@ -33,7 +35,11 @@ export default function EditListingPage({
         setModel(data.model || "");
         setDescription(data.description || "");
         setPrice(data.price?.toString() || "");
-        setDeliveryMethod(data.delivery_method === "pickup" ? "pickup" : "shipping");
+        setDeliveryMethod(
+          data.delivery_method === "pickup" || data.delivery_method === "both"
+            ? data.delivery_method
+            : "shipping",
+        );
         setPickupLocation(data.pickup_location || "");
       }
 
@@ -45,7 +51,10 @@ export default function EditListingPage({
 
   async function saveChanges() {
     try {
-      if (deliveryMethod === "pickup" && !pickupLocation.trim()) {
+      if (
+        (deliveryMethod === "pickup" || deliveryMethod === "both") &&
+        !pickupLocation.trim()
+      ) {
         alert("Indica a localidade da entrega em mão.");
         return;
       }
@@ -59,7 +68,10 @@ export default function EditListingPage({
           description,
           price: Number(price),
           delivery_method: deliveryMethod,
-          pickup_location: deliveryMethod === "pickup" ? pickupLocation.trim() : null,
+          pickup_location:
+            deliveryMethod === "pickup" || deliveryMethod === "both"
+              ? pickupLocation.trim()
+              : null,
         })
         .eq("id", listingId);
 
@@ -123,14 +135,17 @@ export default function EditListingPage({
 
             <select
               value={deliveryMethod}
-              onChange={(event) => setDeliveryMethod(event.target.value as "shipping" | "pickup")}
+              onChange={(event) =>
+                setDeliveryMethod(event.target.value as ListingDeliveryMethod)
+              }
               className="h-14 w-full rounded-2xl border border-white/10 bg-black px-4"
             >
               <option value="shipping">Envio com rastreio</option>
               <option value="pickup">Entrega em mão</option>
+              <option value="both">Envio e entrega em mão</option>
             </select>
 
-            {deliveryMethod === "pickup" && (
+            {(deliveryMethod === "pickup" || deliveryMethod === "both") && (
               <input
                 type="text"
                 value={pickupLocation}

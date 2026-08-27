@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { calculatePlatformFee } from "@/lib/platformCommission";
+import {
+  isTransactionDeliveryMethod,
+  supportsDeliveryMethod,
+} from "@/lib/delivery";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
@@ -87,6 +91,7 @@ export async function POST(req: NextRequest) {
       type = "raffle",
       listingId,
       selectedTickets,
+      deliveryMethod,
     } = body;
 
     /*
@@ -170,6 +175,24 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         );
       }
+
+      if (
+        !isTransactionDeliveryMethod(deliveryMethod) ||
+        !supportsDeliveryMethod(
+          auction.delivery_method,
+          deliveryMethod,
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Escolhe uma forma de entrega disponível para este leilão.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const selectedAuctionDeliveryMethod = deliveryMethod;
 
       /*
        * -------------------------------------------------------
@@ -381,7 +404,7 @@ export async function POST(req: NextRequest) {
         await stripe.checkout.sessions.create({
           mode: "payment",
 
-          payment_method_types: ["card"],
+          payment_method_types: ["card", "mb_way"],
 
           ...(user.email
             ? {
@@ -419,6 +442,7 @@ export async function POST(req: NextRequest) {
             userId: user.id,
             bidId: winningBid.id,
             amount: winningAmount.toFixed(2),
+            deliveryMethod: selectedAuctionDeliveryMethod,
           },
 
           success_url:
@@ -518,6 +542,24 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         );
       }
+
+      if (
+        !isTransactionDeliveryMethod(deliveryMethod) ||
+        !supportsDeliveryMethod(
+          sale.delivery_method,
+          deliveryMethod,
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Escolhe uma forma de entrega disponível para esta venda.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const selectedSaleDeliveryMethod = deliveryMethod;
 
       if (sale.sale_status !== "available") {
         return NextResponse.json(
@@ -875,8 +917,7 @@ export async function POST(req: NextRequest) {
        * 5.6 CALCULAR VALORES DA TRANSACTION
        * -------------------------------------------------------
        *
-       * Comissão da plataforma: 0% durante o primeiro mês de
-       * lançamento; 3% depois do período promocional.
+       * Comissão da plataforma: 3% sobre cada venda paga.
        */
 
       const platformFee =
@@ -917,8 +958,11 @@ export async function POST(req: NextRequest) {
           commercial_status:
             "pending_payment",
           financial_status: "unpaid",
-          delivery_method: sale.delivery_method,
-          pickup_location: sale.pickup_location,
+          delivery_method: selectedSaleDeliveryMethod,
+          pickup_location:
+            selectedSaleDeliveryMethod === "pickup"
+              ? sale.pickup_location
+              : null,
         })
         .select(
           "id, listing_id, buyer_id, seller_id, amount, platform_fee, seller_amount, commercial_status, financial_status, created_at",
@@ -974,9 +1018,7 @@ export async function POST(req: NextRequest) {
             {
               mode: "payment",
 
-              payment_method_types: [
-                "card",
-              ],
+              payment_method_types: ["card", "mb_way"],
 
               ...(user.email
                 ? {
@@ -1019,6 +1061,8 @@ export async function POST(req: NextRequest) {
                   platformFee.toFixed(2),
                 sellerAmount:
                   sellerAmount.toFixed(2),
+                deliveryMethod:
+                  selectedSaleDeliveryMethod,
               },
 
               success_url:
@@ -1514,7 +1558,7 @@ export async function POST(req: NextRequest) {
       await stripe.checkout.sessions.create({
         mode: "payment",
 
-        payment_method_types: ["card"],
+        payment_method_types: ["card", "mb_way"],
 
         ...(user.email
           ? {

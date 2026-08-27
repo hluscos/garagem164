@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { calculateSellerNetAmount } from "@/lib/platformCommission";
 
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!,
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
           seller_id,
           amount,
           platform_fee,
+          payment_processing_fee,
           seller_amount,
           currency,
           commercial_status,
@@ -331,10 +333,62 @@ export async function POST(req: NextRequest) {
      * ---------------------------------------------------------
      */
 
-    const sellerAmount =
-      Number(
-        transaction.seller_amount,
+    if (!transaction.stripe_payment_intent) {
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível validar o pagamento original.",
+        },
+        { status: 409 },
       );
+    }
+
+    let paymentProcessingFee: number;
+
+    try {
+      const paymentIntent =
+        await stripe.paymentIntents.retrieve(
+          transaction.stripe_payment_intent,
+          {
+            expand: ["latest_charge.balance_transaction"],
+          },
+        );
+
+      const charge = paymentIntent.latest_charge;
+      const balanceTransaction =
+        charge && typeof charge !== "string"
+          ? charge.balance_transaction
+          : null;
+
+      if (
+        !balanceTransaction ||
+        typeof balanceTransaction === "string"
+      ) {
+        throw new Error("Stripe balance transaction is unavailable.");
+      }
+
+      paymentProcessingFee =
+        Math.round(balanceTransaction.fee) / 100;
+    } catch (error) {
+      console.error(
+        "❌ ERRO AO OBTER TAXA STRIPE PARA PAGAMENTO:",
+        error,
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Ainda não foi possível apurar a taxa de processamento deste pagamento.",
+        },
+        { status: 409 },
+      );
+    }
+
+    const sellerAmount = calculateSellerNetAmount(
+      Number(transaction.amount),
+      Number(transaction.platform_fee),
+      paymentProcessingFee,
+    );
 
     if (
       !Number.isFinite(
@@ -348,6 +402,33 @@ export async function POST(req: NextRequest) {
             "O valor a receber pelo vendedor é inválido.",
         },
         { status: 409 },
+      );
+    }
+
+    const { error: settlementUpdateError } =
+      await supabaseAdmin
+        .from("transactions")
+        .update({
+          payment_processing_fee:
+            paymentProcessingFee,
+          seller_amount: sellerAmount,
+        })
+        .eq("id", transaction.id)
+        .eq("financial_status", "ready_for_payout")
+        .is("stripe_transfer_id", null);
+
+    if (settlementUpdateError) {
+      console.error(
+        "❌ ERRO AO ATUALIZAR VALORES FINAIS DA TRANSAÇÃO:",
+        settlementUpdateError,
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível preparar o valor final do pagamento.",
+        },
+        { status: 500 },
       );
     }
 
@@ -396,6 +477,10 @@ export async function POST(req: NextRequest) {
 
             seller_amount:
               sellerAmount.toFixed(2),
+            platform_fee:
+              Number(transaction.platform_fee).toFixed(2),
+            payment_processing_fee:
+              paymentProcessingFee.toFixed(2),
           },
         },
         {
@@ -467,6 +552,8 @@ export async function POST(req: NextRequest) {
 
       amount:
         sellerAmount,
+
+      paymentProcessingFee,
 
       currency:
         transaction.currency,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isListingDeliveryMethod } from "@/lib/delivery";
 
 export async function POST(req: NextRequest) {
   try {
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!['shipping', 'pickup'].includes(delivery_method)) {
+    if (!isListingDeliveryMethod(delivery_method)) {
       return NextResponse.json(
         { success: false, message: "Forma de entrega inválida." },
         { status: 400 },
@@ -95,7 +96,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (
-      delivery_method === "pickup" &&
+      (delivery_method === "pickup" ||
+        delivery_method === "both") &&
       (typeof pickup_location !== "string" || !pickup_location.trim())
     ) {
       return NextResponse.json(
@@ -300,7 +302,8 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       delivery_method,
       pickup_location:
-        delivery_method === "pickup"
+        delivery_method === "pickup" ||
+        delivery_method === "both"
           ? pickup_location.trim().slice(0, 120)
           : null,
 

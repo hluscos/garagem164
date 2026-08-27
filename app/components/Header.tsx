@@ -7,6 +7,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import {
   Menu,
+  Mail,
   Search,
   X,
 } from "lucide-react";
@@ -20,6 +21,7 @@ export default function Header() {
   const [session, setSession] = useState<Session | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -57,6 +59,34 @@ export default function Header() {
       window.removeEventListener("focus", handleFocus);
     };
   }, []);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    let active = true;
+    const loadUnreadMessages = async () => {
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .neq("sender_id", session.user.id)
+        .is("read_at", null);
+
+      if (active) setUnreadMessages(count ?? 0);
+    };
+
+    void loadUnreadMessages();
+    const channel = supabase
+      .channel(`header-unread-${session.user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, loadUnreadMessages)
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [session]);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -99,7 +129,7 @@ export default function Header() {
             </span>
 
             <span>
-              ⭐ Anúncios Gratuitos durante o Lançamento
+              ⭐ Anúncios Gratuitos
             </span>
 
           </div>
@@ -203,6 +233,19 @@ export default function Header() {
               <div className="hidden items-center gap-3 xl:flex">
 
                 <Link
+                  href="/messages"
+                  aria-label={unreadMessages ? `${unreadMessages} mensagens por ler` : "Mensagens"}
+                  className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800]"
+                >
+                  <Mail size={19} />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ffb800] px-1 text-[10px] font-black text-black">
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
                   href="/account"
                   className="hidden h-[52px] items-center justify-center rounded-2xl border border-white/10 px-6 text-[13px] font-black uppercase tracking-[0.5px] text-white transition-all duration-300 hover:border-[#ffb800] hover:text-[#ffb800] lg:flex"
                 >
@@ -294,6 +337,14 @@ export default function Header() {
 
               {session ? (
                 <div className="mt-3 grid grid-cols-2 gap-3">
+                  <Link
+                    href="/messages"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 text-white transition hover:border-[#ffb800] hover:text-[#ffb800]"
+                  >
+                    <Mail size={17} />
+                    Mensagens{unreadMessages ? ` (${unreadMessages})` : ""}
+                  </Link>
                   <Link
                     href="/account"
                     onClick={() => setMobileMenuOpen(false)}
