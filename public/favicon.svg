@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
+  <title>Garagem164</title>
+  <rect width="192" height="192" rx="42" fill="#070707"/>
+  <rect x="8" y="8" width="176" height="176" rx="35" fill="none" stroke="#ffb000" stroke-width="8"/>
+  <path d="M37 60h118" stroke="#fff" stroke-linecap="round" stroke-width="7"/>
+  <path d="M49 46h94" stroke="#ffb000" stroke-linecap="round" stroke-width="7"/>
+  <text x="96" y="132" fill="#ef1b2d" font-family="Arial Black,Arial,sans-serif" font-size="73" font-style="italic" font-weight="900" letter-spacing="-8" stroke="#fff" stroke-linejoin="round" stroke-width="3" text-anchor="middle">164</text>
+  <path d="M42 147h108" stroke="#ffb000" stroke-linecap="round" stroke-width="7"/>
+</svg>
