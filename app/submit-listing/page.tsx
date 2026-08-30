@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { ListingDeliveryMethod } from "@/lib/delivery";
@@ -33,6 +33,28 @@ export default function SubmitListingPage() {
   const [message, setMessage] = useState("");
 
   const [images, setImages] = useState<File[]>([]);
+  const imagePreviews = useMemo(
+    () =>
+      images.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+      })),
+    [images],
+  );
+
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((preview) => {
+        URL.revokeObjectURL(preview.url);
+      });
+    };
+  }, [imagePreviews]);
+
+  function removeImage(indexToRemove: number) {
+    setImages((currentImages) =>
+      currentImages.filter((_, index) => index !== indexToRemove),
+    );
+  }
 
   useEffect(() => {
     async function checkAuth() {
@@ -734,6 +756,8 @@ export default function SubmitListingPage() {
                       e.target.files,
                     ),
                   );
+
+                  e.target.value = "";
                 }}
                 className="hidden"
               />
@@ -741,15 +765,52 @@ export default function SubmitListingPage() {
             </label>
 
             {images.length > 0 && (
-              <div className="mt-4 text-sm text-zinc-400">
-                {images.length} foto
-                {images.length > 1
-                  ? "s"
-                  : ""}{" "}
-                selecionada
-                {images.length > 1
-                  ? "s"
-                  : ""}
+              <div className="mt-5">
+                <div className="text-sm text-zinc-400">
+                  {images.length} foto
+                  {images.length > 1
+                    ? "s"
+                    : ""}{" "}
+                  selecionada
+                  {images.length > 1
+                    ? "s"
+                    : ""}. Confirma as imagens antes de publicar.
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {imagePreviews.map(({ file, url }, index) => (
+                    <div
+                      key={`${file.name}-${file.lastModified}-${index}`}
+                      className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
+                    >
+                      <img
+                        src={url}
+                        alt={`Pré-visualização da foto ${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                      />
+
+                      <span className="absolute bottom-2 left-2 rounded-lg bg-black/75 px-2 py-1 text-[10px] font-black text-white">
+                        {index + 1}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        aria-label={`Remover a foto ${index + 1}`}
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/80 text-lg text-white transition hover:bg-red-500"
+                      >
+                        ×
+                      </button>
+
+                      <div
+                        className="truncate px-3 py-2 text-xs text-zinc-400"
+                        title={file.name}
+                      >
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
