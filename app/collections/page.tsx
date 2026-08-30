@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { collectionBrands } from "./brands";
+
 export default function CollectionsPage() {
   const brands = [
     {
@@ -56,12 +59,12 @@ export default function CollectionsPage() {
           </div>
 
           <h1 className="mt-5 text-[48px] font-black italic uppercase leading-none tracking-[-3px] sm:text-[64px] lg:text-[82px] lg:tracking-[-4px]">
-            Anúncios
+            Coleções
           </h1>
 
           <p className="mt-6 text-zinc-400 text-[18px] max-w-[700px] leading-relaxed">
-            Explora as principais marcas de miniaturas 1:64.
-            Descobre modelos raros, edições limitadas e peças de coleção.
+            Explora as principais marcas de miniaturas 1:64 e encontra
+            anúncios colocados à venda pela comunidade Garagem164.
           </p>
 
         </div>
@@ -74,11 +77,19 @@ export default function CollectionsPage() {
 
         <div className="grid grid-cols-4 gap-6">
 
-          {brands.map((brand) => (
+          {brands.map((brand) => {
+            const isCollectionLandingPage = collectionBrands.some(
+              (collectionBrand) => collectionBrand.slug === brand.slug,
+            );
+            const href = isCollectionLandingPage
+              ? "/collections/" + brand.slug
+              : "/listings?brand=" + encodeURIComponent(brand.name);
 
-            <a
+            return (
+
+            <Link
               key={brand.name}
-              href={`/listings/${brand.slug}`}
+              href={href}
               className="group rounded-[28px] border border-white/5 bg-zinc-950 p-10 hover:border-[#ffb800]/30 transition-all duration-500 cursor-pointer block"
             >
 
@@ -100,9 +111,10 @@ export default function CollectionsPage() {
 
               </div>
 
-            </a>
+            </Link>
 
-          ))}
+            );
+          })}
 
         </div>
 

@@ -48,6 +48,13 @@ export default function ListingsPage() {
       }
 
       setListings(data || []);
+      const requestedBrand = new URLSearchParams(
+        window.location.search,
+      ).get("brand")?.trim();
+
+      if (requestedBrand) {
+        setActiveBrand(requestedBrand);
+      }
       setLoading(false);
     }
 

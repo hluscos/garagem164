@@ -4,6 +4,7 @@ import BrandsRow from "./components/BrandsRow";
 import FeatureCards from "./components/FeatureCards";
 import AuctionGrid from "./components/AuctionGrid";
 import Footer from "./components/Footer";
+import SeoIntro from "./components/SeoIntro";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <StatsBar />
       <BrandsRow />
       <FeatureCards />
+      <SeoIntro />
       <AuctionGrid />
       <Footer />
     </main>
