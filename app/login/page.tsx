@@ -63,6 +63,9 @@ export default function LoginPage() {
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          ...(provider === "google"
+            ? { queryParams: { prompt: "select_account" } }
+            : {}),
         },
       });
 
