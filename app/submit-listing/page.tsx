@@ -52,12 +52,8 @@ export default function SubmitListingPage() {
   }, []);
 
   function selectImages(files: FileList) {
-    imagePreviewsRef.current.forEach((preview) => {
-      URL.revokeObjectURL(preview.url);
-    });
-
     const selectedImages = Array.from(files);
-    const previews = selectedImages.map((file) => {
+    const newPreviews = selectedImages.map((file) => {
       const url = URL.createObjectURL(file);
 
       return {
@@ -68,9 +64,17 @@ export default function SubmitListingPage() {
       };
     });
 
-    imagePreviewsRef.current = previews;
-    setImages(selectedImages);
-    setImagePreviews(previews);
+    const nextPreviews = [
+      ...imagePreviewsRef.current,
+      ...newPreviews,
+    ];
+
+    imagePreviewsRef.current = nextPreviews;
+    setImages((currentImages) => [
+      ...currentImages,
+      ...selectedImages,
+    ]);
+    setImagePreviews(nextPreviews);
   }
 
   function updatePreviewStatus(
