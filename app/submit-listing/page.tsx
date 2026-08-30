@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { ListingDeliveryMethod } from "@/lib/delivery";
+
+type ImagePreview = {
+  id: string;
+  file: File;
+  url: string;
+  status: "loading" | "ready" | "error";
+};
 
 export default function SubmitListingPage() {
   const router = useRouter();
@@ -33,27 +40,74 @@ export default function SubmitListingPage() {
   const [message, setMessage] = useState("");
 
   const [images, setImages] = useState<File[]>([]);
-  const imagePreviews = useMemo(
-    () =>
-      images.map((file) => ({
-        file,
-        url: URL.createObjectURL(file),
-      })),
-    [images],
-  );
+  const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+  const imagePreviewsRef = useRef<ImagePreview[]>([]);
 
   useEffect(() => {
     return () => {
-      imagePreviews.forEach((preview) => {
+      imagePreviewsRef.current.forEach((preview) => {
         URL.revokeObjectURL(preview.url);
       });
     };
-  }, [imagePreviews]);
+  }, []);
+
+  function selectImages(files: FileList) {
+    imagePreviewsRef.current.forEach((preview) => {
+      URL.revokeObjectURL(preview.url);
+    });
+
+    const selectedImages = Array.from(files);
+    const previews = selectedImages.map((file) => {
+      const url = URL.createObjectURL(file);
+
+      return {
+        id: url,
+        file,
+        url,
+        status: "loading" as const,
+      };
+    });
+
+    imagePreviewsRef.current = previews;
+    setImages(selectedImages);
+    setImagePreviews(previews);
+  }
+
+  function updatePreviewStatus(
+    previewId: string,
+    status: ImagePreview["status"],
+  ) {
+    setImagePreviews((currentPreviews) => {
+      const nextPreviews = currentPreviews.map((preview) =>
+        preview.id === previewId ? { ...preview, status } : preview,
+      );
+
+      imagePreviewsRef.current = nextPreviews;
+
+      return nextPreviews;
+    });
+  }
 
   function removeImage(indexToRemove: number) {
+    const previewToRemove = imagePreviewsRef.current[indexToRemove];
+
+    if (previewToRemove) {
+      URL.revokeObjectURL(previewToRemove.url);
+    }
+
     setImages((currentImages) =>
       currentImages.filter((_, index) => index !== indexToRemove),
     );
+
+    setImagePreviews((currentPreviews) => {
+      const nextPreviews = currentPreviews.filter(
+        (_, index) => index !== indexToRemove,
+      );
+
+      imagePreviewsRef.current = nextPreviews;
+
+      return nextPreviews;
+    });
   }
 
   useEffect(() => {
@@ -751,11 +805,7 @@ export default function SubmitListingPage() {
                     return;
                   }
 
-                  setImages(
-                    Array.from(
-                      e.target.files,
-                    ),
-                  );
+                  selectImages(e.target.files);
 
                   e.target.value = "";
                 }}
@@ -778,16 +828,35 @@ export default function SubmitListingPage() {
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {imagePreviews.map(({ file, url }, index) => (
+                  {imagePreviews.map(({ file, url, status }, index) => (
                     <div
-                      key={`${file.name}-${file.lastModified}-${index}`}
+                      key={url}
                       className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
                     >
-                      <img
-                        src={url}
-                        alt={`Pré-visualização da foto ${index + 1}`}
-                        className="aspect-square w-full object-cover"
-                      />
+                      <div className="relative aspect-square bg-zinc-900">
+                        <img
+                          src={url}
+                          alt={`Pré-visualização da foto ${index + 1}`}
+                          onLoad={() => updatePreviewStatus(url, "ready")}
+                          onError={() => updatePreviewStatus(url, "error")}
+                          className={`h-full w-full object-cover transition-opacity duration-200 ${
+                            status === "ready" ? "opacity-100" : "opacity-0"
+                          }`}
+                        />
+
+                        {status === "loading" && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-zinc-900 text-xs font-bold text-zinc-400">
+                            <span className="h-8 w-8 animate-pulse rounded-full bg-zinc-700" />
+                            A preparar…
+                          </div>
+                        )}
+
+                        {status === "error" && (
+                          <div className="absolute inset-0 flex items-center justify-center px-3 text-center text-xs font-semibold text-red-300">
+                            Não foi possível mostrar esta imagem.
+                          </div>
+                        )}
+                      </div>
 
                       <span className="absolute bottom-2 left-2 rounded-lg bg-black/75 px-2 py-1 text-[10px] font-black text-white">
                         {index + 1}
