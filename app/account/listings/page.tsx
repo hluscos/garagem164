@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 
 interface ListingImage {
   image_url: string;
@@ -118,8 +119,12 @@ console.log("DELETE OK");
                 <div className="flex h-28 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900 sm:h-24 sm:w-24">
                   {image ? (
                     <img
-                      src={image}
+                      src={optimizedImage(image, { width: 224, height: 224, quality: 72, fit: "cover" })}
                       alt={listing.model || "Anúncio"}
+                      width={224}
+                      height={224}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   ) : (

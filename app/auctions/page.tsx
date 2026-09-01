@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 
 type Auction = {
   id: string;
@@ -385,8 +386,14 @@ export default function AuctionsPage() {
 
         <div className="absolute inset-0">
           <img
-            src="/images/hero/backgrounds/auction-bg.webp"
+            src={optimizedImage("/images/hero/backgrounds/auction-bg.webp", { width: 1600, quality: 72 })}
+            srcSet={optimizedSrcSet("/images/hero/backgrounds/auction-bg.webp", [640, 960, 1600], 72)}
+            sizes="100vw"
             alt=""
+            width={1920}
+            height={640}
+            fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/25 to-black/75" />
@@ -449,8 +456,12 @@ export default function AuctionsPage() {
                 >
                   {logo ? (
                     <img
-                      src={logo}
+                      src={optimizedImage(logo, { width: 180, quality: 72 })}
                       alt={brand}
+                      width={180}
+                      height={120}
+                      loading="lazy"
+                      decoding="async"
                       className={`max-h-10 max-w-[100px] object-contain transition ${selected ? "brightness-0" : ""}`}
                     />
                   ) : (
@@ -594,8 +605,12 @@ export default function AuctionsPage() {
 
   <div className="relative z-10 flex h-full items-center justify-center px-6 pt-8">
     <img
-      src={image}
+      src={optimizedImage(image, { width: 640, height: 480, quality: 76, fit: "contain" })}
       alt={auction.model || "Miniatura"}
+      width={640}
+      height={480}
+      loading="lazy"
+      decoding="async"
       className="max-h-[190px] max-w-[82%] object-contain transition-transform duration-700 group-hover:scale-105"
     />
   </div>

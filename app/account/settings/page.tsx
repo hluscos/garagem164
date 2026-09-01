@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, KeyRound, Save, Trash2, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 
 type Message = {
   type: "success" | "error";
@@ -312,8 +313,11 @@ export default function AccountSettingsPage() {
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#ffb800]/30 bg-[#ffb800]/10">
               {avatarUrl ? (
                 <img
-                  src={avatarUrl}
+                  src={optimizedImage(avatarUrl, { width: 192, height: 192, quality: 76, fit: "cover" })}
                   alt="Foto de perfil"
+                  width={192}
+                  height={192}
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               ) : (

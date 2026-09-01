@@ -33,3 +33,25 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+@keyframes hero-car-enter {
+  from {
+    opacity: 0;
+    transform: translateX(90px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-hero-car {
+  animation: hero-car-enter 700ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-car {
+    animation: none;
+  }
+}

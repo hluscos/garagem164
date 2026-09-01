@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 
@@ -15,7 +16,11 @@ import {
 import { FaInstagram } from "react-icons/fa";
 
 import { supabase } from "@/lib/supabase";
-import GlobalSearch from "./GlobalSearch";
+import { optimizedImage } from "@/lib/images";
+
+const GlobalSearch = dynamic(() => import("./GlobalSearch"), {
+  ssr: false,
+});
 
 export default function Header() {
   const [session, setSession] = useState<Session | null>(null);
@@ -163,8 +168,12 @@ export default function Header() {
             className="relative h-[58px] w-[170px] shrink-0 select-none overflow-hidden lg:flex lg:h-full lg:w-auto lg:items-center lg:overflow-visible xl:mr-14"
           >
             <img
-              src="/logo.png"
+              src={optimizedImage("/logo.png", { width: 420, quality: 82 })}
               alt="Garagem164"
+              width={1536}
+              height={1024}
+              fetchPriority="high"
+              decoding="async"
               className="absolute -left-[36px] -top-[31px] h-auto w-[210px] max-w-none object-contain lg:static lg:h-[115px] lg:w-auto lg:max-w-full"
             />
           </Link>
@@ -389,10 +398,12 @@ export default function Header() {
 
       </header>
 
-      <GlobalSearch
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-      />
+      {searchOpen ? (
+        <GlobalSearch
+          open
+          onClose={() => setSearchOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

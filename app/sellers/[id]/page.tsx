@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { CalendarDays, PackageCheck, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 
 type SellerProfile = {
   id: string;
@@ -214,8 +215,12 @@ export default function SellerProfilePage() {
             <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#ffb800]/30 bg-[#ffb800]/10">
               {profile.avatar_url ? (
                 <img
-                  src={profile.avatar_url}
+                  src={optimizedImage(profile.avatar_url, { width: 224, height: 224, quality: 78, fit: "cover" })}
                   alt={`Foto de perfil de ${displayName}`}
+                  width={224}
+                  height={224}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -281,8 +286,12 @@ export default function SellerProfilePage() {
                   <div className="aspect-[4/3] overflow-hidden bg-zinc-900">
                     {image ? (
                       <img
-                        src={image}
+                        src={optimizedImage(image, { width: 640, height: 480, quality: 76, fit: "cover" })}
                         alt={`${listing.brand ?? ""} ${listing.model ?? ""}`.trim()}
+                        width={640}
+                        height={480}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
                     ) : (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 
 type Listing = {
   id: string;
@@ -88,8 +89,14 @@ export default function ListingsPage() {
 
         <div className="absolute inset-0">
           <img
-            src="/images/hero/backgrounds/listings-bg.webp"
+            src={optimizedImage("/images/hero/backgrounds/listings-bg.webp", { width: 1600, quality: 72 })}
+            srcSet={optimizedSrcSet("/images/hero/backgrounds/listings-bg.webp", [640, 960, 1600], 72)}
+            sizes="100vw"
             alt=""
+            width={1920}
+            height={640}
+            fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/25 to-black/75" />
@@ -228,8 +235,12 @@ export default function ListingsPage() {
                     {image ? (
 
                       <img
-                        src={image}
+                        src={optimizedImage(image, { width: 640, height: 640, quality: 76, fit: "cover" })}
                         alt={`${listing.brand} ${listing.model}`}
+                        width={640}
+                        height={640}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
 

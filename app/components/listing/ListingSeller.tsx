@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 
 type SellerProfile = {
   display_name: string | null;
@@ -74,8 +75,12 @@ export default function ListingSeller({ sellerId }: { sellerId: string }) {
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-zinc-800">
           {profile?.avatar_url ? (
             <img
-              src={profile.avatar_url}
+              src={optimizedImage(profile.avatar_url, { width: 160, height: 160, quality: 76, fit: "cover" })}
               alt={`Foto de perfil de ${displayName}`}
+              width={160}
+              height={160}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (

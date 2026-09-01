@@ -11,6 +11,7 @@ import {
   Truck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 import PickupConfirmationForm from "../components/PickupConfirmationForm";
 import PayoutButton from "../components/PayoutButton";
 
@@ -506,8 +507,12 @@ export default function SalesPage() {
 
                         {sale.image?.trim() ? (
                           <img
-                            src={sale.image}
+                            src={optimizedImage(sale.image, { width: 192, height: 192, quality: 72, fit: "cover" })}
                             alt={sale.model}
+                            width={192}
+                            height={192}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover"
                           />
                         ) : (

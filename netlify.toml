@@ -1,0 +1,8 @@
+[images]
+remote_images = ["https://fueaubafdxljduiqvjaj\\.supabase\\.co/.*"]
+
+[[headers]]
+for = "/images/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"

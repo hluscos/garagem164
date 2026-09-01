@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 
 type Props = {
-  listing: any;
+  listing: {
+    id: string;
+    model: string | null;
+    brand?: string | null;
+    condition?: string | null;
+    category?: string | null;
+    listing_type: "sale" | "auction" | "raffle";
+  };
 };
 
 export default function ListingGallery({
@@ -44,8 +52,14 @@ export default function ListingGallery({
       <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-zinc-950">
 
         <img
-          src={images[selectedImage]}
-          alt={listing.model}
+          src={optimizedImage(images[selectedImage], { width: 1200, quality: 80 })}
+          srcSet={optimizedSrcSet(images[selectedImage], [480, 800, 1200], 80)}
+          sizes="(max-width: 1024px) 100vw, 60vw"
+          alt={listing.model || "Miniatura de coleção"}
+          width={1200}
+          height={900}
+          fetchPriority="high"
+          decoding="async"
           className="w-full max-h-[650px] object-contain bg-zinc-950"
         />
 
@@ -76,8 +90,12 @@ export default function ListingGallery({
             }`}
           >
             <img
-              src={image}
+              src={optimizedImage(image, { width: 180, height: 180, quality: 70, fit: "cover" })}
               alt=""
+              width={180}
+              height={180}
+              loading="lazy"
+              decoding="async"
               className="aspect-square w-full object-contain bg-zinc-950"
             />
           </button>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { optimizedImage } from "@/lib/images";
 
 export default function BrandsRow() {
   const brands = [
@@ -55,7 +56,7 @@ export default function BrandsRow() {
 
   return (
     <section className="border-t border-white/5 bg-black">
-      <div className="hide-scrollbar mx-auto flex h-[92px] max-w-[1720px] items-center justify-between gap-8 overflow-x-auto px-6 sm:px-10 lg:px-16">
+      <div className="mx-auto grid max-w-[1720px] grid-cols-4 items-center gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-8 sm:px-8 lg:h-[92px] lg:px-16 lg:py-0">
         {brands.map((brand) => {
           const href = collectionLandingSlugs.has(brand.slug)
             ? "/collections/" + brand.slug
@@ -66,14 +67,18 @@ export default function BrandsRow() {
               key={brand.slug}
               href={href}
               aria-label={"Explorar miniaturas " + brand.name}
-              className="shrink-0"
+              className="flex min-w-0 items-center justify-center"
             >
               <img
-                src={brand.logo}
+                src={optimizedImage(brand.logo, { width: 180, quality: 74 })}
                 alt={"Explorar miniaturas " + brand.name}
+                width={180}
+                height={120}
+                loading="lazy"
+                decoding="async"
                 className={
                   brand.height +
-                  " w-auto object-contain opacity-85 transition-all duration-300 hover:scale-110 hover:opacity-100"
+                  " max-h-10 w-full object-contain opacity-85 transition-all duration-300 hover:scale-105 hover:opacity-100 sm:max-h-12 lg:max-h-none"
                 }
               />
             </Link>

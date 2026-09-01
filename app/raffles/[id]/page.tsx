@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 import ShareButtons from "@/app/components/listing/ShareButtons";
 
 type ListingImage = {
@@ -459,11 +460,23 @@ export default function RaffleDetailPage() {
               </div>
 
               <img
-                src={
+                src={optimizedImage(
                   raffle.listing_images?.[0]?.image_url ||
-                  "/images/hero/cars/clio-williams.png"
-                }
+                    "/images/hero/cars/clio-williams.png",
+                  { width: 1200, quality: 80 },
+                )}
+                srcSet={optimizedSrcSet(
+                  raffle.listing_images?.[0]?.image_url ||
+                    "/images/hero/cars/clio-williams.png",
+                  [480, 800, 1200],
+                  80,
+                )}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 alt={raffle.model}
+                width={1200}
+                height={900}
+                fetchPriority="high"
+                decoding="async"
                 className="relative z-10 mx-auto w-[88%] py-10 sm:w-[75%] sm:py-16"
               />
 

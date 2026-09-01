@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 
 export default function Hero() {
   const cars = [
@@ -30,7 +30,7 @@ export default function Hero() {
         className="absolute inset-0 scale-105 bg-cover bg-[position:62%_center] opacity-55 sm:bg-center lg:opacity-70"
         style={{
           backgroundImage:
-            "url('/images/hero/backgrounds/garage-bg.webp')",
+            `url('${optimizedImage("/images/hero/backgrounds/garage-bg.webp", { width: 1920, quality: 68 })}')`,
         }}
       />
 
@@ -116,34 +116,19 @@ export default function Hero() {
 
         <div className="absolute -bottom-2 -right-[28%] z-[5] h-[300px] w-[130%] sm:-right-[15%] sm:h-[360px] sm:w-[110%] lg:bottom-[20px] lg:right-[20px] lg:z-20 lg:h-[560px] lg:w-[900px]">
 
-          <AnimatePresence mode="wait">
-
-            <motion.img
+            <img
               key={cars[currentCar]}
-              src={cars[currentCar]}
-              alt="Hero Car"
-              initial={{
-                opacity: 0,
-                x: 250,
-                scale: 0.96,
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                x: -250,
-                scale: 0.96,
-              }}
-              transition={{
-                duration: 1,
-              }}
-              className="absolute inset-0 w-full h-full object-contain drop-shadow-[0_0_80px_rgba(255,149,0,0.25)]"
+              src={optimizedImage(cars[currentCar], { width: 1200, quality: 76 })}
+              srcSet={optimizedSrcSet(cars[currentCar], [520, 768, 1200], 76)}
+              sizes="(max-width: 640px) 130vw, (max-width: 1024px) 110vw, 900px"
+              alt="Miniatura automóvel de coleção"
+              width={1536}
+              height={1024}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className="animate-hero-car absolute inset-0 h-full w-full object-contain drop-shadow-[0_0_80px_rgba(255,149,0,0.25)]"
             />
-
-          </AnimatePresence>
 
         </div>
 

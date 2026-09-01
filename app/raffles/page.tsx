@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 
 type Raffle = {
   id: string;
@@ -145,8 +146,14 @@ if (tickets) {
 <div className="absolute inset-0 overflow-hidden">
 
   <img
-    src="/images/cards/raffle-background.png"
+    src={optimizedImage("/images/cards/raffle-background.png", { width: 1600, quality: 72 })}
+    srcSet={optimizedSrcSet("/images/cards/raffle-background.png", [640, 960, 1600], 72)}
+    sizes="100vw"
     alt=""
+    width={1536}
+    height={1024}
+    fetchPriority="high"
+    decoding="async"
     className="absolute inset-0 h-full w-full object-cover opacity-75"
   />
 
@@ -258,11 +265,16 @@ if (tickets) {
                 </div>
 
                 <img
-  src={
+  src={optimizedImage(
     item.listing_images?.[0]?.image_url ||
-    "/images/hero/cars/clio-williams.png"
-  }
+      "/images/hero/cars/clio-williams.png",
+    { width: 640, height: 480, quality: 76, fit: "contain" },
+  )}
   alt={item.model}
+  width={640}
+  height={480}
+  loading="lazy"
+  decoding="async"
   className="relative z-10 w-[82%] mx-auto mt-10 group-hover:scale-105 transition-all duration-700"
 />
 

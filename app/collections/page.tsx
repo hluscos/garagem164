@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { collectionBrands } from "./brands";
+import { optimizedImage } from "@/lib/images";
 
 export default function CollectionsPage() {
   const brands = [
@@ -75,7 +76,7 @@ export default function CollectionsPage() {
 
       <section className="mx-auto max-w-[1480px] px-6 py-12 lg:px-12 lg:py-16">
 
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
 
           {brands.map((brand) => {
             const isCollectionLandingPage = collectionBrands.some(
@@ -90,14 +91,18 @@ export default function CollectionsPage() {
             <Link
               key={brand.name}
               href={href}
-              className="group rounded-[28px] border border-white/5 bg-zinc-950 p-10 hover:border-[#ffb800]/30 transition-all duration-500 cursor-pointer block"
+              className="group block cursor-pointer rounded-[28px] border border-white/5 bg-zinc-950 p-7 transition-all duration-500 hover:border-[#ffb800]/30 sm:p-8 lg:p-10"
             >
 
               <div className="h-[120px] flex items-center justify-center">
 
                 <img
-                  src={brand.logo}
+                  src={optimizedImage(brand.logo, { width: 240, quality: 74 })}
                   alt={brand.name}
+                  width={240}
+                  height={160}
+                  loading="lazy"
+                  decoding="async"
                   className="max-h-[70px] object-contain group-hover:scale-105 transition-all duration-500"
                 />
 

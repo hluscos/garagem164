@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -94,8 +95,11 @@ export default function AccountSidebar() {
 
             {avatarUrl ? (
               <img
-                src={avatarUrl}
+                src={optimizedImage(avatarUrl, { width: 160, height: 160, quality: 74, fit: "cover" })}
                 alt="Foto de perfil"
+                width={160}
+                height={160}
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             ) : (

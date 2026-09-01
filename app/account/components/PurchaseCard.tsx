@@ -9,6 +9,7 @@ import {
   Truck,
   Ticket,
 } from "lucide-react";
+import { optimizedImage } from "@/lib/images";
 import TicketBadge from "./TicketBadge";
 
 type PurchaseType = "raffle" | "sale" | "auction";
@@ -208,8 +209,12 @@ export default function PurchaseCard({
 
             {image?.trim() ? (
               <img
-                src={image}
+                src={optimizedImage(image, { width: 192, height: 192, quality: 72, fit: "cover" })}
                 alt={model}
+                width={192}
+                height={192}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : (

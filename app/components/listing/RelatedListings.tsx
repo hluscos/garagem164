@@ -3,7 +3,12 @@
 import Link from "next/link";
 
 type Props = {
-  listings?: any[];
+  listings?: Array<{
+    id: string;
+    model: string;
+    brand?: string | null;
+    price?: number | null;
+  }>;
 };
 
 export default function RelatedListings({
@@ -31,6 +36,10 @@ export default function RelatedListings({
             <img
               src="https://placehold.co/600x400"
               alt={item.model}
+              width={600}
+              height={400}
+              loading="lazy"
+              decoding="async"
               className="w-full aspect-[4/3] object-cover"
             />
 

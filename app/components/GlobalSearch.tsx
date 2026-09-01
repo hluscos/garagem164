@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, X } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
+import { optimizedImage } from "@/lib/images";
 
 type ListingType = "sale" | "auction" | "raffle";
 
@@ -227,8 +228,12 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-900 sm:h-24 sm:w-24">
                       {image ? (
                         <img
-                          src={image}
+                          src={optimizedImage(image, { width: 192, height: 192, quality: 72, fit: "cover" })}
                           alt={`${result.brand ?? ""} ${result.model ?? ""}`.trim()}
+                          width={192}
+                          height={192}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
                       ) : (

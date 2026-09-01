@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
+import { optimizedImage, optimizedSrcSet } from "@/lib/images";
 import ShareButtons from "@/app/components/listing/ShareButtons";
 import type { TransactionDeliveryMethod } from "@/lib/delivery";
 
@@ -812,11 +813,17 @@ export default function AuctionDetailPage() {
             <div className="relative z-10 flex min-h-[520px] items-center justify-center px-10 py-12">
 
               <img
-                src={mainImage}
+                src={optimizedImage(mainImage, { width: 1200, quality: 80 })}
+                srcSet={optimizedSrcSet(mainImage, [480, 800, 1200], 80)}
+                sizes="(max-width: 1024px) 100vw, 60vw"
                 alt={
                   listing.model ||
                   "Miniatura"
                 }
+                width={1200}
+                height={900}
+                fetchPriority="high"
+                decoding="async"
                 className="max-h-[430px] max-w-[90%] object-contain"
               />
 

@@ -65,29 +65,29 @@ export default function CookieConsent() {
   return (
     <aside
       aria-label="Preferências de cookies"
-      className="fixed inset-x-4 bottom-4 z-[110] mx-auto max-w-5xl rounded-[26px] border border-white/10 bg-zinc-950 p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.7)] sm:p-6"
+      className="fixed inset-x-3 bottom-3 z-[110] mx-auto max-w-5xl rounded-[22px] border border-white/10 bg-zinc-950 p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.7)] sm:inset-x-4 sm:bottom-4 sm:rounded-[26px] sm:p-6"
     >
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#ffb800]/10 text-[#ffb800]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-5">
+        <div className="flex min-w-0 gap-3 sm:gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffb800]/10 text-[#ffb800] sm:h-11 sm:w-11 sm:rounded-2xl">
             <Cookie size={21} />
           </div>
 
           <div>
             <div className="flex items-start justify-between gap-3">
-              <h2 className="text-base font-black uppercase tracking-[0.5px]">
+              <h2 className="text-sm font-black uppercase tracking-[0.5px] sm:text-base">
                 A tua privacidade importa
               </h2>
               <button
                 type="button"
                 onClick={() => setVisible(false)}
                 aria-label="Fechar aviso de cookies"
-                className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-600 transition hover:bg-white/5 hover:text-white lg:hidden"
+                className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-white/5 hover:text-white lg:hidden"
               >
                 <X size={17} />
               </button>
             </div>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
+            <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-zinc-300 sm:text-sm">
               Utilizamos cookies essenciais para manter a plataforma segura e
               a sessão iniciada. Cookies opcionais só serão utilizados com a
               tua autorização. Consulta a nossa{" "}
@@ -102,18 +102,18 @@ export default function CookieConsent() {
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col-reverse gap-3 sm:flex-row">
+        <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3">
           <button
             type="button"
             onClick={() => saveChoice("rejected")}
-            className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/10 px-6 text-[11px] font-black uppercase tracking-[1px] text-white transition hover:border-white/30"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 px-3 text-center text-[10px] font-black uppercase tracking-[0.5px] text-white transition hover:border-white/30 sm:h-12 sm:rounded-2xl sm:px-6 sm:text-[11px] sm:tracking-[1px]"
           >
             Recusar opcionais
           </button>
           <button
             type="button"
             onClick={() => saveChoice("accepted")}
-            className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#ffb800] px-6 text-[11px] font-black uppercase tracking-[1px] text-black transition hover:bg-[#ffc933]"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#ffb800] px-3 text-center text-[10px] font-black uppercase tracking-[0.5px] text-black transition hover:bg-[#ffc933] sm:h-12 sm:rounded-2xl sm:px-6 sm:text-[11px] sm:tracking-[1px]"
           >
             Aceitar todos
           </button>
